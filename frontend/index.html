@@ -2,243 +2,155 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-Generation Studio 🚀</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        dark: '#0f172a',
-                        card: '#1e293b',
-                        primary: '#10b981',
-                        accent: '#3b82f6'
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'spin-slow': 'spin 3s linear infinite',
-                    }
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
                 }
             }
         }
     </script>
     <style>
         body { background-color: #0f172a; color: white; }
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #10b981, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        
-        .loader {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-left-color: #10b981;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Gallery Grid */
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-text { background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-left-color: #10b981; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
         .gallery-img { aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
         .gallery-img:hover { transform: scale(1.05); border: 2px solid #10b981; }
-
-        /* แก้ไขปัญหาปุ่มกดไม่ได้บนมือถือ */
-        #generate-btn {
-            position: relative;
-            z-index: 10;
-            pointer-events: auto !important;
-            touch-action: manipulation;
-        }
-
-        /* ป้องกัน modal หรือ element อื่นมาทับ */
-        .glass-panel {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ปรับให้ปุ่ม responsive บนมือถือ */
-        @media (max-width: 768px) {
-            #generate-btn {
-                min-height: 50px; /* ทำให้กดง่ายบนมือถือ */
-                font-size: 16px;
-            }
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Navbar -->
     <nav class="glass-panel sticky top-0 z-50 border-b border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-rocket text-emerald-500 text-2xl"></i>
-                    <span class="font-bold text-xl tracking-tight">AI-Generation <span class="gradient-text">Studio</span></span>
-                </div>
-                <div class="flex items-center gap-4">
-                    <button onclick="openGallery()" class="px-3 py-1 rounded-full bg-gray-800 hover:bg-gray-700 text-sm transition flex items-center gap-2 border border-gray-700">
-                        <i class="fa-solid fa-images"></i> Gallery
-                    </button>
-                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800 border border-gray-700 text-xs font-medium text-emerald-400">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-                        <span>Local GPU Ready</span>
-                    </div>
+        <div class="max-w-7xl mx-auto px-4 flex justify-between h-16 items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-rocket text-emerald-500 text-2xl"></i>
+                <span class="font-bold text-xl">AI-Generation <span class="gradient-text">Studio</span></span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="openGallery()" class="px-3 py-1 rounded-full bg-gray-800 hover:bg-gray-700 text-sm border border-gray-700">
+                    <i class="fa-solid fa-images"></i> Gallery
+                </button>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800 border border-gray-700 text-xs text-emerald-400">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <span>Ready</span>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
         
-        <!-- Left Column: Controls -->
-        <div class="w-full lg:w-1/3 space-y-6">
+        <!-- Left Column -->
+        <div class="w-full lg:w-1/3">
             <div class="glass-panel rounded-2xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-blue-400"></i> Configuration
-                </h2>
+                <h2 class="text-lg font-semibold mb-4"><i class="fa-solid fa-sliders text-blue-400"></i> Configuration</h2>
 
-                <!-- Model -->
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">AI Model</label>
-                        <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <label class="block text-sm text-gray-300 mb-2">AI Model</label>
+                        <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
                             <option value="Z-Image Turbo">Z-Image Turbo</option>
                             <option value="Flux 2 Klein">Flux 2 Klein</option>
                         </select>
                     </div>
 
-                    <!-- Prompt Area -->
                     <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-medium text-gray-300">Prompt</label>
-                            <button onclick="clearPrompt()" class="text-xs text-gray-500 hover:text-red-400 transition">
+                        <div class="flex justify-between mb-2">
+                            <label class="block text-sm text-gray-300">Prompt</label>
+                            <button onclick="document.getElementById('prompt-input').value=''" class="text-xs text-gray-500 hover:text-red-400">
                                 <i class="fa-solid fa-trash-can"></i> Clear
                             </button>
                         </div>
-                        <textarea id="prompt-input" rows="4" 
-                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
-                            placeholder="Describe your imagination..."></textarea>
+                        <textarea id="prompt-input" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm" placeholder="Describe..."></textarea>
                     </div>
 
-                    <!-- ✨ Prompt Presets -->
-                    <div class="pt-2">
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-xs text-gray-500">✨ Quick Presets</label>
-                            <button onclick="randomPrompt()" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-xs text-gray-500">✨ Quick Presets</label>
+                            <button onclick="randomPrompt()" class="text-xs text-emerald-400 hover:text-emerald-300">
                                 <i class="fa-solid fa-dice"></i> Surprise Me
                             </button>
                         </div>
-                        
-                        <div class="flex flex-wrap gap-2 mb-3">
-                            <button onclick="addPrompt('cinematic lighting, 8k, masterpiece, highly detailed')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-emerald-600 text-gray-300 hover:text-white transition border border-gray-600">Cinematic</button>
-                            <button onclick="addPrompt('photorealistic, 8k, raw photo, dslr, 50mm lens')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-blue-600 text-gray-300 hover:text-white transition border border-gray-600">Realistic</button>
-                            <button onclick="addPrompt('anime style, vivid colors, studio ghibli, vibrant')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-purple-600 text-gray-300 hover:text-white transition border border-gray-600">Anime</button>
-                            <button onclick="addPrompt('3d render, unreal engine 5, octane render, 8k')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-orange-600 text-gray-300 hover:text-white transition border border-gray-600">3D</button>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            <button onclick="addPrompt('cinematic lighting, 8k, masterpiece')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-emerald-600 border border-gray-600">Cinematic</button>
+                            <button onclick="addPrompt('photorealistic, 8k, raw photo')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-blue-600 border border-gray-600">Realistic</button>
+                            <button onclick="addPrompt('anime style, vivid colors')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-purple-600 border border-gray-600">Anime</button>
+                            <button onclick="addPrompt('3d render, unreal engine 5')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-orange-600 border border-gray-600">3D</button>
                         </div>
-                        
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="addPrompt('bokeh, depth of field, soft focus')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 text-gray-400 hover:text-white transition border border-gray-700">Bokeh</button>
-                            <button onclick="addPrompt('cyberpunk, neon lights, futuristic city')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 text-gray-400 hover:text-white transition border border-gray-700">Cyberpunk</button>
-                            <button onclick="addPrompt('dark fantasy, gothic, intricate details')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 text-gray-400 hover:text-white transition border border-gray-700">Dark Fantasy</button>
+                            <button onclick="addPrompt('cyberpunk, neon lights')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 border border-gray-700">Cyberpunk</button>
+                            <button onclick="addPrompt('dark fantasy, gothic')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 border border-gray-700">Dark Fantasy</button>
                         </div>
                     </div>
 
-                    <!-- Advanced Settings -->
-                    <div class="pt-4 border-t border-gray-700">
-                        <button id="advanced-toggle" class="text-xs text-gray-400 hover:text-white flex items-center gap-1 mb-3 w-full justify-center">
-                            <i class="fa-solid fa-chevron-down"></i> Advanced Settings
-                        </button>
-                        <div id="advanced-options" class="hidden space-y-3">
-                            <textarea id="neg_prompt" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs" placeholder="Negative Prompt (Optional)"></textarea>
-                            <div class="grid grid-cols-2 gap-2">
-                                <select id="width-select" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs">
-                                    <option value="720">720</option>
-                                    <option value="1024" selected>1024</option>
-                                    <option value="1280">1280</option>
-                                </select>
-                                <select id="height-select" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs">
+                    <div class="pt-4 border-t border-gray-700 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Width</label>
+                                <select id="width-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
                                     <option value="720">720</option>
                                     <option value="1024" selected>1024</option>
                                     <option value="1280">1280</option>
                                 </select>
                             </div>
-                            <input type="number" id="seed-input" value="-1" 
-                                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm" placeholder="Seed (-1 for Random)">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Height</label>
+                                <select id="height-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                                    <option value="720">720</option>
+                                    <option value="1024" selected>1024</option>
+                                    <option value="1280">1280</option>
+                                </select>
+                            </div>
                         </div>
-                    </div> 
-                    
-                </div> 
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Seed (-1 for Random)</label>
+                            <input type="number" id="seed-input" value="-1" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                        </div>
+                    </div>
+                </div>
 
-                <!-- Generate Button -->
-                <button id="generate-btn" onclick="startGen(event)" class="mt-6 w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2">
+                <button id="generate-btn" onclick="generate()" class="mt-6 w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2">
                     <span>✨ Generate Masterpiece</span>
                 </button>
             </div>
         </div>
 
-        <!-- Right Column: Display -->
+        <!-- Right Column -->
         <div class="w-full lg:w-2/3">
             <div class="glass-panel rounded-2xl p-1 min-h-[500px] flex flex-col relative overflow-hidden">
-                <div class="absolute top-4 left-4 z-10 flex gap-2">
-                    <span class="px-3 py-1 rounded-full bg-black/50 backdrop-blur text-xs font-mono text-gray-300 border border-white/10">
-                        Output Preview
-                    </span>
-                </div>
-
                 <div id="display-area" class="flex-grow flex items-center justify-center bg-gray-900/50 rounded-xl m-1 relative">
                     
-                    <!-- Placeholder -->
-                    <div id="placeholder-state" class="text-center p-8">
+                    <div id="placeholder" class="text-center p-8">
                         <div class="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-slow">
                             <i class="fa-solid fa-wand-magic-sparkles text-3xl text-gray-600"></i>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-400">Ready to Create</h3>
-                        <p class="text-gray-500 text-sm mt-2">Select a preset or enter a prompt</p>
                     </div>
 
-                    <!-- Loading -->
-                    <div id="loading-state" class="hidden absolute inset-0 bg-gray-900/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
-                        <div class="relative w-24 h-24 mb-6">
-                            <div class="absolute inset-0 border-4 border-gray-700 rounded-full"></div>
-                            <div class="absolute inset-0 border-4 border-emerald-500 rounded-full border-t-transparent animate-spin"></div>
-                            <div class="absolute inset-0 flex items-center justify-center font-bold text-emerald-400" id="progress-percent">0%</div>
-                        </div>
-                        <h3 class="text-lg font-semibold text-white mb-1" id="loading-text">Initializing...</h3>
-                        <p class="text-sm text-gray-400 font-mono" id="loading-node">Connecting to Local GPU</p>
+                    <div id="loading" class="hidden absolute inset-0 bg-gray-900/90 z-20 flex flex-col items-center justify-center">
+                        <div class="loader mb-4" style="width: 48px; height: 48px;"></div>
+                        <h3 class="text-lg font-semibold text-white">Generating...</h3>
+                        <p class="text-sm text-gray-400 mt-2">Please wait</p>
                     </div>
 
-                    <!-- Result -->
-                    <img id="result-image" class="hidden max-w-full max-h-[600px] object-contain rounded-lg shadow-2xl" src="" alt="Generated Image">
+                    <img id="result-image" class="hidden max-w-full max-h-[600px] object-contain rounded-lg shadow-2xl" src="">
                 </div>
 
-                <!-- Action Bar -->
-                <div id="action-bar" class="hidden p-4 border-t border-gray-700 flex justify-between items-center bg-gray-800/50">
+                <div id="action-bar" class="hidden p-4 border-t border-gray-700 flex justify-between items-center">
                     <div class="text-sm text-gray-400">
                         Seed: <span id="result-seed" class="font-mono text-emerald-400">-</span>
                     </div>
-                    <a id="download-link" href="#" download="z-image-pro.png" 
-                       class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                    <a id="download-link" href="#" download="ai-image.png" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                         <i class="fa-solid fa-download"></i> Download
                     </a>
                 </div>
@@ -250,7 +162,7 @@
     <div id="galleryModal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4">
         <div class="bg-gray-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700">
             <div class="flex justify-between items-center p-4 border-b border-gray-800">
-                <h2 class="text-lg font-bold">🖼️ Generation History</h2>
+                <h2 class="text-lg font-bold">🖼️ Gallery</h2>
                 <button onclick="closeGallery()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-4 overflow-y-auto flex-grow">
@@ -259,325 +171,161 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-800 py-6 mt-auto">
+    <footer class="border-t border-gray-800 py-6">
         <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
             <p>Powered by FastAPI, ComfyUI | Made by ❤️ TonLikeIT</p>
         </div>
     </footer>
 
-    <!-- JavaScript Logic -->
     <script>
-        const API_URL = "";
         let audioCtx = null;
-        let userJustClicked = false;
 
-        // --- 🔊 Sound & Notification Helpers ---
-        function playNotificationSound() {
+        // Sound
+        function playSound() {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
-                
-                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-                
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.5);
-            } catch (e) { console.warn('Sound skipped:', e); }
+            } catch (e) { console.warn('Sound skipped'); }
         }
 
-        async function sendBrowserNotification(title, body) {
-            if (!("Notification" in window)) return;
-            if (Notification.permission === "granted") {
-                new Notification(title, { body, icon: "https://cdn-icons-png.flaticon.com/512/3081/3081559.png" });
-            } else if (Notification.permission !== "denied") {
-                const perm = await Notification.requestPermission();
-                if (perm === "granted") new Notification(title, { body });
-            }
-        }
-
-        // --- ✨ Prompt Helper Functions ---
+        // Prompt helpers
         function addPrompt(text) {
             const input = document.getElementById('prompt-input');
-            const current = input.value.trim();
-            input.value = current.length > 0 ? current + ", " + text : text;
+            input.value = input.value.trim() ? input.value + ", " + text : text;
             input.focus();
-            input.classList.add('ring-2', 'ring-emerald-500');
-            setTimeout(() => input.classList.remove('ring-2', 'ring-emerald-500'), 300);
-        }
-
-        function clearPrompt() {
-            document.getElementById('prompt-input').value = "";
         }
 
         function randomPrompt() {
             const prompts = [
-                "A futuristic city floating in the clouds, cyberpunk style, neon lights, 8k, highly detailed",
-                "A cute cat wearing a spacesuit on Mars, realistic texture, cinematic lighting",
-                "Portrait of a samurai in a cherry blossom forest, traditional Japanese art style, 8k",
-                "An underwater palace made of crystal, bioluminescent fish, 8k, unreal engine 5",
-                "A cozy coffee shop in a rainy forest, warm lighting, lo-fi aesthetic",
-                "Mechanical dragon breathing fire, steampunk style, intricate gears, 8k"
+                "futuristic city floating in clouds, cyberpunk, neon lights, 8k",
+                "cute cat wearing spacesuit on Mars, realistic, cinematic",
+                "samurai in cherry blossom forest, Japanese art style, 8k",
+                "underwater crystal palace, bioluminescent fish, 8k",
+                "cozy coffee shop in rainy forest, warm lighting",
+                "mechanical dragon breathing fire, steampunk, 8k"
             ];
             document.getElementById('prompt-input').value = prompts[Math.floor(Math.random() * prompts.length)];
         }
 
-        // --- DOM Elements ---
-        const advancedToggle = document.getElementById('advanced-toggle');
-        const advancedOptions = document.getElementById('advanced-options');
-        const generateBtn = document.getElementById('generate-btn');
-        const placeholderState = document.getElementById('placeholder-state');
-        const loadingState = document.getElementById('loading-state');
-        const resultImage = document.getElementById('result-image');
-        const actionBar = document.getElementById('action-bar');
-        const loadingNode = document.getElementById('loading-node');
-        const progressPercent = document.getElementById('progress-percent');
-        const resultSeed = document.getElementById('result-seed');
-        const downloadLink = document.getElementById('download-link');
-
-        // Check Status
-        async function checkSystemStatus() {
-            if (userJustClicked) return;
+        // Check queue status (polling every 2s)
+        async function checkStatus() {
             try {
-                const res = await fetch(`${API_URL}/api/status`);
+                const res = await fetch('/api/status');
                 const data = await res.json();
-                if (data.is_processing) {
-                    generateBtn.disabled = true;
-                    generateBtn.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> Processing...`;
-                    generateBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
-                    generateBtn.classList.remove('from-emerald-500', 'to-teal-600');
-                } else if (!generateBtn.classList.contains('processing')) {
-                    generateBtn.disabled = false;
-                    generateBtn.innerHTML = `<span>✨ Generate Masterpiece</span>`;
-                    generateBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
-                    generateBtn.classList.add('from-emerald-500', 'to-teal-600');
+                const btn = document.getElementById('generate-btn');
+                if (data.is_processing && !btn.classList.contains('busy')) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Processing...';
+                    btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
+                    btn.classList.remove('from-emerald-500', 'to-teal-600');
+                } else if (!data.is_processing && !btn.classList.contains('busy')) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
+                    btn.classList.add('from-emerald-500', 'to-teal-600');
                 }
-            } catch (e) { console.error('Status check failed:', e); }
+            } catch (e) {}
         }
-        checkSystemStatus();
-        setInterval(checkSystemStatus, 2000);
+        setInterval(checkStatus, 2000);
 
-        // Toggle Advanced
-        advancedToggle.addEventListener('click', () => {
-            advancedOptions.classList.toggle('hidden');
-            const icon = advancedToggle.querySelector('i');
-            icon.classList.toggle('fa-chevron-down');
-            icon.classList.toggle('fa-chevron-up');
-        });
+        // Main generate function
+        async function generate() {
+            const prompt = document.getElementById('prompt-input').value;
+            if (!prompt) { alert("Please enter a prompt!"); return; }
 
-        // --- 🚀 MAIN GENERATE FUNCTION (iOS COMPATIBLE) ---
-        async function startGen(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
+            const btn = document.getElementById('generate-btn');
+            const loading = document.getElementById('loading');
+            const placeholder = document.getElementById('placeholder');
+            const resultImg = document.getElementById('result-image');
+            const actionBar = document.getElementById('action-bar');
+
+            // Init audio on first user interaction
+            if (!audioCtx) {
+                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
             }
 
-            console.log('[DEBUG] Generate button clicked!'); 
-            
-            const btn = generateBtn;
-            const placeholder = placeholderState;
-            const loading = loadingState;
-            const result = resultImage;
-            const prog = progressPercent;
-            const node = loadingNode;
+            // Check status
+            const statusRes = await fetch('/api/status');
+            const statusData = await statusRes.json();
+            if (statusData.is_processing) {
+                alert("⚠️ System busy, please wait...");
+                return;
+            }
+
+            // Set loading
+            btn.classList.add('busy');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader mr-2"></div> Processing...';
+            placeholder.classList.add('hidden');
+            resultImg.classList.add('hidden');
+            actionBar.classList.add('hidden');
+            loading.classList.remove('hidden');
 
             const payload = {
-                prompt: document.getElementById('prompt-input').value,
-                negative_prompt: document.getElementById('neg_prompt').value || "",
+                prompt: prompt,
                 model: document.getElementById('model-select').value,
                 seed: parseInt(document.getElementById('seed-input').value),
                 width: parseInt(document.getElementById('width-select').value),
                 height: parseInt(document.getElementById('height-select').value)
             };
 
-            if(!payload.prompt) { alert("Please enter a prompt!"); return; }
-
-                // สร้าง Audio Context (ป้องกัน Error)
-            if (!audioCtx) {
-                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } 
-                catch(err) { console.warn('AudioContext not supported'); }
-            }
-            
-            // ✅ แก้จุด iOS Crash: เช็คว่า Browser รองรับ Notification จริงๆ ไหม
-            if ("Notification" in window && Notification.permission === "default") {
-                Notification.requestPermission();
-            }
-
-            const statusRes = await fetch(`${API_URL}/api/status`);
-            const statusData = await statusRes.json();
-            if (statusData.is_processing) {
-                alert("⚠️ System is busy. Please wait...");
-                return;
-            }
-            userJustClicked = true;
-
-            // Set Loading State
-            placeholder.classList.add('hidden');
-            result.classList.add('hidden');
-            actionBar.classList.add('hidden');
-            loading.classList.remove('hidden');
-            btn.classList.add('processing');
-            btn.disabled = true;
-            btn.innerHTML = `<div class="loader mr-2"></div> Processing...`;
-            btn.classList.add('opacity-75', 'cursor-not-allowed');
-            prog.innerText = "0%";
-            node.innerText = "Connecting...";
-
             try {
-                const res = await fetch(`${API_URL}/api/generate`, {
+                const res = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (!res.ok) throw new Error("Server Error: " + res.status);
-
-                // ✅ ตรวจเช็คว่ารองรับ ReadableStream ไหม (iOS บางเวอร์ชันไม่รองรับ)
-                const supportsStreaming = res.body && typeof res.body.getReader === 'function' && 'TextDecoder' in window;
-
-                if (supportsStreaming) {
-                    // 🚀 Streaming Mode (Desktop/Android Chrome)
-                    console.log('[DEBUG] Using Streaming mode');
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buffer = "";
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split("\n");
-                        buffer = lines.pop(); 
-
-                        for (const line of lines) {
-                            if (line.startsWith("data: ")) {
-                                try {
-                                    const jsonStr = line.slice(6).trim(); 
-                                    if (!jsonStr) continue; 
-                                    const evt = JSON.parse(jsonStr); 
-                                    handleEvent(evt);
-                                    if (evt.type === "complete" || evt.type === "error") return;
-                                } catch (err) { console.warn("Parse error:", err); }
-                            }
-                        }
-                    }
-                } else {
-                    // 📱 Fallback Mode (iOS Safari) - ใช้ Polling แทน
-                    console.log('[DEBUG] Using Polling fallback mode (iOS)');
-                    node.innerText = "Processing on server...";
-                    
-                    let completed = false;
-                    const pollInterval = setInterval(async () => {
-                        try {
-                            const statusCheck = await fetch(`${API_URL}/api/status`);
-                            const statusJson = await statusCheck.json();
-                            
-                            if (!statusJson.is_processing && !completed) {
-                                completed = true;
-                                clearInterval(pollInterval);
-                                
-                                const histRes = await fetch(`${API_URL}/api/history`);
-                                const history = await histRes.json();
-                                
-                                if (history.length > 0) {
-                                    const latest = history[0];
-                                    const evt = {
-                                        type: "complete",
-                                        url: `/api/outputs/${latest.filename}`,
-                                        seed: latest.seed
-                                    };
-                                    handleEvent(evt);
-                                } else {
-                                    throw new Error("No image found");
-                                }
-                            }
-                        } catch (err) {
-                            console.error('Polling error:', err);
-                        }
-                    }, 1500);
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Generation failed');
                 }
 
-            } catch (e) {
-                console.error(e);
-                alert("Error: " + e.message);
-                resetButton();
-                loading.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-                userJustClicked = false;
-            }
-        }
+                const data = await res.json();
 
-        // Helper: จัดการ Event จาก Backend
-        function handleEvent(evt) {
-            const prog = progressPercent;
-            const node = loadingNode;
-            const btn = generateBtn;
-            const loading = loadingState;
-            const result = resultImage;
-
-            if (evt.type === "progress") {
-                const pct = Math.floor((evt.value / evt.max) * 100);
-                prog.innerText = pct + "%";
-                if (evt.node) node.innerText = evt.node;
-            } 
-            else if (evt.type === "status") {
-                if (evt.node) node.innerText = "Running: " + evt.node;
-            } 
-            else if (evt.type === "complete") {
-                clearInterval(window.progressInterval);
-                prog.innerText = "100%";
-                
-                result.src = evt.url;
-                result.classList.remove('hidden');
-                playNotificationSound(); 
-                sendBrowserNotification("✅ Gen Complete!", "Your masterpiece is ready.");
-                
-                resultSeed.innerText = evt.seed;
-                downloadLink.href = evt.url;
-                downloadLink.download = `z-image-${evt.seed}.png`;
+                // Show result
+                resultImg.src = data.base64;
+                resultImg.classList.remove('hidden');
+                document.getElementById('result-seed').innerText = data.seed;
+                document.getElementById('download-link').href = data.base64;
+                document.getElementById('download-link').download = `ai-image-${data.seed}.png`;
                 actionBar.classList.remove('hidden');
 
+                playSound();
+
+            } catch (e) {
+                alert("Error: " + e.message);
+                placeholder.classList.remove('hidden');
+            } finally {
                 loading.classList.add('hidden');
-                resetButton();
-            } 
-            else if (evt.type === "error") {
-                alert("Error: " + evt.detail);
-                resetButton();
+                btn.classList.remove('busy');
+                btn.disabled = false;
+                btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
+                btn.classList.add('from-emerald-500', 'to-teal-600');
             }
         }
 
-        // Helper: Reset ปุ่ม
-        function resetButton() {
-            const btn = generateBtn;
-            btn.classList.remove('processing');
-            btn.disabled = false;
-            btn.innerHTML = `<span>✨ Generate Masterpiece</span>`;
-            btn.classList.remove('opacity-75', 'cursor-not-allowed');
-            btn.classList.add('from-emerald-500', 'to-teal-600');
-            btn.classList.remove('bg-gray-600');
-            setTimeout(() => { userJustClicked = false; }, 1000);
-        }
-
-        // --- 🖼️ Gallery Logic ---
+        // Gallery
         async function openGallery() {
             document.getElementById('galleryModal').classList.remove('hidden');
             const list = document.getElementById('galleryList');
-            list.innerHTML = "<p class='text-gray-500'>Loading history...</p>";
+            list.innerHTML = "<p class='text-gray-500'>Loading...</p>";
             try {
                 const res = await fetch('/api/history');
                 const data = await res.json();
                 list.innerHTML = "";
-                if(data.length === 0) {
+                if (data.length === 0) {
                     list.innerHTML = "<p class='text-gray-500 col-span-full text-center'>No history yet.</p>";
                     return;
                 }
@@ -585,22 +333,25 @@
                     const div = document.createElement('div');
                     div.className = "relative group";
                     div.innerHTML = `
-                        <img src="/api/outputs/${item.filename}" class="gallery-img w-full" onclick="viewDetail('${item.prompt.replace(/'/g, "\\'")}', '${item.seed}', '${item.model}')">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1 text-[10px] truncate opacity-0 group-hover:opacity-100 transition">
-                            ${item.prompt}
-                        </div>
+                        <img src="/api/outputs/${item.filename}" class="gallery-img w-full" onclick="loadFromGallery('${item.prompt.replace(/'/g, "\\'")}', ${item.seed}, '${item.model}')">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1 text-[10px] truncate opacity-0 group-hover:opacity-100">${item.prompt}</div>
                     `;
                     list.appendChild(div);
                 });
-            } catch(e) { list.innerHTML = "<p class='text-red-400'>Load failed</p>"; }
+            } catch (e) {
+                list.innerHTML = "<p class='text-red-400'>Load failed</p>";
+            }
         }
-        function closeGallery() { document.getElementById('galleryModal').classList.add('hidden'); }
-        function viewDetail(p, s, m) {
-            document.getElementById('prompt-input').value = p;
-            document.getElementById('seed-input').value = s;
-            document.getElementById('model-select').value = m;
+
+        function closeGallery() {
+            document.getElementById('galleryModal').classList.add('hidden');
+        }
+
+        function loadFromGallery(prompt, seed, model) {
+            document.getElementById('prompt-input').value = prompt;
+            document.getElementById('seed-input').value = seed;
+            document.getElementById('model-select').value = model;
             closeGallery();
-            alert("Prompt & Seed loaded! Click Generate to re-run.");
         }
     </script>
 </body>

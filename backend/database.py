@@ -4,14 +4,12 @@ import os
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.db")
 
 def init_db():
-    """สร้างตารางในฐานข้อมูลถ้ายังไม่มี"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             prompt TEXT,
-            negative_prompt TEXT DEFAULT '',
             model TEXT,
             seed INTEGER,
             width INTEGER,
@@ -23,29 +21,19 @@ def init_db():
     conn.commit()
     conn.close()
 
-def save_history(data):
-    """บันทึกข้อมูลลงฐานข้อมูล"""
+def save_history(prompt, model, seed, w, h, filename):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO history (prompt, negative_prompt, model, seed, width, height, filename)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        data['prompt'], 
-        data.get('neg', ''),      # ✅ ใช้ .get() กัน error ถ้าไม่มี key นี้
-        data['model'], 
-        data['seed'], 
-        data['w'], 
-        data['h'],  
-        data['filename']
-    ))
+        INSERT INTO history (prompt, model, seed, width, height, filename)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (prompt, model, seed, w, h, filename))
     conn.commit()
     conn.close()
 
 def get_history(limit=50):
-    """ดึงประวัติจากฐานข้อมูล"""
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # ให้คืนค่าเป็น dict ได้
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('SELECT * FROM history ORDER BY created_at DESC LIMIT ?', (limit,))
     rows = [dict(row) for row in c.fetchall()]
