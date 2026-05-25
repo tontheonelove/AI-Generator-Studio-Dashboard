@@ -9,7 +9,7 @@ import time
 def get_client_id():
     return str(uuid.uuid4())
 
-def generate_image_stream(prompt_text, seed, width, height, neg_prompt, cfg_scale, steps, sampler, config):
+def generate_image_stream(prompt_text, seed, width, height, neg_prompt, config):
     """
     Generate image using Local ComfyUI only.
     Server address is hardcoded to 127.0.0.1:8188 for local usage.
@@ -66,21 +66,7 @@ def generate_image_stream(prompt_text, seed, width, height, neg_prompt, cfg_scal
     if config.get("neg_id") and config["neg_id"] in workflow:
         workflow[config["neg_id"]]["inputs"]["text"] = neg_prompt
         print(f"[ComfyClient] Negative prompt injected into node: {config['neg_id']}")
-    
-    # CFG Scale
-    if config.get("cfg_id") and config["cfg_id"] in workflow:
-        workflow[config["cfg_id"]]["inputs"]["value"] = cfg_scale
-        print(f"[ComfyClient] CFG Scale set to: {cfg_scale}")
-    
-    # Steps
-    if config.get("steps_id") and config["steps_id"] in workflow:
-        workflow[config["steps_id"]]["inputs"]["value"] = steps
-        print(f"[ComfyClient] Steps set to: {steps}")
-    
-    # Sampler
-    if config.get("sampler_id") and config["sampler_id"] in workflow:
-        workflow[config["sampler_id"]]["inputs"]["value"] = sampler
-        print(f"[ComfyClient] Sampler set to: {sampler}")
+
 
     # 4. Connect WebSocket (Local)
     try:

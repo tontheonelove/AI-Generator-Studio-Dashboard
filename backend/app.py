@@ -65,9 +65,6 @@ class GenerationRequest(BaseModel):
     seed: int = -1
     width: int = 1024
     height: int = 1024
-    cfg_scale: float = 7.0
-    steps: int = 20
-    sampler: str = "euler"
 
 # --- Routes ---
 
@@ -101,8 +98,7 @@ async def generate_image(req: GenerationRequest):
             # เรียกใช้ comfy_client (ต้องอัปเดต function ด้านล่างด้วย)
             for update in generate_image_stream(
                 req.prompt, req.seed, req.width, req.height, 
-                req.negative_prompt, req.cfg_scale, req.steps, req.sampler,
-                config
+                req.negative_prompt, config
             ):
                 # ส่งข้อมูลกลับเป็น JSON Stream
                 yield f"data: {json.dumps(update)}\n\n"
