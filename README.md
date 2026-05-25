@@ -50,16 +50,19 @@
 ✅ Sound & popup notification when done !
 
 ❌ Remove RunPOD  (will comback check security)
+
 ---
 
 ## Update 🚀🚀 (27-4-26)
 
 🚀 Support Multiplatform (You can select between Comfyui locally and Comfyui Runpod)  🔥
+
 ---
 
 ## Update 🚀🚀 (26-4-26)
 
 🚀 Support Model  Z-Image Turbo , Flux2. Klein9B  
+
 ---
 
 ## ✨ Key Features
@@ -77,6 +80,7 @@
 ✅Support Computer / Ipad / Mobile UI
  
 🔥 Require  Python3.10 +
+
 ---
 
 ## 🛠️ Local Installation (Virtual Environment [VENV])
