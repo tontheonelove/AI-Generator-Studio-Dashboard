@@ -1,9 +1,10 @@
 # AI-Generator-Studio-Dashboard
 
-<img width="1673" height="894" alt="image" src="https://github.com/user-attachments/assets/7f80a9b0-fd77-43f0-adef-c500b6974f7a" />
 
+---
 ## Update 🔥🔥 (25-5-26)
 
+---
 🥇 1. 🖼️ Gallery / History (Databases)
 
 ✅ Automatic image saving: Generated images will be saved to the backend/outputs/ folder and the data will be saved to the history.db database.
@@ -11,7 +12,7 @@
 ✅ Gallery button: In the upper right corner of the website, there is a button to view the history of all images that have been generated.
 
 ✅ One-Click Re-run: Click on an image in the gallery → The system will immediately retrieve the Prompt, Seed, and Model and fill them into the fields → You can regenerate or continue editing without having to type them again.
-
+---
 
 🥈 2. 📊 Real-time Progress Bar 
 
@@ -20,6 +21,7 @@
 ✅ See the Node name: The message below will indicate what is currently being done (e.g., Loading Model, Sampling, VAE Decode).
 
 ✅ New technology: Uses Server-Sent Events (SSE) instead of regular HTTP, allowing data to flow from the backend to the webpage in real-time without waiting for completion.
+---
 
 🥉 3. 🎛️ Advanced Controls
 
@@ -30,7 +32,7 @@
 ✅ Steps: Define the number of generation iterations (higher steps mean higher detail but slower processing).
 
 ✅ Sampler: Select the randomization algorithm (Euler, DPM++, etc.).
-
+---
 
 ## Update 🚀🚀 (21-5-26)
 
@@ -45,15 +47,17 @@
 ✅ Sound & popup notification when done !
 
 ❌ Remove RunPOD  (will comback check security)
-
+---
 
 ## Update 🚀🚀 (27-4-26)
 
 🚀 Support Multiplatform (You can select between Comfyui locally and Comfyui Runpod)  🔥
+---
 
 ## Update 🚀🚀 (26-4-26)
 
 🚀 Support Model  Z-Image Turbo , Flux2. Klein9B  
+---
 
 ## ✨ Key Features
 
@@ -70,6 +74,7 @@
 ✅Support Computer / Ipad / Mobile UI
  
 🔥 Require  Python3.10 +
+---
 
 ## 🛠️ Local Installation (Virtual Environment [VENV])
 1. Clone the Repository:
@@ -115,12 +120,14 @@ start with run.bat
 
 
 ### Let s try....   
-  
 
+---
+  
 ##  🛠️ How to update when available🔥
 
 🚀 just run update.bat 
 
+---
 
 ### License
 MIT License © 2026 TonLikeIT
