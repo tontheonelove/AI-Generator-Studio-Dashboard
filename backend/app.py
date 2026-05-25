@@ -38,7 +38,13 @@ WORKFLOW_SETTINGS = {
         "seed_id": "57:3",
         "latent_id": "57:13"
     },
-    "Flux 2 Klein": {
+    "Z-Image Turbo-GGUF": {
+        "file": "workflow/image_z_image_turbo_gguf.json",
+        "prompt_id": "57:27",
+        "seed_id": "57:3",
+        "latent_id": "57:13"
+    },
+    "Flux 2 Klein-GGUF": {
         "file": "workflow/image_flux2_text_to_image_9b.json",
         "prompt_id": "75:74",               
         "seed_id": "75:73",                
