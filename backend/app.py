@@ -51,7 +51,7 @@ WORKFLOW_SETTINGS = {
     }
 }
 
-# Model Request (ลบ CFG, Steps, Sampler ออกแล้ว)
+# Model Request
 class GenerationRequest(BaseModel):
     prompt: str
     negative_prompt: str = ""
@@ -88,13 +88,13 @@ async def generate_image(req: GenerationRequest):
 
     # ฟังก์ชันสำหรับ Streaming ข้อมูลกลับทีละส่วน (Real-time)
     async def event_stream():
+        # ✅ ✅ สำคัญ: ต้องประกาศ global ที่นี่ด้วย ไม่งั้น is_processing จะไม่เปลี่ยนค่าจริง!
+        global is_processing 
         try:
-            # ✅ ส่ง neg_prompt เข้าไปด้วย (ลบ cfg/steps/sampler ออกแล้ว)
             for update in generate_image_stream(
                 req.prompt, req.seed, req.width, req.height, 
                 req.negative_prompt, config 
             ):
-                # ✅ เฉพาะ progress/status เท่านั้นที่ส่งเป็น JSON
                 if update['type'] in ['progress', 'status']:
                     yield f"data: {json.dumps(update)}\n\n"
                 
@@ -106,31 +106,36 @@ async def generate_image(req: GenerationRequest):
                     with open(filepath, "wb") as f:
                         f.write(img_data)
                     
-                    # ✅ บันทึกลง DB (ส่งค่าให้ตรงกับ database.py)
+                    # ✅ ✅ ใช้ update['seed'] (Seed จริง) แทน req.seed (-1)
+                    actual_seed = update['seed']
+
+                    # บันทึกลง DB
                     save_history({
                         'prompt': req.prompt, 
-                        'neg': req.negative_prompt,  # ✅ ใส่ negative_prompt
+                        'neg': req.negative_prompt,
                         'model': req.model, 
-                        'seed': req.seed,
+                        'seed': actual_seed,  # ✅ แก้ไขตรงนี้
                         'w': req.width, 
                         'h': req.height,
                         'filename': filename
-                        # ❌ ลบ cfg, steps, sampler ออกแล้ว
                     })
                     
-                    # ✅ ส่งแค่ URL (ไม่ใช่ bytes!)
+                    # ส่งแค่ URL พร้อม Seed จริง
                     done_msg = {
                         "type": "complete", 
                         "url": f"/api/outputs/{filename}", 
-                        "seed": req.seed
+                        "seed": actual_seed  # ✅ แก้ไขตรงนี้
                     }
                     yield f"data: {json.dumps(done_msg)}\n\n"
+                    
+                    # ปลดล็อกทันทีหลังส่งข้อมูลเสร็จ
                     is_processing = False
                     break
         except Exception as e:
             error_msg = {"type": "error", "detail": str(e)}
             yield f"data: {json.dumps(error_msg)}\n\n"
         finally:
+            # รับประกันว่าปลดล็อกเสมอแม้เกิด Error
             is_processing = False
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

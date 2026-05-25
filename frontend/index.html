@@ -455,8 +455,9 @@
                                     loading.classList.add('hidden');
                                     btn.classList.remove('processing');
                                     btn.disabled = false;
-                                    btn.innerHTML = `<span>✨ Generate Masterpiece</span>`;
                                     btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                                    btn.classList.add('from-emerald-500', 'to-teal-600'); // ✅ บังคับใส่สีเขียว
+                                    btn.classList.remove('bg-gray-600'); // ✅ เอาสีเทาออก
                                     return; 
                                 } 
                                 else if (evt.type === "error") {
