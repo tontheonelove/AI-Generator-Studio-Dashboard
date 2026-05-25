@@ -193,8 +193,8 @@
   },
   "75:115": {
     "inputs": {
-      "clip_name": "Qwen3-8B-Q5_0.gguf",
-      "type": "stable_diffusion"
+      "clip_name": "Qwen3-8B-Q8_0.gguf",
+      "type": "flux2"
     },
     "class_type": "CLIPLoaderGGUF",
     "_meta": {
