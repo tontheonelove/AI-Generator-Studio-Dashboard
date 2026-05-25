@@ -1,10 +1,10 @@
 # AI-Generator-Studio-Dashboard
 
 
----
 ## Update 🔥🔥 (25-5-26)
 
 ---
+
 🥇 1. 🖼️ Gallery / History (Databases)
 
 ✅ Automatic image saving: Generated images will be saved to the backend/outputs/ folder and the data will be saved to the history.db database.
@@ -12,6 +12,7 @@
 ✅ Gallery button: In the upper right corner of the website, there is a button to view the history of all images that have been generated.
 
 ✅ One-Click Re-run: Click on an image in the gallery → The system will immediately retrieve the Prompt, Seed, and Model and fill them into the fields → You can regenerate or continue editing without having to type them again.
+
 ---
 
 🥈 2. 📊 Real-time Progress Bar 
