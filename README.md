@@ -77,8 +77,8 @@
 1. Clone the Repository:
 
 ```
-git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard-API.git
-cd AI-Generator-Studio-Dashboard-API
+git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
+cd AI-Generator-Studio-Dashboard
 start with run.bat
 ```
 
