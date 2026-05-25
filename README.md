@@ -25,18 +25,6 @@
 
 ---
 
-🥉 3. 🎛️ Advanced Controls
-
-✅ Negative Prompt: Specify unwanted elements in the image (e.g., ugly, bad hands, low quality).
-
-✅ CFG Scale: Control the AI's adherence to the prompt (higher value = more trust in the prompt, lower value = more freedom).
-
-✅ Steps: Define the number of generation iterations (higher steps mean higher detail but slower processing).
-
-✅ Sampler: Select the randomization algorithm (Euler, DPM++, etc.).
-
----
-
 ## Update 🚀🚀 (21-5-26)
 
 ✅ Migrate New UI
