@@ -270,6 +270,7 @@
     <script>
         const API_URL = "";
         let audioCtx = null;
+        let userJustClicked = false;
 
         // --- 🔊 Sound & Notification Helpers ---
         function playNotificationSound() {
@@ -345,6 +346,7 @@
 
         // Check Status
         async function checkSystemStatus() {
+            if (userJustClicked) return;
             try {
                 const res = await fetch(`${API_URL}/api/status`);
                 const data = await res.json();
@@ -416,6 +418,7 @@
                 alert("⚠️ System is busy. Please wait...");
                 return;
             }
+            userJustClicked = true;
 
             // Set Loading State
             placeholder.classList.add('hidden');
@@ -510,6 +513,7 @@
                 resetButton();
                 loading.classList.add('hidden');
                 placeholder.classList.remove('hidden');
+                userJustClicked = false;
             }
         }
 
@@ -561,6 +565,7 @@
             btn.classList.remove('opacity-75', 'cursor-not-allowed');
             btn.classList.add('from-emerald-500', 'to-teal-600');
             btn.classList.remove('bg-gray-600');
+            setTimeout(() => { userJustClicked = false; }, 1000);
         }
 
         // --- 🖼️ Gallery Logic ---
