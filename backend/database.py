@@ -11,6 +11,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             prompt TEXT,
+            negative_prompt TEXT DEFAULT '',
             model TEXT,
             seed INTEGER,
             width INTEGER,
@@ -27,10 +28,11 @@ def save_history(data):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO history (prompt, model, seed, width, height, filename)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO history (prompt, negative_prompt, model, seed, width, height, filename)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     ''', (
         data['prompt'], 
+        data.get('neg', ''),      # ✅ ใช้ .get() กัน error ถ้าไม่มี key นี้
         data['model'], 
         data['seed'], 
         data['w'], 

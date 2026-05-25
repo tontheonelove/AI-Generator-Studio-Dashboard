@@ -4,7 +4,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 import os
-import traceback
 import json
 import time
 from .comfy_client import generate_image_stream
@@ -32,17 +31,14 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 
+# ตั้งค่า Workflow
 WORKFLOW_SETTINGS = {
     "Z-Image Turbo": {
         "file": "workflow/image_z_image_turbo.json",
         "prompt_id": "57:27",
         "seed_id": "57:3",
         "latent_id": "57:13",
-        # ⚠️ ต้องเช็ค ID ใน JSON ของคุณให้ตรงกับ Node ที่ใช้ CFG/Sampler/Negative
-        "neg_id": "57:28", 
-        "cfg_id": "57:30",
-        "steps_id": "57:31",
-        "sampler_id": "57:32"
+        "neg_id": "57:28" 
     },
     "Flux 2 Klein": {
         "file": "workflow/image_flux2_text_to_image_9b.json",
@@ -51,13 +47,11 @@ WORKFLOW_SETTINGS = {
         "width_id": "75:68",               
         "height_id": "75:69",               
         "seed_key": "noise_seed",
-        "neg_id": "75:75",
-        "cfg_id": "75:76",
-        "steps_id": "75:77",
-        "sampler_id": "75:78"
+        "neg_id": "75:75"
     }
 }
 
+# Model Request (ลบ CFG, Steps, Sampler ออกแล้ว)
 class GenerationRequest(BaseModel):
     prompt: str
     negative_prompt: str = ""
@@ -95,9 +89,10 @@ async def generate_image(req: GenerationRequest):
     # ฟังก์ชันสำหรับ Streaming ข้อมูลกลับทีละส่วน (Real-time)
     async def event_stream():
         try:
+            # ✅ ส่ง neg_prompt เข้าไปด้วย (ลบ cfg/steps/sampler ออกแล้ว)
             for update in generate_image_stream(
                 req.prompt, req.seed, req.width, req.height, 
-                req.negative_prompt, config  # ✅ ลบ cfg, steps, sampler ออกแล้ว
+                req.negative_prompt, config 
             ):
                 # ✅ เฉพาะ progress/status เท่านั้นที่ส่งเป็น JSON
                 if update['type'] in ['progress', 'status']:
@@ -111,18 +106,16 @@ async def generate_image(req: GenerationRequest):
                     with open(filepath, "wb") as f:
                         f.write(img_data)
                     
-                    # บันทึกลง DB
+                    # ✅ บันทึกลง DB (ส่งค่าให้ตรงกับ database.py)
                     save_history({
                         'prompt': req.prompt, 
-                        'neg': req.negative_prompt,
+                        'neg': req.negative_prompt,  # ✅ ใส่ negative_prompt
                         'model': req.model, 
                         'seed': req.seed,
                         'w': req.width, 
                         'h': req.height,
-                        'cfg': 7.0,      # ✅ ใส่ค่า default ไปก่อน (หรือลบออกถ้าไม่ใช้)
-                        'steps': 20,     # ✅ ใส่ค่า default ไปก่อน
-                        'sampler': 'euler', # ✅ ใส่ค่า default ไปก่อน
                         'filename': filename
+                        # ❌ ลบ cfg, steps, sampler ออกแล้ว
                     })
                     
                     # ✅ ส่งแค่ URL (ไม่ใช่ bytes!)
