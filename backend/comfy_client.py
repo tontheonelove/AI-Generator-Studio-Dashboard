@@ -9,16 +9,10 @@ import time
 def get_client_id():
     return str(uuid.uuid4())
 
-def generate_image_stream(prompt_text, seed, width, height, neg_prompt, config):
+def generate_image_stream(prompt_text, seed, width, height, config):
     """
     Generate image using Local ComfyUI only.
     Server address is hardcoded to 127.0.0.1:8188 for local usage.
-    
-    Parameters added:
-    - neg_prompt: Negative prompt text
-    - cfg_scale: CFG scale value
-    - steps: Number of sampling steps
-    - sampler: Sampler name
     """
     client_id = get_client_id()
     
@@ -60,12 +54,6 @@ def generate_image_stream(prompt_text, seed, width, height, neg_prompt, config):
             workflow[config["width_id"]]["inputs"]["value"] = width
         if config["height_id"] in workflow:
             workflow[config["height_id"]]["inputs"]["value"] = height
-
-    # 🔥 NEW: Handle Advanced Parameters
-    # Negative Prompt
-    if config.get("neg_id") and config["neg_id"] in workflow:
-        workflow[config["neg_id"]]["inputs"]["text"] = neg_prompt
-        print(f"[ComfyClient] Negative prompt injected into node: {config['neg_id']}")
 
 
     # 4. Connect WebSocket (Local)

@@ -95,36 +95,47 @@ async def generate_image(req: GenerationRequest):
     # ฟังก์ชันสำหรับ Streaming ข้อมูลกลับทีละส่วน (Real-time)
     async def event_stream():
         try:
-            # เรียกใช้ comfy_client (ต้องอัปเดต function ด้านล่างด้วย)
             for update in generate_image_stream(
                 req.prompt, req.seed, req.width, req.height, 
-                req.negative_prompt, config
+                req.negative_prompt, config  # ✅ ลบ cfg, steps, sampler ออกแล้ว
             ):
-                # ส่งข้อมูลกลับเป็น JSON Stream
-                yield f"data: {json.dumps(update)}\n\n"
+                # ✅ เฉพาะ progress/status เท่านั้นที่ส่งเป็น JSON
+                if update['type'] in ['progress', 'status']:
+                    yield f"data: {json.dumps(update)}\n\n"
                 
-                if update['type'] == 'done':
-                    # บันทึกรูปและข้อมูลลง Database
+                elif update['type'] == 'done':
+                    # บันทึกรูปลงโฟลเดอร์
                     img_data = update['images'][0]['data']
                     filename = f"{int(time.time())}_{req.seed}.png"
                     filepath = os.path.join(OUTPUT_DIR, filename)
                     with open(filepath, "wb") as f:
                         f.write(img_data)
                     
+                    # บันทึกลง DB
                     save_history({
-                        'prompt': req.prompt, 'neg': req.negative_prompt,
-                        'model': req.model, 'seed': req.seed,
-                        'w': req.width, 'h': req.height,
-                        'cfg': req.cfg_scale, 'steps': req.steps,
-                        'sampler': req.sampler, 'filename': filename
+                        'prompt': req.prompt, 
+                        'neg': req.negative_prompt,
+                        'model': req.model, 
+                        'seed': req.seed,
+                        'w': req.width, 
+                        'h': req.height,
+                        'cfg': 7.0,      # ✅ ใส่ค่า default ไปก่อน (หรือลบออกถ้าไม่ใช้)
+                        'steps': 20,     # ✅ ใส่ค่า default ไปก่อน
+                        'sampler': 'euler', # ✅ ใส่ค่า default ไปก่อน
+                        'filename': filename
                     })
                     
-                    # แจ้งจบงาน พร้อมส่ง URL รูป
-                    done_msg = {"type": "complete", "url": f"/api/outputs/{filename}", "seed": req.seed}
+                    # ✅ ส่งแค่ URL (ไม่ใช่ bytes!)
+                    done_msg = {
+                        "type": "complete", 
+                        "url": f"/api/outputs/{filename}", 
+                        "seed": req.seed
+                    }
                     yield f"data: {json.dumps(done_msg)}\n\n"
                     break
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'detail': str(e)})}\n\n"
+            error_msg = {"type": "error", "detail": str(e)}
+            yield f"data: {json.dumps(error_msg)}\n\n"
         finally:
             is_processing = False
 

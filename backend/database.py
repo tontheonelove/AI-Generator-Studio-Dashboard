@@ -11,14 +11,10 @@ def init_db():
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             prompt TEXT,
-            negative_prompt TEXT,
             model TEXT,
             seed INTEGER,
             width INTEGER,
             height INTEGER,
-            cfg_scale REAL,
-            steps INTEGER,
-            sampler TEXT,
             filename TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -31,18 +27,14 @@ def save_history(data):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO history (prompt, negative_prompt, model, seed, width, height, cfg_scale, steps, sampler, filename)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO history (prompt, model, seed, width, height, filename)
+        VALUES (?, ?, ?, ?, ?, ?)
     ''', (
         data['prompt'], 
-        data['neg'], 
         data['model'], 
         data['seed'], 
         data['w'], 
-        data['h'], 
-        data['cfg'], 
-        data['steps'], 
-        data['sampler'], 
+        data['h'],  
         data['filename']
     ))
     conn.commit()
