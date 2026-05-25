@@ -7,23 +7,13 @@
 
 ---
 
-🥇 1. 🖼️ Gallery / History (Databases)
+🖼️ Gallery / History (Databases)
 
 ✅ Automatic image saving: Generated images will be saved to the backend/outputs/ folder and the data will be saved to the history.db database.
 
 ✅ Gallery button: In the upper right corner of the website, there is a button to view the history of all images that have been generated.
 
 ✅ One-Click Re-run: Click on an image in the gallery → The system will immediately retrieve the Prompt, Seed, and Model and fill them into the fields → You can regenerate or continue editing without having to type them again.
-
----
-
-🥈 2. 📊 Real-time Progress Bar 
-
-✅ See the actual steps: The progress bar will move according to the progress value sent by ComfyUI (e.g., 10/20 steps).
-
-✅ See the Node name: The message below will indicate what is currently being done (e.g., Loading Model, Sampling, VAE Decode).
-
-✅ New technology: Uses Server-Sent Events (SSE) instead of regular HTTP, allowing data to flow from the backend to the webpage in real-time without waiting for completion.
 
 ---
 
