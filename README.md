@@ -1,5 +1,7 @@
 # AI-Generator-Studio-Dashboard
 
+<img src=ex.png/>
+
 
 ## Update 🔥🔥 (25-5-26)
 
