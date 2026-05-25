@@ -191,7 +191,7 @@
                 </div> 
 
                 <!-- Generate Button -->
-                <button id="generate-btn" class="mt-6 w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2">
+                <button id="generate-btn" onclick="startGen(event)" class="mt-6 w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2">
                     <span>✨ Generate Masterpiece</span>
                 </button>
             </div>
@@ -399,11 +399,16 @@
 
             if(!payload.prompt) { alert("Please enter a prompt!"); return; }
 
+                // สร้าง Audio Context (ป้องกัน Error)
             if (!audioCtx) {
                 try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } 
                 catch(err) { console.warn('AudioContext not supported'); }
             }
-            if (Notification.permission === "default") Notification.requestPermission();
+            
+            // ✅ แก้จุด iOS Crash: เช็คว่า Browser รองรับ Notification จริงๆ ไหม
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
 
             const statusRes = await fetch(`${API_URL}/api/status`);
             const statusData = await statusRes.json();
@@ -557,9 +562,6 @@
             btn.classList.add('from-emerald-500', 'to-teal-600');
             btn.classList.remove('bg-gray-600');
         }
-
-        // Bind Event - ใช้แค่ click ก็พอ iOS รองรับดีอยู่แล้ว (touchstart อาจทำให้กดซ้ำ 2 รอบ)
-        generateBtn.addEventListener('click', startGen);
 
         // --- 🖼️ Gallery Logic ---
         async function openGallery() {
