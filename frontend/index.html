@@ -374,6 +374,8 @@
 
         // --- 🚀 MAIN GENERATE FUNCTION (STREAMING FIXED) ---
         async function startGen() {
+            console.log('[Mobile Debug] Generate button clicked!'); 
+            console.log('[Mobile Debug] Prompt:', document.getElementById('prompt-input').value);
             const btn = generateBtn;
             const placeholder = placeholderState;
             const loading = loadingState;
