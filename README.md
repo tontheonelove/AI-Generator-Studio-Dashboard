@@ -22,6 +22,7 @@
 ✅ See the Node name: The message below will indicate what is currently being done (e.g., Loading Model, Sampling, VAE Decode).
 
 ✅ New technology: Uses Server-Sent Events (SSE) instead of regular HTTP, allowing data to flow from the backend to the webpage in real-time without waiting for completion.
+
 ---
 
 🥉 3. 🎛️ Advanced Controls
@@ -33,6 +34,7 @@
 ✅ Steps: Define the number of generation iterations (higher steps mean higher detail but slower processing).
 
 ✅ Sampler: Select the randomization algorithm (Euler, DPM++, etc.).
+
 ---
 
 ## Update 🚀🚀 (21-5-26)
