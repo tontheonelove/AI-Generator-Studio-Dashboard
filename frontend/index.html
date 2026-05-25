@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI-Generation Studio 🚀</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,6 +61,28 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
         .gallery-img { aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
         .gallery-img:hover { transform: scale(1.05); border: 2px solid #10b981; }
+
+        /* แก้ไขปัญหาปุ่มกดไม่ได้บนมือถือ */
+        #generate-btn {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto !important;
+            touch-action: manipulation;
+        }
+
+        /* ป้องกัน modal หรือ element อื่นมาทับ */
+        .glass-panel {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ปรับให้ปุ่ม responsive บนมือถือ */
+        @media (max-width: 768px) {
+            #generate-btn {
+                min-height: 50px; /* ทำให้กดง่ายบนมือถือ */
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -482,8 +504,14 @@
             }
         }
 
-        // Bind Event
+        // Bind Event - รองรับทั้ง Click และ Touch
         generateBtn.addEventListener('click', startGen);
+        generateBtn.addEventListener('touchstart', function(e) {
+            // ป้องกันการกดซ้ำ
+            if (!generateBtn.disabled) {
+                startGen();
+            }
+        }, { passive: true });
 
         // --- ️ Gallery Logic ---
         async function openGallery() {
