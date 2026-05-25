@@ -125,6 +125,7 @@ async def generate_image(req: GenerationRequest):
                         "seed": req.seed
                     }
                     yield f"data: {json.dumps(done_msg)}\n\n"
+                    is_processing = False
                     break
         except Exception as e:
             error_msg = {"type": "error", "detail": str(e)}
