@@ -143,23 +143,30 @@
                     </div>
 
                     <!-- Advanced Settings -->
-                    <div id="advanced-options" class="hidden space-y-3">
-                        <textarea id="neg_prompt" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs" placeholder="Negative Prompt (Optional)"></textarea>
-                        <div class="grid grid-cols-2 gap-2">
-                            <select id="width-select" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs">
-                                <option value="720">720</option>
-                                <option value="1024" selected>1024</option>
-                                <option value="1280">1280</option>
-                            </select>
-                            <select id="height-select" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs">
-                                <option value="720">720</option>
-                                <option value="1024" selected>1024</option>
-                                <option value="1280">1280</option>
-                            </select>
+                    <div class="pt-4 border-t border-gray-700">
+                        <button id="advanced-toggle" class="text-xs text-gray-400 hover:text-white flex items-center gap-1 mb-3 w-full justify-center">
+                            <i class="fa-solid fa-chevron-down"></i> Advanced Settings
+                        </button>
+                        <div id="advanced-options" class="hidden space-y-3">
+                            <textarea id="neg_prompt" rows="2" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs" placeholder="Negative Prompt (Optional)"></textarea>
+                            <div class="grid grid-cols-2 gap-2">
+                                <select id="width-select" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs">
+                                    <option value="720">720</option>
+                                    <option value="1024" selected>1024</option>
+                                    <option value="1280">1280</option>
+                                </select>
+                                <select id="height-select" class="bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-xs">
+                                    <option value="720">720</option>
+                                    <option value="1024" selected>1024</option>
+                                    <option value="1280">1280</option>
+                                </select>
+                            </div>
+                            <input type="number" id="seed-input" value="-1" 
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm" placeholder="Seed (-1 for Random)">
                         </div>
-                        <input type="number" id="seed-input" value="-1" 
-                            class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm" placeholder="Seed (-1 for Random)">
-                    </div>
+                    </div> 
+                    
+                </div> 
 
                 <!-- Generate Button -->
                 <button id="generate-btn" class="mt-6 w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transform transition hover:-translate-y-0.5 active:translate-y-0 flex justify-center items-center gap-2">
