@@ -271,7 +271,7 @@
         const API_URL = "";
         let audioCtx = null;
 
-        // ---  Sound & Notification Helpers ---
+        // --- 🔊 Sound & Notification Helpers ---
         function playNotificationSound() {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -372,10 +372,15 @@
             icon.classList.toggle('fa-chevron-up');
         });
 
-        // --- 🚀 MAIN GENERATE FUNCTION (STREAMING FIXED) ---
-        async function startGen() {
-            console.log('[Mobile Debug] Generate button clicked!'); 
-            console.log('[Mobile Debug] Prompt:', document.getElementById('prompt-input').value);
+        // --- 🚀 MAIN GENERATE FUNCTION (iOS COMPATIBLE) ---
+        async function startGen(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            console.log('[DEBUG] Generate button clicked!'); 
+            
             const btn = generateBtn;
             const placeholder = placeholderState;
             const loading = loadingState;
@@ -383,7 +388,6 @@
             const prog = progressPercent;
             const node = loadingNode;
 
-            // เก็บค่าจากฟอร์ม
             const payload = {
                 prompt: document.getElementById('prompt-input').value,
                 negative_prompt: document.getElementById('neg_prompt').value || "",
@@ -395,8 +399,10 @@
 
             if(!payload.prompt) { alert("Please enter a prompt!"); return; }
 
-            // ขอ Permission ตอนกดปุ่มครั้งแรก
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioCtx) {
+                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } 
+                catch(err) { console.warn('AudioContext not supported'); }
+            }
             if (Notification.permission === "default") Notification.requestPermission();
 
             const statusRes = await fetch(`${API_URL}/api/status`);
@@ -419,7 +425,6 @@
             node.innerText = "Connecting...";
 
             try {
-                // เรียก API แบบ Streaming
                 const res = await fetch(`${API_URL}/api/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -428,94 +433,135 @@
 
                 if (!res.ok) throw new Error("Server Error: " + res.status);
 
-                // อ่านข้อมูลแบบ Stream (ทีละชิ้น)
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = "";
+                // ✅ ตรวจเช็คว่ารองรับ ReadableStream ไหม (iOS บางเวอร์ชันไม่รองรับ)
+                const supportsStreaming = res.body && typeof res.body.getReader === 'function' && 'TextDecoder' in window;
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+                if (supportsStreaming) {
+                    // 🚀 Streaming Mode (Desktop/Android Chrome)
+                    console.log('[DEBUG] Using Streaming mode');
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = "";
 
-                    // ถอดรหัสข้อมูลและตัดแบ่งบรรทัด
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split("\n");
-                    buffer = lines.pop(); // เก็บบรรทัดสุดท้ายที่ยังไม่ครบไว้
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
 
-                    for (const line of lines) {
-                        // ✅ เช็คว่าขึ้นต้นด้วย "data: "
-                        if (line.startsWith("data: ")) {
-                            try {
-                                const jsonStr = line.slice(6).trim(); // ตัด "data: " ออก
-                                if (!jsonStr) continue; 
-                                
-                                const evt = JSON.parse(jsonStr); // Parse JSON ที่สะอาดแล้ว
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split("\n");
+                        buffer = lines.pop(); 
 
-                                // จัดการเหตุการณ์
-                                if (evt.type === "progress") {
-                                    const pct = Math.floor((evt.value / evt.max) * 100);
-                                    prog.innerText = pct + "%";
-                                    if (evt.node) node.innerText = evt.node;
-                                } 
-                                else if (evt.type === "status") {
-                                    if (evt.node) node.innerText = "Running: " + evt.node;
-                                } 
-                                else if (evt.type === "complete") {
-                                    // งานเสร็จ!
-                                    clearInterval(window.progressInterval); // หยุดจำลองถ้ามี
-                                    prog.innerText = "100%";
-                                    
-                                    result.src = evt.url;
-                                    result.classList.remove('hidden');
-                                    playNotificationSound(); 
-                                    sendBrowserNotification("✅ Gen Complete!", "Your masterpiece is ready.");
-                                    
-                                    resultSeed.innerText = evt.seed;
-                                    downloadLink.href = evt.url;
-                                    downloadLink.download = `z-image-${evt.seed}.png`;
-                                    actionBar.classList.remove('hidden');
-
-                                    // Reset UI
-                                    loading.classList.add('hidden');
-                                    btn.classList.remove('processing');
-                                    btn.disabled = false;
-                                    btn.classList.remove('opacity-75', 'cursor-not-allowed');
-                                    btn.classList.add('from-emerald-500', 'to-teal-600'); // ✅ บังคับใส่สีเขียว
-                                    btn.classList.remove('bg-gray-600'); // ✅ เอาสีเทาออก
-                                    return; 
-                                } 
-                                else if (evt.type === "error") {
-                                    throw new Error(evt.detail);
-                                }
-                            } catch (e) {
-                                console.warn("Parse error:", e, "Line:", line);
+                        for (const line of lines) {
+                            if (line.startsWith("data: ")) {
+                                try {
+                                    const jsonStr = line.slice(6).trim(); 
+                                    if (!jsonStr) continue; 
+                                    const evt = JSON.parse(jsonStr); 
+                                    handleEvent(evt);
+                                    if (evt.type === "complete" || evt.type === "error") return;
+                                } catch (err) { console.warn("Parse error:", err); }
                             }
                         }
                     }
+                } else {
+                    // 📱 Fallback Mode (iOS Safari) - ใช้ Polling แทน
+                    console.log('[DEBUG] Using Polling fallback mode (iOS)');
+                    node.innerText = "Processing on server...";
+                    
+                    let completed = false;
+                    const pollInterval = setInterval(async () => {
+                        try {
+                            const statusCheck = await fetch(`${API_URL}/api/status`);
+                            const statusJson = await statusCheck.json();
+                            
+                            if (!statusJson.is_processing && !completed) {
+                                completed = true;
+                                clearInterval(pollInterval);
+                                
+                                const histRes = await fetch(`${API_URL}/api/history`);
+                                const history = await histRes.json();
+                                
+                                if (history.length > 0) {
+                                    const latest = history[0];
+                                    const evt = {
+                                        type: "complete",
+                                        url: `/api/outputs/${latest.filename}`,
+                                        seed: latest.seed
+                                    };
+                                    handleEvent(evt);
+                                } else {
+                                    throw new Error("No image found");
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Polling error:', err);
+                        }
+                    }, 1500);
                 }
+
             } catch (e) {
                 console.error(e);
                 alert("Error: " + e.message);
+                resetButton();
                 loading.classList.add('hidden');
                 placeholder.classList.remove('hidden');
-                btn.classList.remove('processing');
-                btn.disabled = false;
-                btn.innerHTML = `<span>✨ Generate Masterpiece</span>`;
-                btn.classList.remove('opacity-75', 'cursor-not-allowed');
-                checkSystemStatus();
             }
         }
 
-        // Bind Event - รองรับทั้ง Click และ Touch
-        generateBtn.addEventListener('click', startGen);
-        generateBtn.addEventListener('touchstart', function(e) {
-            // ป้องกันการกดซ้ำ
-            if (!generateBtn.disabled) {
-                startGen();
-            }
-        }, { passive: true });
+        // Helper: จัดการ Event จาก Backend
+        function handleEvent(evt) {
+            const prog = progressPercent;
+            const node = loadingNode;
+            const btn = generateBtn;
+            const loading = loadingState;
+            const result = resultImage;
 
-        // --- ️ Gallery Logic ---
+            if (evt.type === "progress") {
+                const pct = Math.floor((evt.value / evt.max) * 100);
+                prog.innerText = pct + "%";
+                if (evt.node) node.innerText = evt.node;
+            } 
+            else if (evt.type === "status") {
+                if (evt.node) node.innerText = "Running: " + evt.node;
+            } 
+            else if (evt.type === "complete") {
+                clearInterval(window.progressInterval);
+                prog.innerText = "100%";
+                
+                result.src = evt.url;
+                result.classList.remove('hidden');
+                playNotificationSound(); 
+                sendBrowserNotification("✅ Gen Complete!", "Your masterpiece is ready.");
+                
+                resultSeed.innerText = evt.seed;
+                downloadLink.href = evt.url;
+                downloadLink.download = `z-image-${evt.seed}.png`;
+                actionBar.classList.remove('hidden');
+
+                loading.classList.add('hidden');
+                resetButton();
+            } 
+            else if (evt.type === "error") {
+                alert("Error: " + evt.detail);
+                resetButton();
+            }
+        }
+
+        // Helper: Reset ปุ่ม
+        function resetButton() {
+            const btn = generateBtn;
+            btn.classList.remove('processing');
+            btn.disabled = false;
+            btn.innerHTML = `<span>✨ Generate Masterpiece</span>`;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btn.classList.add('from-emerald-500', 'to-teal-600');
+            btn.classList.remove('bg-gray-600');
+        }
+
+        // Bind Event - ใช้แค่ click ก็พอ iOS รองรับดีอยู่แล้ว (touchstart อาจทำให้กดซ้ำ 2 รอบ)
+        generateBtn.addEventListener('click', startGen);
+
+        // --- 🖼️ Gallery Logic ---
         async function openGallery() {
             document.getElementById('galleryModal').classList.remove('hidden');
             const list = document.getElementById('galleryList');
