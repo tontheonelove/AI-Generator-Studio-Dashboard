@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI-Generation Studio 🚀</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -176,6 +177,30 @@
         </div>
     </div>
 
+    <!-- Version Update Modal -->
+    <div id="updateModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl transform transition-all scale-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 flex justify-between items-center">
+                <h3 class="text-white font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-sparkles"></i> มีอัปเดตใหม่!
+                </h3>
+                <span id="modalVersion" class="text-xs bg-white/20 px-2 py-1 rounded-full text-white font-mono">v1.0.0</span>
+            </div>
+            
+            <div class="p-6">
+                <p class="text-gray-400 text-sm mb-4">ฟีเจอร์ใหม่ในเวอร์ชันนี้:</p>
+                <ul id="featureList" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
+                    <!-- Features will be injected here -->
+                </ul>
+                
+                <button onclick="closeUpdateModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2">
+                    <span>รับทราบและเริ่มใช้งาน</span>
+                    <i class="fa-solid fa-check"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer class="border-t border-gray-800 py-6">
         <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
             <p>Powered by FastAPI, ComfyUI | Made by ❤️ TonLikeIT</p>
@@ -185,7 +210,7 @@
     <script>
         let audioCtx = null;
 
-        // Sound
+        // --- 🔊 Sound ---
         function playSound() {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -203,7 +228,7 @@
             } catch (e) { console.warn('Sound skipped'); }
         }
 
-        // Prompt helpers
+        // --- ✨ Prompt Helpers ---
         function addPrompt(text) {
             const input = document.getElementById('prompt-input');
             input.value = input.value.trim() ? input.value + ", " + text : text;
@@ -222,7 +247,62 @@
             document.getElementById('prompt-input').value = prompts[Math.floor(Math.random() * prompts.length)];
         }
 
-        // Check queue status (polling every 2s)
+        // --- 🔄 Version Check System ---
+        async function checkForUpdates() {
+            try {
+                const res = await fetch('/api/version');
+                const data = await res.json();
+                
+                const currentSeenVersion = localStorage.getItem('seenVersion');
+                
+                if (data.version && data.version !== currentSeenVersion) {
+                    showUpdateModal(data);
+                }
+            } catch (e) {
+                console.warn('Failed to check version:', e);
+            }
+        }
+
+        function showUpdateModal(data) {
+            const modal = document.getElementById('updateModal');
+            const versionTag = document.getElementById('modalVersion');
+            const featureList = document.getElementById('featureList');
+            
+            versionTag.innerText = `v${data.version}`;
+            featureList.innerHTML = '';
+            
+            if (data.features && data.features.length > 0) {
+                data.features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start gap-3 text-gray-300 text-sm';
+                    li.innerHTML = `
+                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
+                        <span>${feature}</span>
+                    `;
+                    featureList.appendChild(li);
+                });
+            } else {
+                featureList.innerHTML = '<li class="text-gray-500 text-sm">ไม่มีรายละเอียดฟีเจอร์</li>';
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeUpdateModal() {
+            const modal = document.getElementById('updateModal');
+            modal.classList.add('hidden');
+            
+            fetch('/api/version')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.version) {
+                        localStorage.setItem('seenVersion', data.version);
+                    }
+                })
+                .catch(e => console.error('Failed to save seen version:', e));
+        }
+
+        // --- ⏳ Queue Status Polling ---
         async function checkStatus() {
             try {
                 const res = await fetch('/api/status');
@@ -243,7 +323,7 @@
         }
         setInterval(checkStatus, 2000);
 
-        // Main generate function
+        // --- 🚀 Main Generate Function ---
         async function generate() {
             const prompt = document.getElementById('prompt-input').value;
             if (!prompt) { alert("Please enter a prompt!"); return; }
@@ -254,12 +334,10 @@
             const resultImg = document.getElementById('result-image');
             const actionBar = document.getElementById('action-bar');
 
-            // Init audio on first user interaction
             if (!audioCtx) {
                 try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
             }
 
-            // Check status
             const statusRes = await fetch('/api/status');
             const statusData = await statusRes.json();
             if (statusData.is_processing) {
@@ -267,7 +345,6 @@
                 return;
             }
 
-            // Set loading
             btn.classList.add('busy');
             btn.disabled = true;
             btn.innerHTML = '<div class="loader mr-2"></div> Processing...';
@@ -298,7 +375,6 @@
 
                 const data = await res.json();
 
-                // Show result
                 resultImg.src = data.base64;
                 resultImg.classList.remove('hidden');
                 document.getElementById('result-seed').innerText = data.seed;
@@ -321,7 +397,7 @@
             }
         }
 
-        // Gallery
+        // --- 🖼️ Gallery Logic ---
         async function openGallery() {
             document.getElementById('galleryModal').classList.remove('hidden');
             const list = document.getElementById('galleryList');
@@ -358,6 +434,11 @@
             document.getElementById('model-select').value = model;
             closeGallery();
         }
+
+        // Start Version Check after page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkForUpdates, 1000);
+        });
     </script>
 </body>
 </html>

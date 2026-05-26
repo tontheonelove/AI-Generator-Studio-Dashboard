@@ -1,0 +1,13 @@
+{
+  "version": "1.2.0",
+  "release_date": "2026-05-26",
+  "features": [
+    "🎬 Image Generation รองรับ Z-Image และ Flux2 Klein9B",
+    "🖼️ มีGallery Preview ดูย้อนหลัง",
+    "🔊 เสียงแจ้งเตือนเมื่อ Gen เสร็จ",
+    "🐛 รองรับการใช้งานบน iOS/Android",
+    "🌍 รองรับการใช้งานแบบ IP แชร์ ระดับบริษัท,องค์กร",
+    "❤️ Dev by TonLikeIT สอนฟรีแบบไม่มีกั๊กเช่นเคย"
+
+  ]
+}

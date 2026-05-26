@@ -7,6 +7,7 @@ import base64
 import os
 import traceback
 import time
+import json
 from .comfy_client import generate_image
 from .database import init_db, save_history, get_history
 
@@ -136,6 +137,19 @@ def generate_image_endpoint(req: GenerationRequest):
     finally:
         is_processing = False
         print("[Queue] 🔓 Unlocked")
+
+@app.get("/api/version")
+def get_version():
+    """ดึงข้อมูลเวอร์ชันล่าสุดจาก version.json"""
+    version_path = os.path.join(BASE_DIR, "..", "version.json")
+    try:
+        if os.path.exists(version_path):
+            with open(version_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {"version": "1.0.0", "features": [], "release_date": ""}
+    except Exception as e:
+        print(f"[Version] Error reading version.json: {e}")
+        return {"version": "unknown", "features": [], "release_date": ""}
 
 # Mount Frontend
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
