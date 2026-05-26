@@ -15,6 +15,8 @@
 
 ✅ One-Click Re-run: Click on an image in the gallery → The system will immediately retrieve the Prompt, Seed, and Model and fill them into the fields → You can regenerate or continue editing without having to type them again.
 
+🔥Support localnetwork & public production use your ip example 192.168.1.1:8000  and share ..
+
 ---
 
 ## Update 🚀🚀 (21-5-26)
