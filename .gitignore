@@ -12,3 +12,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+#output
+outputs/*
+!outputs/.gitkeep
