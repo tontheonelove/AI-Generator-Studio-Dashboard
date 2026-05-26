@@ -8,69 +8,69 @@ echo    AI-Image-Generator-Studio - Auto Launcher
 echo ==========================================
 echo.
 
-REM 1. ตรวจสอบ Python
+REM 1. Check Python
 where python >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] ไม่พบ Python ในเครื่อง
-    echo กรุณาติดตั้ง Python 3.10+ จาก https://python.org
-    echo อย่าลืมติ๊กถูก "Add Python to PATH" ตอนติดตั้ง
+    echo [ERROR] Notfound Python
+    echo Please Install Python 3.10+ from https://python.org
+    echo Check on "Add Python to PATH" 
     echo.
     pause
     exit /b 1
 )
 
-echo [1/4] ตรวจพบ Python: 
+echo [1/4] detected Python: 
 python --version
 echo.
 
-REM 2. สร้าง venv ถ้ายังไม่มี
+REM 2. create venv if not available
 if not exist "venv" (
-    echo [2/4] กาลังสร้าง Virtual Environment...
+    echo [2/4] creating.. Virtual Environment...
     python -m venv venv
     if errorlevel 1 (
-        echo [ERROR] สร้าง venv ไม่สําเร็จ
+        echo [ERROR] create venv fail !!!
         pause
         exit /b 1
     )
 ) else (
-    echo [2/4] พบ Virtual Environment แล้ว
+    echo [2/4] detected Virtual Environment
 )
 echo.
 
-REM 3. ติดตั้ง Library
-echo [3/4] กาลังติดตั้ง/อัปเดต Library (รอสักครู่)...
+REM 3. Install Library
+echo [3/4] Installing/update Library (wait)...
 call venv\Scripts\activate.bat
 pip install -r requirements.txt
 if errorlevel 1 (
-    echo [ERROR] ติดตั้ง Library ไม่สําเร็จ
+    echo [ERROR] install Library fail !!
     pause
     exit /b 1
 )
-echo [INFO] Library พร้อมใช้งาน
+echo [INFO] Library Ready to use 
 echo.
 
-REM 4. รันแอป
-echo [4/4] กาลังเปิด Backend Server...
+REM 4. run app
+echo [4/4] starting Backend Server...
 echo.
 echo ==========================================
-echo  กาลังเปิดหน้าต่าง Server...
+echo  starting Server...
 echo ==========================================
 echo.
 
 start "AI-Generate-Server" cmd /k "cd /d %~dp0 && call venv\Scripts\activate.bat && uvicorn backend.app:app --host 0.0.0.0 --port 8000"
 
 echo.
-echo [LAUNCH] รอ 5 วินาทีก่อนเปิดหน้าเว็บ...
+echo [LAUNCH] wait 5 sec open browser...
 timeout /t 5 /nobreak
 
-echo [LAUNCH] เปิดหน้าเว็บ...
+echo [LAUNCH] openbrowser...
 start "" "http://localhost:8000"
 
 echo.
 echo ==========================================
-echo    SUCCESS! แอปพร้อมใช้งาน
-echo    หน้าต่าง Server ถูกเปิดแยกไว้แล้ว
-echo    หากต้องการปิด ให้ปิดหน้าต่าง Server
+echo    SUCCESS! ready to use
+echo    The Server window is already open separately.
+echo    To close it, close the Server window.
 echo ==========================================
 echo.
 pause
