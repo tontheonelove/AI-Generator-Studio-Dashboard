@@ -1,0 +1,32 @@
+[ Z-image Turbo + Z-image Turbo GGUF ]
+
+1. [ Realistic Snapshot ]
+https://civitai.com/models/2268008/realistic-snapshot-z-image-turbo?modelVersionId=2617751
+
+2. [ NiceGirls UltraReal ]
+https://civitai.com/models/1862761/nicegirls-ultrareal?modelVersionId=2526600
+
+3. [ NSFW MASTER FLUX ]
+https://civitai.com/models/667086/nsfw-master-flux?modelVersionId=2904324
+
+4. [ Lenovo UltraReal ]
+https://civitai.com/models/1662740/lenovo-ultrareal?modelVersionId=2452071
+
+
+
+[ Flux2 Klein 9B GGUF  ]
+
+
+1. [Ultra Real - Amateur Selfies ]
+https://civitai.com/models/2233658/ultra-real-amateur-selfies?modelVersionId=2662963
+
+2. [Real Skin (Less Synthetic)]
+https://civitai.com/models/2534398/real-skin-less-synthetic?modelVersionId=2848310
+
+3. [Phone Photography (2000-2025)]
+https://civitai.com/models/2537408/phone-photography-2000-2025-klein-9b?modelVersionId=2862425
+
+4. [Ultra Real]
+https://civitai.com/models/2462105/ultra-real-klein-9b?modelVersionId=2846977
+
+[ wait for update soon]

@@ -12,6 +12,20 @@
       "title": "Save Image"
     }
   },
+  "10": {
+    "inputs": {
+      "lora_name": "RealisticSnapshot-Zimage-Turbov5.safetensors",
+      "strength_model": 1,
+      "model": [
+        "57:62",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
   "57:29": {
     "inputs": {
       "vae_name": "ae.safetensors"
@@ -21,32 +35,34 @@
       "title": "Load VAE"
     }
   },
-  "57:33": {
+  "57:13": {
     "inputs": {
-      "conditioning": [
-        "57:27",
-        0
-      ]
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
     },
-    "class_type": "ConditioningZeroOut",
+    "class_type": "EmptySD3LatentImage",
     "_meta": {
-      "title": "ConditioningZeroOut"
+      "title": "EmptySD3LatentImage"
     }
   },
-  "57:8": {
+  "57:63": {
     "inputs": {
-      "samples": [
-        "57:3",
-        0
-      ],
-      "vae": [
-        "57:29",
-        0
-      ]
+      "clip_name": "Qwen3-4B-Q8_0.gguf",
+      "type": "lumina2"
     },
-    "class_type": "VAEDecode",
+    "class_type": "CLIPLoaderGGUF",
     "_meta": {
-      "title": "VAE Decode"
+      "title": "CLIPLoader (GGUF)"
+    }
+  },
+  "57:62": {
+    "inputs": {
+      "unet_name": "z-image-turbo-Q8_0.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {
+      "title": "Unet Loader (GGUF)"
     }
   },
   "57:27": {
@@ -62,22 +78,23 @@
       "title": "CLIP Text Encode (Prompt)"
     }
   },
-  "57:13": {
+  "57:33": {
     "inputs": {
-      "width": 1024,
-      "height": 1024,
-      "batch_size": 1
+      "conditioning": [
+        "57:27",
+        0
+      ]
     },
-    "class_type": "EmptySD3LatentImage",
+    "class_type": "ConditioningZeroOut",
     "_meta": {
-      "title": "EmptySD3LatentImage"
+      "title": "ConditioningZeroOut"
     }
   },
   "57:11": {
     "inputs": {
       "shift": 3,
       "model": [
-        "57:62",
+        "10",
         0
       ]
     },
@@ -116,23 +133,20 @@
       "title": "KSampler"
     }
   },
-  "57:63": {
+  "57:8": {
     "inputs": {
-      "clip_name": "Qwen3-4B-Q8_0.gguf",
-      "type": "lumina2"
+      "samples": [
+        "57:3",
+        0
+      ],
+      "vae": [
+        "57:29",
+        0
+      ]
     },
-    "class_type": "CLIPLoaderGGUF",
+    "class_type": "VAEDecode",
     "_meta": {
-      "title": "CLIPLoader (GGUF)"
-    }
-  },
-  "57:62": {
-    "inputs": {
-      "unet_name": "z-image-turbo-Q8_0.gguf"
-    },
-    "class_type": "UnetLoaderGGUF",
-    "_meta": {
-      "title": "Unet Loader (GGUF)"
+      "title": "VAE Decode"
     }
   }
 }

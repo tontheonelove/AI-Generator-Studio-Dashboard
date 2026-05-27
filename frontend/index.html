@@ -57,12 +57,21 @@
                 <h2 class="text-lg font-semibold mb-4"><i class="fa-solid fa-sliders text-blue-400"></i> Configuration</h2>
 
                 <div class="space-y-4">
+                    <!-- Model Select -->
                     <div>
                         <label class="block text-sm text-gray-300 mb-2">AI Model</label>
                         <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
                             <option value="Z-Image Turbo">Z-Image Turbo</option>
                             <option value="Z-Image Turbo-GGUF">Z-Image Turbo-GGUF</option>
                             <option value="Flux 2 Klein-GGUF">Flux 2 Klein-GGUF</option>
+                        </select>
+                    </div>
+
+                    <!-- ✅ LoRA Select (新增) -->
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">🎨 LoRA Style</label>
+                        <select id="lora-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                            <option value="">Loading...</option>
                         </select>
                     </div>
 
@@ -101,20 +110,32 @@
                                 <label class="block text-xs text-gray-400 mb-1">Width</label>
                                 <select id="width-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
                                     <option value="720">720</option>
+                                    <option value="864">864</option>
                                     <option value="1024" selected>1024</option>
                                     <option value="1080">1080</option>
                                     <option value="1280">1280</option>
+                                    <option value="1440">1440</option>
+                                    <option value="1536">1536</option>
                                     <option value="1920">1920</option>
+                                    <option value="2160">2160</option>
+                                    <option value="2560">2560</option>
+                                    <option value="3840">3840</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-400 mb-1">Height</label>
                                 <select id="height-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
                                     <option value="720">720</option>
+                                    <option value="864">864</option>
                                     <option value="1024" selected>1024</option>
                                     <option value="1080">1080</option>
                                     <option value="1280">1280</option>
+                                    <option value="1440">1440</option>
+                                    <option value="1536">1536</option>
                                     <option value="1920">1920</option>
+                                    <option value="2160">2160</option>
+                                    <option value="2560">2560</option>
+                                    <option value="3840">3840</option>
                                 </select>
                             </div>
                         </div>
@@ -189,9 +210,7 @@
             
             <div class="p-6">
                 <p class="text-gray-400 text-sm mb-4">ฟีเจอร์ใหม่ในเวอร์ชันนี้:</p>
-                <ul id="featureList" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
-                    <!-- Features will be injected here -->
-                </ul>
+                <ul id="featureList" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2"></ul>
                 
                 <button onclick="closeUpdateModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2">
                     <span>รับทราบและเริ่มใช้งาน</span>
@@ -209,6 +228,36 @@
 
     <script>
         let audioCtx = null;
+        const loraSelect = document.getElementById('lora-select');
+        const modelSelect = document.getElementById('model-select');
+        let currentLoraList = [];
+
+        // --- 🎨 LoRA Management ---
+        async function loadLoras(modelName) {
+            try {
+                const res = await fetch(`/api/loras/${encodeURIComponent(modelName)}`);
+                const data = await res.json();
+                currentLoraList = data.loras || [];
+                
+                loraSelect.innerHTML = '';
+                if (currentLoraList.length === 0) {
+                    loraSelect.innerHTML = '<option value="">No LoRA available</option>';
+                    return;
+                }
+                
+                currentLoraList.forEach((lora, index) => {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    opt.textContent = lora.label;
+                    loraSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Failed to load LoRAs:', e);
+                loraSelect.innerHTML = '<option value="">Error loading</option>';
+            }
+        }
+
+        modelSelect.addEventListener('change', () => loadLoras(modelSelect.value));
 
         // --- 🔊 Sound ---
         function playSound() {
@@ -237,12 +286,22 @@
 
         function randomPrompt() {
             const prompts = [
-                "futuristic city floating in clouds, cyberpunk, neon lights, 8k",
+                "The iconic Big Ben clock tower and the Houses of Parliament in London at golden hour, the River Thames reflecting warm amber light, Westminster Bridge in the foreground, a classic red double-decker bus crossing, dramatic clouds lit by sunset, 8k",
                 "cute cat wearing spacesuit on Mars, realistic, cinematic",
                 "samurai in cherry blossom forest, Japanese art style, 8k",
                 "underwater crystal palace, bioluminescent fish, 8k",
                 "cozy coffee shop in rainy forest, warm lighting",
-                "mechanical dragon breathing fire, steampunk, 8k"
+                "mechanical dragon breathing fire, steampunk, 8k",
+                "A green iguana basking on a moss-covered fallen log in a tropical rainforest, every scale and spine rendered in sharp detail, dewdrops clinging to its skin, a blurred waterfall and lush tropical foliage in the background, National Geographic wildlife photography style",
+                "A generous portion of classic British fish and chips served on a sheet of white paper, golden crispy beer-battered cod fillet alongside thick-cut chips, a wedge of lemon, mushy peas in a small dish, malt vinegar bottle nearby, wooden pub table, overhead shot",
+                "A photorealistic close-up portrait of a cute young Asian woman with a kawaii aesthetic. She has long, dark wavy hair styled in high twin tails with bangs. She is wearing white reindeer antler headbands and small white bunny hair clips. She has a cute white bunny sticker on her cheek. She is framing her face with her hands, gently touching her cheeks. She is wearing a cream-colored top with a cute bear print. Bright, soft high-key lighting, innocent and playful vibe, high resolution, 8k.",
+                "A photorealistic close-up selfie of a young Asian woman in a bedroom at night. She has dark hair in a messy high bun with a pearl hair clip and loose strands framing her face. She is wearing a cream-colored, ruffled coquette-style top with black piping and a black satin bow on the chest. She is leaning forward slightly, looking at the camera with a soft expression. In the background, a large black-framed mirror reflects a bed with white sheets and a window with night city lights. Dim lighting with a flash photography aesthetic, high resolution, 4k.",
+                "A photorealistic full-body shot of a young Asian woman crouching on a wooden floor, taking a mirror selfie. She has long, straight black hair with a blue flower hair clip. She is wearing a white long-sleeved floral crop top with ruched detailing, a white skirt, white knee-high socks with ruffled edges, and chunky pink sneakers. She holds a smartphone with a sticker-covered case and a pink grip. The background is a bright, sunlit room with large windows showing a city skyline, a clothing rack on the left, and a shoe display shelf on the right. High resolution, 4k, fashion photography style.",
+                "A photorealistic close-up portrait of a young Asian woman with a sweet, gentle smile, styled in a vintage cottagecore aesthetic. She has black hair in twin braids with bangs, wearing a cream knitted bonnet with cherry embroidery and red ribbons. Her outfit features a white camisole with red scalloped lace trim and a red bow, with a red knitted cardigan draped off her shoulders. Red gingham bows and cherry hair clips adorn her braids. She is holding a strawberry cupcake. The background is a cozy, warm-toned room with wooden furniture and a blurred retro TV. Soft lighting, high resolution, 8k.",
+                "Aerial view of Yuanyang rice terraces in Yunnan province at sunrise, thousands of cascading water-filled paddies reflecting golden and pink sky colors, morning mist weaving between terrace layers, lush green hillside with scattered palm trees, drone photography",
+                "A turquoise river winds through a lush canyon. Thick moss and dense ferns blanket the rocky walls; multiple waterfalls cascade from above, enveloped in mist. At noon, sunlight filters through the dense canopy, dappling the river surface with shimmering light. The atmosphere is humid and fresh, pulsing with primal jungle vitality. No humans, text, or artificial traces present.",
+                "An ultra-realistic close-up of a golden retriever outdoors under soft daylight. Hair is exquisitely detailed: strands distinct, color transitioning naturally from warm gold to light cream, light glinting delicately at the tips; a gentle breeze adds subtle volume. Undercoat is soft and dense; guard hairs are long and well-defined, with visible layering. Eyes are moist, expressive; nose is slightly damp with fine specular highlights. Background is softly blurred to emphasize the dog’s tangible texture and vivid expression.",
+                
             ];
             document.getElementById('prompt-input').value = prompts[Math.floor(Math.random() * prompts.length)];
         }
@@ -252,54 +311,35 @@
             try {
                 const res = await fetch('/api/version');
                 const data = await res.json();
-                
                 const currentSeenVersion = localStorage.getItem('seenVersion');
-                
-                if (data.version && data.version !== currentSeenVersion) {
-                    showUpdateModal(data);
-                }
-            } catch (e) {
-                console.warn('Failed to check version:', e);
-            }
+                if (data.version && data.version !== currentSeenVersion) showUpdateModal(data);
+            } catch (e) { console.warn('Failed to check version:', e); }
         }
 
         function showUpdateModal(data) {
             const modal = document.getElementById('updateModal');
             const versionTag = document.getElementById('modalVersion');
             const featureList = document.getElementById('featureList');
-            
             versionTag.innerText = `v${data.version}`;
             featureList.innerHTML = '';
-            
             if (data.features && data.features.length > 0) {
                 data.features.forEach(feature => {
                     const li = document.createElement('li');
                     li.className = 'flex items-start gap-3 text-gray-300 text-sm';
-                    li.innerHTML = `
-                        <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i>
-                        <span>${feature}</span>
-                    `;
+                    li.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i><span>${feature}</span>`;
                     featureList.appendChild(li);
                 });
             } else {
                 featureList.innerHTML = '<li class="text-gray-500 text-sm">ไม่มีรายละเอียดฟีเจอร์</li>';
             }
-            
             modal.classList.remove('hidden');
         }
 
         function closeUpdateModal() {
-            const modal = document.getElementById('updateModal');
-            modal.classList.add('hidden');
-            
-            fetch('/api/version')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.version) {
-                        localStorage.setItem('seenVersion', data.version);
-                    }
-                })
-                .catch(e => console.error('Failed to save seen version:', e));
+            document.getElementById('updateModal').classList.add('hidden');
+            fetch('/api/version').then(res => res.json()).then(data => {
+                if (data.version) localStorage.setItem('seenVersion', data.version);
+            }).catch(e => console.error('Failed to save seen version:', e));
         }
 
         // --- ⏳ Queue Status Polling ---
@@ -353,12 +393,18 @@
             actionBar.classList.add('hidden');
             loading.classList.remove('hidden');
 
+            // ✅ ดึงค่า LoRA ที่เลือก
+            const loraIndex = parseInt(loraSelect.value);
+            const selectedLora = currentLoraList[loraIndex] || {};
+
             const payload = {
                 prompt: prompt,
-                model: document.getElementById('model-select').value,
+                model: modelSelect.value,
                 seed: parseInt(document.getElementById('seed-input').value),
                 width: parseInt(document.getElementById('width-select').value),
-                height: parseInt(document.getElementById('height-select').value)
+                height: parseInt(document.getElementById('height-select').value),
+                lora_filename: selectedLora.filename || "",
+                lora_strength: selectedLora.strength || 0.0
             };
 
             try {
@@ -374,14 +420,12 @@
                 }
 
                 const data = await res.json();
-
                 resultImg.src = data.base64;
                 resultImg.classList.remove('hidden');
                 document.getElementById('result-seed').innerText = data.seed;
                 document.getElementById('download-link').href = data.base64;
                 document.getElementById('download-link').download = `ai-image-${data.seed}.png`;
                 actionBar.classList.remove('hidden');
-
                 playSound();
 
             } catch (e) {
@@ -419,25 +463,23 @@
                     `;
                     list.appendChild(div);
                 });
-            } catch (e) {
-                list.innerHTML = "<p class='text-red-400'>Load failed</p>";
-            }
+            } catch (e) { list.innerHTML = "<p class='text-red-400'>Load failed</p>"; }
         }
 
-        function closeGallery() {
-            document.getElementById('galleryModal').classList.add('hidden');
-        }
+        function closeGallery() { document.getElementById('galleryModal').classList.add('hidden'); }
 
         function loadFromGallery(prompt, seed, model) {
             document.getElementById('prompt-input').value = prompt;
             document.getElementById('seed-input').value = seed;
             document.getElementById('model-select').value = model;
+            loadLoras(model); // โหลด LoRA ใหม่ตาม model ที่เลือก
             closeGallery();
         }
 
-        // Start Version Check after page load
+        // Init
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(checkForUpdates, 1000);
+            loadLoras(modelSelect.value); // โหลด LoRA ครั้งแรก
         });
     </script>
 </body>

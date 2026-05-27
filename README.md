@@ -2,10 +2,22 @@
 
 <img src=ex.png/>
 
+---
+
+## 🚀🚀 Update (29-5-26)
+
+<img src=lora.png/>
+
+🚀 Support Loras template added 4 loras
+
+🔥 Add more prompt template random
+
+✅ Add more resolution max 4K
+
+---
 
 ## Update 🔥🔥 (25-5-26)
 
----
 
 🖼️ Gallery / History (Databases)
 

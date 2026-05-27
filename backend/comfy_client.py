@@ -9,7 +9,7 @@ import time
 def get_client_id():
     return str(uuid.uuid4())
 
-def generate_image(prompt_text, seed, width, height, config):
+def generate_image(prompt_text, seed, width, height, lora_filename, lora_strength, config):
     """
     Generate image แบบ Simple (ไม่ใช้ streaming)
     คืนค่าเป็น dict: {"images": [...], "seed": ...}
@@ -21,23 +21,24 @@ def generate_image(prompt_text, seed, width, height, config):
     
     print(f"[ComfyClient] Connecting to: {server_address}")
     
-    # Load Workflow
     base_dir = os.path.dirname(os.path.abspath(__file__))
     workflow_path = os.path.join(base_dir, config["file"])
     
     with open(workflow_path, "r", encoding="utf-8") as f:
         workflow = json.load(f)
 
-    # Inject Parameters
+    # Inject Prompt
     if config["prompt_id"] in workflow:
         workflow[config["prompt_id"]]["inputs"]["text"] = prompt_text
     
+    # Inject Seed
     seed_key = config.get("seed_key", "seed")
     actual_seed = seed if seed != -1 else random.randint(1, 10**14)
     
     if config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
+    # Inject Resolution
     if "latent_id" in config and config["latent_id"] in workflow:
         workflow[config["latent_id"]]["inputs"]["width"] = width
         workflow[config["latent_id"]]["inputs"]["height"] = height
@@ -46,6 +47,21 @@ def generate_image(prompt_text, seed, width, height, config):
             workflow[config["width_id"]]["inputs"]["value"] = width
         if config["height_id"] in workflow:
             workflow[config["height_id"]]["inputs"]["value"] = height
+
+    # 🔥 Inject LoRA
+    lora_node_id = config.get("lora_id")
+    if lora_node_id and lora_node_id in workflow:
+        if lora_filename and lora_strength > 0:
+            workflow[lora_node_id]["inputs"]["lora_name"] = lora_filename
+            workflow[lora_node_id]["inputs"]["strength_model"] = lora_strength
+            print(f"[ComfyClient] LoRA injected: {lora_filename} (strength: {lora_strength})")
+        else:
+            # ปิด LoRA ถ้าเลือก No LoRA หรือ strength เป็น 0
+            workflow[lora_node_id]["inputs"]["strength_model"] = 0.0
+            print("[ComfyClient] LoRA disabled (strength=0)")
+    else:
+        if lora_filename:
+            print(f"[ComfyClient] ⚠️ lora_id not found in config for this model")
 
     # Connect WebSocket
     try:

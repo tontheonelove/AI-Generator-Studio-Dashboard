@@ -1,0 +1,83 @@
+{
+  "Z-Image Turbo": [
+    {
+      "label": "🚫 No LoRA",
+      "filename": "",
+      "strength": 0.0
+    },
+    {
+      "label": "📸 Realistic Snapshot v5",
+      "filename": "RealisticSnapshot-Zimage-Turbov5.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📲 NiceGirls UltraReal",
+      "filename": "NIceAsians_Zimage.safetensors",
+      "strength": 0.7
+    },
+    {
+      "label": "🤭 NSFW_master",
+      "filename": "NSFW_master_ZIT_000017532.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📱 Lenovo UltraReal",
+      "filename": "lenovo_z.safetensors",
+      "strength": 0.8
+    }
+  ],
+  "Z-Image Turbo-GGUF": [
+    {
+      "label": "🚫 No LoRA",
+      "filename": "",
+      "strength": 0.0
+    },
+    {
+      "label": "📸 Realistic Snapshot v5",
+      "filename": "RealisticSnapshot-Zimage-Turbov5.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📲 NiceGirls UltraReal",
+      "filename": "NIceAsians_Zimage.safetensors",
+      "strength": 0.7
+    },
+    {
+      "label": "🤭 NSFW_master",
+      "filename": "NSFW_master_ZIT_000017532.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📱 Lenovo UltraReal",
+      "filename": "lenovo_z.safetensors",
+      "strength": 0.8
+    }
+  ],
+  "Flux 2 Klein-GGUF": [
+    {
+      "label": "🚫 No LoRA",
+      "filename": "",
+      "strength": 0.0
+    },
+    {
+      "label": "❤️ Ultra Real - Amateur Selfies",
+      "filename": "amateur_selfie.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📸 Real Skin (Less Synthetic)",
+      "filename": "RealSkin.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📱 Phone Photography (2000-2025)",
+      "filename": "Phone_Photography_2025_KL_9B",
+      "strength": 0.8
+    },
+    {
+      "label": "🔥 Ultra Real",
+      "filename": "ultra_real_v4.safetensors",
+      "strength": 0.8
+    }
+  ]
+}

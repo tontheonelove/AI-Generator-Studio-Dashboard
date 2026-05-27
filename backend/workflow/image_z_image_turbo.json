@@ -60,16 +60,6 @@
       "title": "VAE Decode"
     }
   },
-  "57:28": {
-    "inputs": {
-      "unet_name": "z_image_turbo_bf16.safetensors",
-      "weight_dtype": "default"
-    },
-    "class_type": "UNETLoader",
-    "_meta": {
-      "title": "Load Diffusion Model"
-    }
-  },
   "57:27": {
     "inputs": {
       "text": "Latina female with thick wavy hair, harbor boats and pastel houses behind. Breezy seaside light, warm tones, cinematic close-up. ",
@@ -98,7 +88,7 @@
     "inputs": {
       "shift": 3,
       "model": [
-        "57:28",
+        "57:62",
         0
       ]
     },
@@ -135,6 +125,30 @@
     "class_type": "KSampler",
     "_meta": {
       "title": "KSampler"
+    }
+  },
+  "57:28": {
+    "inputs": {
+      "unet_name": "z_image_turbo_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "57:62": {
+    "inputs": {
+      "lora_name": "RealisticSnapshot-Zimage-Turbov5.safetensors",
+      "strength_model": 0.8,
+      "model": [
+        "57:28",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
     }
   }
 }
