@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀🚀 Update (29-5-26)
+## 🚀🚀 Update (27-5-26)
 
 <img src=lora.png/>
 
