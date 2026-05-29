@@ -2,6 +2,21 @@
 
 <img src=ex.png/>
 
+## 🔥🔥 Update (29-5-26) 
+
+💻 New Feature Image & Image Edit Added 
+   - Qwen image edit 2511 (GGUF) (Image Edit)
+   - Flux Klein 9B Face Swap (GGUF) (Image Edit)
+   - Qwen image 2512 (with Loras 4 Step ) (Image)
+   - Meinamix Anime (Image)
+   - Wan2.2 (Image)
+
+📱 Upgrade Frontend & Backend
+
+✅ Link Model Update!!
+
+🌍 Support Windows & Linux Production
+
 ---
 
 ## 🚀🚀 Update (27-5-26)
@@ -77,47 +92,37 @@
 
 ---
 
-## 🛠️ Local Installation (Virtual Environment [VENV])
-1. Clone the Repository:
+## 🛠️ Local Installation (Windows)
 
 ```
 git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
 cd AI-Generator-Studio-Dashboard
-start with run.bat
+start with run_windows_only.bat
 ```
 
-2. Prepare ComfyUI:
+## 🛠️ Server Installation (Linux) Recommend Ubuntu
+
+```
+git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
+cd AI-Generator-Studio-Dashboard
+chmod +x run_linux_only.sh
+run ./run_linux_only.sh
+```
+
+✅ Prepare ComfyUI:
 
     - Ensure ComfyUI is running locally (default: 127.0.0.1:8188).
 
     - Load the provided yourworkflow.json  workflow into your ComfyUI to ensure all custom nodes are present.
   
-3. [Important!!] Check Workflow with Your Comfyui Host is Complitable ( there are two options )
+✅ [Important!!] Check Workflow with Your Comfyui Host is Complitable ( there are two options )
 
+✅  Use the workflow from the code. The first thing to do is import the workflow from the /backend/workflow/ folder into your Comfyui and download
+ 
+the model that matches that workflow. Once done, test generating it on your Comfyui. If it works, you can 
 
- ✅ 3.1 Use the workflow from the code. The first thing to do is import the workflow from the /backend/workflow/ folder into your Comfyui and download
+use it directly through this Studio.
  
-   the model that matches that workflow. Once done, test generating it on your Comfyui. If it works, you can use it directly through this Studio.
- 
- ✅ 3.2 Use your own workflow by exporting via API and placing the workflow.json file in /backend/workflow/. If the workflow name changes, edit the
- 
-   app.py file in this section.
- 
-    ```
-      WORKFLOW_SETTINGS = {
-     "Z-Image Turbo": {
-         "file": "workflow/image_z_image_turbo.json",   ## Name your file exactly as it is.
-         "prompt_id": "57:27",  ### Check that the ID matches your workflow section.
-         "seed_id": "57:3",  ### Check that the ID matches your workflow section.
-         "latent_id": "57:13"   ### Check that the ID matches your workflow section.
- 
-     "Flux 2 Klein": {
-         "file": "workflow/image_flux2_text_to_image_9b.json",   ## Name your file exactly as it is.
-         "prompt_id": "75:74",    ### Check that the ID matches your workflow section.             
-         "seed_id": "75:73",      ### Check that the ID matches your workflow section.            
-         "width_id": "75:68",     ### Check that the ID matches your workflow section.          
-         "height_id": "75:69",    ### Check that the ID matches your workflow section.          
-         "seed_key": "noise_seed"   ### Check that the ID matches your workflow section.  ```
 
 
 ### Let s try....   
@@ -126,7 +131,7 @@ start with run.bat
   
 ##  🛠️ How to update when available🔥
 
-🚀 just run update.bat 
+🚀 just run update_windows_only.bat   for Linux just run update_linux_only.sh
 
 ---
 

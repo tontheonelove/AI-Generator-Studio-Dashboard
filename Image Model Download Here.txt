@@ -1,0 +1,77 @@
++++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
+
+--------------------------------------------------------------------------------
+
+***[ Z-Image Turbo]***
+[z_image_bf16]  Model สำหรับ VRAM 12GB. ขึ้นไป =>วางไฟล์ที่ /model/unet
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/diffusion_models/z_image_bf16.safetensors?download=true
+
+[qwen_3_4b]  text encode  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors?download=true
+
+[AE]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/vae/ae.safetensors?download=true
+
+--------------------------------------------------------------------------------
+
+***[ Z-Image Turbo GGUF]***
+
+[z-image-turbo-Q8]  Model สำหรับ VRAM ต่ำกว่า12GB => วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/Z-Image-Turbo-GGUF/resolve/main/z-image-turbo-Q8_0.gguf?download=true
+
+[Qwen3-4B-Q8]  text encode  => วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q8_0.gguf?download=true
+
+[AE] => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/vae/ae.safetensors?download=true
+
+--------------------------------------------------------------------------------
+
+***[Flux2-Klein]***  (GGUF)
+
+[Flux2-Klein (GGUF)]   วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q8_0.gguf?download=true
+
+[Qwen3-8B-Q8] text encode  วางไฟล์ที่ /model/textencoders
+https://huggingface.co/NikolayKozloff/Qwen3-8B-Q8_0-GGUF/resolve/main/qwen3-8b-q8_0.gguf?download=true
+
+--------------------------------------------------------------------------------
+
+***[Qwen-Image-2512]***(GGUF)  VRAM 10G ขึ้นไป
+
+[qwen-image-2512-Q4_0.gguf]  วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/Qwen-Image-2512-GGUF/blob/main/qwen-image-2512-Q4_0.gguf
+
+[qwen_2.5_vl_7b_fp8_scaled.safetensors] วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors
+
+[Qwen-Image-2512-Lightning]  วางไฟล์ที่ /model/loras
+https://huggingface.co/lightx2v/Qwen-Image-2512-Lightning/blob/main/Qwen-Image-2512-Lightning-4steps-V1.0-bf16.safetensors
+
+[qwen_image_vae]  วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/vae/qwen_image_vae.safetensors
+
+--------------------------------------------------------------------------------
+
+***[MeinaMix - Anime]*** All VRAM
+
+[meinamix_v12Final.safetensors] วางไฟล์ที่ /model/checkpoint
+https://civitai.com/models/7240/meinamix
+
+--------------------------------------------------------------------------------
+
+***[Wan2.2] (GGUF)***  ต้องลง Custom Node ชื่อ "RES4LYF"  ทดสอบ Import workflow เข้า Comfy จากนั้น Install missing node แล้ว Restart 1 ครั้ง
+
+[Wan2.2-T2V-A14B-GGUF]  วางไฟล์ที่ /model/unet
+https://huggingface.co/QuantStack/Wan2.2-T2V-A14B-GGUF/blob/main/LowNoise/Wan2.2-T2V-A14B-LowNoise-Q4_K_M.gguf
+
+[umt5_xxl_fp8_e4m3fn_scaled.safetensors]  วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
+
+[Wan2.2-Lightning]   วางไฟล์ที่ /model/loras
+https://huggingface.co/lightx2v/Wan2.2-Lightning/blob/main/Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/low_noise_model.safetensors
+
+
+--------------------------------------------------------------------------------
+
+

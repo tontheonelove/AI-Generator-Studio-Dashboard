@@ -1,0 +1,31 @@
++++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
+
+--------------------------------------------------------------------------------
+
+***[Qwen Image Edit 2511]*** (GGUF)
+
+[Qwen Image Edit 2511]  วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/Qwen-Image-Edit-2511-GGUF/resolve/main/qwen-image-edit-2511-Q4_0.gguf?download=true
+
+[qwen_2.5_vl_7b_fp8]  วางไฟล์ที่ /model/textencoders
+https://huggingface.co/f5aiteam/CLIP/blob/main/qwen_2.5_vl_7b_fp8_scaled.safetensors
+
+[Loras] วางไฟล์ที่ /model/loras
+https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors?download=true
+
+
+--------------------------------------------------------------------------------
+
+
+***[Flux2 Klien Faceswap]*** (GGUF)
+
+[Flux2 Klien Faceswap] All VRAM วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/FLUX.2-klein-9B-GGUF/resolve/main/flux-2-klein-9b-Q8_0.gguf?download=true
+
+[Qwen3-8B-Q8] text encode  วางไฟล์ที่ /model/textencoders
+https://huggingface.co/NikolayKozloff/Qwen3-8B-Q8_0-GGUF/resolve/main/qwen3-8b-q8_0.gguf?download=true
+
+[LORAS] วางไฟล์ที่ /model/loras
+https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap/resolve/main/bfs_head_v1_flux-klein_9b_step3750_rank64.safetensors?download=true
+
+--------------------------------------------------------------------------------

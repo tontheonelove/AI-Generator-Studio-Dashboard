@@ -71,13 +71,27 @@
     },
     {
       "label": "📱 Phone Photography (2000-2025)",
-      "filename": "Phone_Photography_2025_KL_9B",
+      "filename": "Phone_Photography_2025_KL_9B.safetensors",
       "strength": 0.8
     },
     {
       "label": "🔥 Ultra Real",
       "filename": "ultra_real_v4.safetensors",
       "strength": 0.8
+    }
+  ],    
+  "Qwen Image 2512": [
+    {
+      "label": "⚡ Lightning 4 Steps (Default)",
+      "filename": "Qwen-Image-2512-Lightning-4steps-V1.0-bf16.safetensors",
+      "strength": 1.0
+    }
+  ],
+  "Wan2.2 Image": [
+    {
+      "label": "🔧 Low Noise Model (Default)",
+      "filename": "low_noise_model.safetensors",
+      "strength": 1.0
     }
   ]
 }

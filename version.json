@@ -1,13 +1,15 @@
 {
-  "version": "1.5.0",
-  "release_date": "2026-05-27",
+  "version": "2.0",
+  "release_date": "2026-05-29",
   "features": [
-    "🎬 Support 4 LORA",
-    "🖼️ เพิ่ม Random Prompt",
-    "💻 Update Workflow",
-    "🐛 Support resolution สูงสุด 4K",
-    "🌍 Link DownLoad Lora",
-    "❤️ Dev by TonLikeIT สอนฟรีแบบไม่มีกั๊กเช่นเคย"
+    "🚀 Image Edit Added",
+    "📸 Qwen Image 2512 Added",
+    "📱 MeinaMix Anime Added",
+    "❤️ Wan2.2 Image Added",
+    "🔥 Upgrade Frontend & Backend",
+    "🌍 Link DownLoad Model Updated!",
+    "💻 Full Support Windows & Linux",
+    "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"
 
   ]
 }

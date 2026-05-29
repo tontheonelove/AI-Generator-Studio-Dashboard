@@ -1,3 +1,6 @@
+นี่คือ Model ทั้งหมดที่อยู่บน Studio เลือกโหลดแค่ที่จะใช้ได้ หรือ Download ทั้งหมดได้
+วางไฟล์ .safetensors ที่ /model/loras  restart Comfyui 1 รอบก็พร้อมใช้
+
 [ Z-image Turbo + Z-image Turbo GGUF ]
 
 1. [ Realistic Snapshot ]
@@ -13,6 +16,7 @@ https://civitai.com/models/667086/nsfw-master-flux?modelVersionId=2904324
 https://civitai.com/models/1662740/lenovo-ultrareal?modelVersionId=2452071
 
 
+--------------------------------------------------------------------------------
 
 [ Flux2 Klein 9B GGUF  ]
 
@@ -28,5 +32,9 @@ https://civitai.com/models/2537408/phone-photography-2000-2025-klein-9b?modelVer
 
 4. [Ultra Real]
 https://civitai.com/models/2462105/ultra-real-klein-9b?modelVersionId=2846977
+
+
+--------------------------------------------------------------------------------
+
 
 [ wait for update soon]

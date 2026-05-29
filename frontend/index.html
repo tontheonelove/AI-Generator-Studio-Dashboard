@@ -27,6 +27,25 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
         .gallery-img { aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
         .gallery-img:hover { transform: scale(1.05); border: 2px solid #10b981; }
+
+        /* ✅ Collapsible Animation */
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+        .collapsible-content.expanded {
+            max-height: 500px;
+            opacity: 1;
+            transition: max-height 0.4s ease-in, opacity 0.3s ease-in;
+        }
+        .collapse-toggle .chevron {
+            transition: transform 0.3s ease;
+        }
+        .collapse-toggle.active .chevron {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -36,13 +55,17 @@
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-rocket text-emerald-500 text-2xl"></i>
                 <span class="font-bold text-xl">AI-Generation <span class="gradient-text">Studio</span></span>
+                <!-- ✅ Version Badge (แก้ class text-xs) -->
+                <span id="nav-version" class="hidden ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-mono text-emerald-400 select-none">
+                    🚀 V1.5 (27-5-26)
+                </span>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="openGallery()" class="px-3 py-1 rounded-full bg-gray-800 hover:bg-gray-700 text-sm border border-gray-700">
+                <button onclick="openGallery()" class="px-3 py-1 rounded-full bg-gray-800 hover:bg-gray-700 text-sm border border-gray-700 transition">
                     <i class="fa-solid fa-images"></i> Gallery
                 </button>
                 <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800 border border-gray-700 text-xs text-emerald-400">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     <span>Ready</span>
                 </div>
             </div>
@@ -54,101 +77,159 @@
         <!-- Left Column -->
         <div class="w-full lg:w-1/3">
             <div class="glass-panel rounded-2xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold mb-4"><i class="fa-solid fa-sliders text-blue-400"></i> Configuration</h2>
+                
+                <!-- Tab Switcher -->
+                <div class="flex gap-2 mb-4">
+                    <button id="tab-generate" onclick="switchTab('generate')" class="flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-emerald-600 text-white transition">
+                        🎨 Image Generate
+                    </button>
+                    <button id="tab-edit" onclick="switchTab('edit')" class="flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition">
+                        ✏️ Image Edit
+                    </button>
+                </div>
+
+                <h2 class="text-lg font-semibold mb-4"><i class="fa-solid fa-sliders text-blue-400"></i> <span id="config-title">Configuration</span></h2>
 
                 <div class="space-y-4">
-                    <!-- Model Select -->
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-2">AI Model</label>
-                        <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
-                            <option value="Z-Image Turbo">Z-Image Turbo</option>
-                            <option value="Z-Image Turbo-GGUF">Z-Image Turbo-GGUF</option>
-                            <option value="Flux 2 Klein-GGUF">Flux 2 Klein-GGUF</option>
-                        </select>
+                    
+                    <!-- === GENERATE MODE CONTROLS === -->
+                    <div id="generate-controls">
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-300 mb-2">AI Model</label>
+                            <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="Z-Image Turbo">Z-Image Turbo</option>
+                                <option value="Z-Image Turbo-GGUF">Z-Image Turbo-GGUF</option>
+                                <option value="Flux 2 Klein-GGUF">Flux 2 Klein-GGUF</option>
+                                <option value="Qwen Image 2512">Qwen Image 2512-GGUF</option>
+                                <option value="Wan2.2 Image">Wan2.2 Image</option>
+                                <option value="MeinaMix Anime">MeinaMix Anime (ภาพอนิเมะเท่านั้น)</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-300 mb-2">🎨 LoRA Style</label>
+                            <select id="lora-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- ✅ LoRA Select (新增) -->
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-2">🎨 LoRA Style</label>
-                        <select id="lora-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
-                            <option value="">Loading...</option>
-                        </select>
+                    <!-- === EDIT MODE CONTROLS === -->
+                    <div id="edit-controls" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">Edit Model</label>
+                            <select id="edit-model-select" onchange="onEditModelChange()" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="Flux Face Swap">🔄 Flux Face Swap (2 Images Required)</option>
+                                <option value="Qwen Image Edit">✏️ Qwen Image Edit (Image2 Optional)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">📷 Image 1 <span class="text-red-400">(Required)</span></label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('image1-input').click()">
+                                <input type="file" id="image1-input" accept="image/*" class="hidden" onchange="previewImage(this, 'image1-preview')">
+                                <img id="image1-preview" class="hidden max-h-40 mx-auto rounded-lg mb-2">
+                                <p id="image1-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-upload mr-1"></i> Click to upload image</p>
+                            </div>
+                        </div>
+                        <div id="image2-container">
+                            <label class="block text-sm text-gray-300 mb-2">📷 Image 2 <span id="image2-label" class="text-red-400">(Required)</span></label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('image2-input').click()">
+                                <input type="file" id="image2-input" accept="image/*" class="hidden" onchange="previewImage(this, 'image2-preview')">
+                                <img id="image2-preview" class="hidden max-h-40 mx-auto rounded-lg mb-2">
+                                <p id="image2-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-upload mr-1"></i> Click to upload image</p>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- Prompt -->
                     <div>
                         <div class="flex justify-between mb-2">
                             <label class="block text-sm text-gray-300">Prompt</label>
-                            <button onclick="document.getElementById('prompt-input').value=''" class="text-xs text-gray-500 hover:text-red-400">
+                            <button onclick="document.getElementById('prompt-input').value=''" class="text-xs text-gray-500 hover:text-red-400 transition">
                                 <i class="fa-solid fa-trash-can"></i> Clear
                             </button>
                         </div>
-                        <textarea id="prompt-input" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm" placeholder="Describe..."></textarea>
+                        <textarea id="prompt-input" rows="3" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm resize-y min-h-[84px] max-h-[200px]" placeholder="Describe..."></textarea>
                     </div>
 
-                    <div>
+                    <!-- Quick Presets -->
+                    <div id="presets-container">
                         <div class="flex justify-between mb-2">
                             <label class="text-xs text-gray-500">✨ Quick Presets</label>
-                            <button onclick="randomPrompt()" class="text-xs text-emerald-400 hover:text-emerald-300">
+                            <button onclick="randomPrompt()" class="text-xs text-emerald-400 hover:text-emerald-300 transition">
                                 <i class="fa-solid fa-dice"></i> Surprise Me
                             </button>
                         </div>
                         <div class="flex flex-wrap gap-2 mb-2">
-                            <button onclick="addPrompt('cinematic lighting, 8k, masterpiece')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-emerald-600 border border-gray-600">Cinematic</button>
-                            <button onclick="addPrompt('photorealistic, 8k, raw photo')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-blue-600 border border-gray-600">Realistic</button>
-                            <button onclick="addPrompt('anime style, vivid colors')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-purple-600 border border-gray-600">Anime</button>
-                            <button onclick="addPrompt('3d render, unreal engine 5')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-orange-600 border border-gray-600">3D</button>
+                            <button onclick="addPrompt('cinematic lighting, 8k, masterpiece')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-emerald-600 border border-gray-600 transition">Cinematic</button>
+                            <button onclick="addPrompt('photorealistic, 8k, raw photo')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-blue-600 border border-gray-600 transition">Realistic</button>
+                            <button onclick="addPrompt('anime style, vivid colors')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-purple-600 border border-gray-600 transition">Anime</button>
+                            <button onclick="addPrompt('3d render, unreal engine 5')" class="px-2 py-1 text-[10px] rounded-full bg-gray-700 hover:bg-orange-600 border border-gray-600 transition">3D</button>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="addPrompt('cyberpunk, neon lights')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 border border-gray-700">Cyberpunk</button>
-                            <button onclick="addPrompt('dark fantasy, gothic')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 border border-gray-700">Dark Fantasy</button>
+                            <button onclick="addPrompt('cyberpunk, neon lights')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 border border-gray-700 transition">Cyberpunk</button>
+                            <button onclick="addPrompt('dark fantasy, gothic')" class="px-2 py-1 text-[10px] rounded-full bg-gray-800 hover:bg-gray-600 border border-gray-700 transition">Dark Fantasy</button>
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t border-gray-700 space-y-3">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs text-gray-400 mb-1">Width</label>
-                                <select id="width-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
-                                    <option value="720">720</option>
-                                    <option value="864">864</option>
-                                    <option value="1024" selected>1024</option>
-                                    <option value="1080">1080</option>
-                                    <option value="1280">1280</option>
-                                    <option value="1440">1440</option>
-                                    <option value="1536">1536</option>
-                                    <option value="1920">1920</option>
-                                    <option value="2160">2160</option>
-                                    <option value="2560">2560</option>
-                                    <option value="3840">3840</option>
-                                </select>
+                    <!-- Generate Controls (Collapsible) -->
+                    <div id="generate-only-controls" class="pt-4 border-t border-gray-700">
+                        <button onclick="toggleCollapse('settings')" class="collapse-toggle w-full flex justify-between items-center py-2 mb-2 text-xs text-gray-400 hover:text-emerald-400 transition group">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-sliders"></i> ⚙️ Size & Seed Settings
+                            </span>
+                            <i class="fa-solid fa-chevron-down chevron text-[10px]"></i>
+                        </button>
+                        <div id="settings-content" class="collapsible-content">
+                            <div class="space-y-3 pb-2">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs text-gray-400 mb-1">Width</label>
+                                        <select id="width-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                                            <option value="720">720</option>
+                                            <option value="864">864</option>
+                                            <option value="1024" selected>1024</option>
+                                            <option value="1080">1080</option>
+                                            <option value="1280">1280</option>
+                                            <option value="1440">1440</option>
+                                            <option value="1536">1536</option>
+                                            <option value="1920">1920</option>
+                                            <option value="2160">2160</option>
+                                            <option value="2560">2560</option>
+                                            <option value="3840">3840</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-400 mb-1">Height</label>
+                                        <select id="height-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                                            <option value="720">720</option>
+                                            <option value="864">864</option>
+                                            <option value="1024" selected>1024</option>
+                                            <option value="1080">1080</option>
+                                            <option value="1280">1280</option>
+                                            <option value="1440">1440</option>
+                                            <option value="1536">1536</option>
+                                            <option value="1920">1920</option>
+                                            <option value="2160">2160</option>
+                                            <option value="2560">2560</option>
+                                            <option value="3840">3840</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-400 mb-1">Seed (-1 for Random)</label>
+                                    <input type="number" id="seed-input" value="-1" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs text-gray-400 mb-1">Height</label>
-                                <select id="height-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
-                                    <option value="720">720</option>
-                                    <option value="864">864</option>
-                                    <option value="1024" selected>1024</option>
-                                    <option value="1080">1080</option>
-                                    <option value="1280">1280</option>
-                                    <option value="1440">1440</option>
-                                    <option value="1536">1536</option>
-                                    <option value="1920">1920</option>
-                                    <option value="2160">2160</option>
-                                    <option value="2560">2560</option>
-                                    <option value="3840">3840</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Seed (-1 for Random)</label>
-                            <input type="number" id="seed-input" value="-1" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
                         </div>
                     </div>
                 </div>
 
-                <button id="generate-btn" onclick="generate()" class="mt-6 w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2">
-                    <span>✨ Generate Masterpiece</span>
-                </button>
+                <!-- ✅ Buttons Container (Generate + Cancel) -->
+                <div class="flex gap-2 mt-6">
+                    <button id="generate-btn" onclick="generate()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2 transition">
+                        <span>✨ Generate Masterpiece</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -166,8 +247,8 @@
 
                     <div id="loading" class="hidden absolute inset-0 bg-gray-900/90 z-20 flex flex-col items-center justify-center">
                         <div class="loader mb-4" style="width: 48px; height: 48px;"></div>
-                        <h3 class="text-lg font-semibold text-white">Generating...</h3>
-                        <p class="text-sm text-gray-400 mt-2">Please wait</p>
+                        <h3 class="text-lg font-semibold text-white" id="loading-title">Generating...</h3>
+                        <p class="text-sm text-gray-400 mt-2" id="loading-detail">Please wait</p>
                     </div>
 
                     <img id="result-image" class="hidden max-w-full max-h-[600px] object-contain rounded-lg shadow-2xl" src="">
@@ -177,7 +258,7 @@
                     <div class="text-sm text-gray-400">
                         Seed: <span id="result-seed" class="font-mono text-emerald-400">-</span>
                     </div>
-                    <a id="download-link" href="#" download="ai-image.png" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <a id="download-link" href="#" download="ai-image.png" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
                         <i class="fa-solid fa-download"></i> Download
                     </a>
                 </div>
@@ -190,7 +271,7 @@
         <div class="bg-gray-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700">
             <div class="flex justify-between items-center p-4 border-b border-gray-800">
                 <h2 class="text-lg font-bold">🖼️ Gallery</h2>
-                <button onclick="closeGallery()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="closeGallery()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-4 overflow-y-auto flex-grow">
                 <div id="galleryList" class="gallery-grid"></div>
@@ -207,11 +288,9 @@
                 </h3>
                 <span id="modalVersion" class="text-xs bg-white/20 px-2 py-1 rounded-full text-white font-mono">v1.0.0</span>
             </div>
-            
             <div class="p-6">
                 <p class="text-gray-400 text-sm mb-4">ฟีเจอร์ใหม่ในเวอร์ชันนี้:</p>
                 <ul id="featureList" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2"></ul>
-                
                 <button onclick="closeUpdateModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2">
                     <span>รับทราบและเริ่มใช้งาน</span>
                     <i class="fa-solid fa-check"></i>
@@ -231,6 +310,87 @@
         const loraSelect = document.getElementById('lora-select');
         const modelSelect = document.getElementById('model-select');
         let currentLoraList = [];
+        let currentMode = 'generate';
+        let uploadedImage1 = '';
+        let uploadedImage2 = '';
+
+        // --- 📂 Collapsible Toggle ---
+        function toggleCollapse(section) {
+            const content = document.getElementById(`${section}-content`);
+            const toggle = content.previousElementSibling;
+            content.classList.toggle('expanded');
+            toggle.classList.toggle('active');
+        }
+
+        // --- 🔄 Tab & Edit Mode Management ---
+        function switchTab(mode) {
+            currentMode = mode;
+            const tabGen = document.getElementById('tab-generate');
+            const tabEdit = document.getElementById('tab-edit');
+            const editControls = document.getElementById('edit-controls');
+            const genControls = document.getElementById('generate-controls');
+            const genOnlyControls = document.getElementById('generate-only-controls');
+            const presetsContainer = document.getElementById('presets-container');
+            const configTitle = document.getElementById('config-title');
+
+            if (mode === 'edit') {
+                tabGen.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition';
+                tabEdit.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-emerald-600 text-white transition';
+                editControls.classList.remove('hidden');
+                genControls.classList.add('hidden');
+                genOnlyControls.classList.add('hidden');
+                presetsContainer.classList.add('hidden');
+                configTitle.textContent = 'Edit Settings';
+                onEditModelChange();
+            } else {
+                tabGen.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-emerald-600 text-white transition';
+                tabEdit.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition';
+                editControls.classList.add('hidden');
+                genControls.classList.remove('hidden');
+                genOnlyControls.classList.remove('hidden');
+                presetsContainer.classList.remove('hidden');
+                configTitle.textContent = 'Configuration';
+            }
+        }
+
+        function onEditModelChange() {
+            const model = document.getElementById('edit-model-select').value;
+            const img2Container = document.getElementById('image2-container');
+            const img2Label = document.getElementById('image2-label');
+            img2Container.classList.remove('hidden');
+            if (model === 'Flux Face Swap') {
+                img2Label.textContent = '(Required)';
+                img2Label.className = 'text-red-400';
+            } else {
+                img2Label.textContent = '(Optional)';
+                img2Label.className = 'text-yellow-400';
+            }
+        }
+
+        async function previewImage(input, previewId) {
+            const file = input.files[0];
+            if (!file) return;
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(previewId.replace('-preview', '-placeholder'));
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Upload failed');
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+                if (previewId === 'image1-preview') uploadedImage1 = data.filename;
+                else uploadedImage2 = data.filename;
+            } catch (e) {
+                alert('Upload failed: ' + e.message);
+            }
+        }
 
         // --- 🎨 LoRA Management ---
         async function loadLoras(modelName) {
@@ -238,13 +398,11 @@
                 const res = await fetch(`/api/loras/${encodeURIComponent(modelName)}`);
                 const data = await res.json();
                 currentLoraList = data.loras || [];
-                
                 loraSelect.innerHTML = '';
                 if (currentLoraList.length === 0) {
                     loraSelect.innerHTML = '<option value="">No LoRA available</option>';
                     return;
                 }
-                
                 currentLoraList.forEach((lora, index) => {
                     const opt = document.createElement('option');
                     opt.value = index;
@@ -256,7 +414,6 @@
                 loraSelect.innerHTML = '<option value="">Error loading</option>';
             }
         }
-
         modelSelect.addEventListener('change', () => loadLoras(modelSelect.value));
 
         // --- 🔊 Sound ---
@@ -300,8 +457,7 @@
                 "A photorealistic close-up portrait of a young Asian woman with a sweet, gentle smile, styled in a vintage cottagecore aesthetic. She has black hair in twin braids with bangs, wearing a cream knitted bonnet with cherry embroidery and red ribbons. Her outfit features a white camisole with red scalloped lace trim and a red bow, with a red knitted cardigan draped off her shoulders. Red gingham bows and cherry hair clips adorn her braids. She is holding a strawberry cupcake. The background is a cozy, warm-toned room with wooden furniture and a blurred retro TV. Soft lighting, high resolution, 8k.",
                 "Aerial view of Yuanyang rice terraces in Yunnan province at sunrise, thousands of cascading water-filled paddies reflecting golden and pink sky colors, morning mist weaving between terrace layers, lush green hillside with scattered palm trees, drone photography",
                 "A turquoise river winds through a lush canyon. Thick moss and dense ferns blanket the rocky walls; multiple waterfalls cascade from above, enveloped in mist. At noon, sunlight filters through the dense canopy, dappling the river surface with shimmering light. The atmosphere is humid and fresh, pulsing with primal jungle vitality. No humans, text, or artificial traces present.",
-                "An ultra-realistic close-up of a golden retriever outdoors under soft daylight. Hair is exquisitely detailed: strands distinct, color transitioning naturally from warm gold to light cream, light glinting delicately at the tips; a gentle breeze adds subtle volume. Undercoat is soft and dense; guard hairs are long and well-defined, with visible layering. Eyes are moist, expressive; nose is slightly damp with fine specular highlights. Background is softly blurred to emphasize the dog’s tangible texture and vivid expression.",
-                
+                "An ultra-realistic close-up of a golden retriever outdoors under soft daylight. Hair is exquisitely detailed: strands distinct, color transitioning naturally from warm gold to light cream, light glinting delicately at the tips; a gentle breeze adds subtle volume. Undercoat is soft and dense; guard hairs are long and well-defined, with visible layering. Eyes are moist, expressive; nose is slightly damp with fine specular highlights. Background is softly blurred to emphasize the dog's tangible texture and vivid expression."
             ];
             document.getElementById('prompt-input').value = prompts[Math.floor(Math.random() * prompts.length)];
         }
@@ -342,12 +498,30 @@
             }).catch(e => console.error('Failed to save seen version:', e));
         }
 
+        // --- 🏷️ Load Version Badge ---
+        async function loadVersionBadge() {
+            try {
+                const res = await fetch('/api/version');
+                const data = await res.json();
+                if (data.version && data.version !== 'unknown') {
+                    const badge = document.getElementById('nav-version');
+                    const dateStr = data.release_date || '';
+                    const displayDate = dateStr ? ` (${dateStr})` : '';
+                    badge.textContent = `🚀 V${data.version}${displayDate}`;
+                    badge.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.warn('Failed to load version badge:', e);
+            }
+        }
+
         // --- ⏳ Queue Status Polling ---
         async function checkStatus() {
             try {
                 const res = await fetch('/api/status');
                 const data = await res.json();
                 const btn = document.getElementById('generate-btn');
+                // ไม่ override ถ้ากำลัง busy อยู่ (เพราะ generate() จัดการเอง)
                 if (data.is_processing && !btn.classList.contains('busy')) {
                     btn.disabled = true;
                     btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Processing...';
@@ -363,11 +537,8 @@
         }
         setInterval(checkStatus, 2000);
 
-        // --- 🚀 Main Generate Function ---
+        // --- 🚀 Main Generate Function (SSE + Cancel Support) ---
         async function generate() {
-            const prompt = document.getElementById('prompt-input').value;
-            if (!prompt) { alert("Please enter a prompt!"); return; }
-
             const btn = document.getElementById('generate-btn');
             const loading = document.getElementById('loading');
             const placeholder = document.getElementById('placeholder');
@@ -376,6 +547,34 @@
 
             if (!audioCtx) {
                 try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+            }
+
+            let payload;
+            if (currentMode === 'edit') {
+                const editModel = document.getElementById('edit-model-select').value;
+                const prompt = document.getElementById('prompt-input').value;
+                if (!uploadedImage1) { alert("⚠️ Please upload Image 1!"); return; }
+                if (editModel === 'Flux Face Swap' && !uploadedImage2) { alert("⚠️ Flux Face Swap requires Image 2!"); return; }
+                if (!prompt) { alert("Please enter a prompt!"); return; }
+                payload = {
+                    prompt, model: editModel, mode: "edit",
+                    image1_filename: uploadedImage1, image2_filename: uploadedImage2 || "",
+                    seed: -1, width: 1024, height: 1024
+                };
+            } else {
+                const prompt = document.getElementById('prompt-input').value;
+                if (!prompt) { alert("Please enter a prompt!"); return; }
+                const loraIndex = parseInt(loraSelect.value);
+                const selectedLora = currentLoraList[loraIndex] || {};
+                payload = {
+                    prompt, model: modelSelect.value,
+                    seed: parseInt(document.getElementById('seed-input').value),
+                    width: parseInt(document.getElementById('width-select').value),
+                    height: parseInt(document.getElementById('height-select').value),
+                    lora_filename: selectedLora.filename || "",
+                    lora_strength: selectedLora.strength || 0.0,
+                    mode: "generate"
+                };
             }
 
             const statusRes = await fetch('/api/status');
@@ -392,20 +591,6 @@
             resultImg.classList.add('hidden');
             actionBar.classList.add('hidden');
             loading.classList.remove('hidden');
-
-            // ✅ ดึงค่า LoRA ที่เลือก
-            const loraIndex = parseInt(loraSelect.value);
-            const selectedLora = currentLoraList[loraIndex] || {};
-
-            const payload = {
-                prompt: prompt,
-                model: modelSelect.value,
-                seed: parseInt(document.getElementById('seed-input').value),
-                width: parseInt(document.getElementById('width-select').value),
-                height: parseInt(document.getElementById('height-select').value),
-                lora_filename: selectedLora.filename || "",
-                lora_strength: selectedLora.strength || 0.0
-            };
 
             try {
                 const res = await fetch('/api/generate', {
@@ -472,14 +657,16 @@
             document.getElementById('prompt-input').value = prompt;
             document.getElementById('seed-input').value = seed;
             document.getElementById('model-select').value = model;
-            loadLoras(model); // โหลด LoRA ใหม่ตาม model ที่เลือก
+            loadLoras(model);
+            switchTab('generate');
             closeGallery();
         }
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(checkForUpdates, 1000);
-            loadLoras(modelSelect.value); // โหลด LoRA ครั้งแรก
+            loadLoras(modelSelect.value);
+            loadVersionBadge();
         });
     </script>
 </body>
