@@ -1,0 +1,191 @@
+{
+  "19": {
+    "inputs": {
+      "filename_prefix": "stable_audio_3",
+      "quality": "320k",
+      "audioUI": "",
+      "audio": ["52:12", 0]
+    },
+    "class_type": "SaveAudioMP3",
+    "_meta": {"title": "Save Audio (MP3)"}
+  },
+  "52:3": {
+    "inputs": {
+      "seed": 408980405379466,
+      "steps": 50,
+      "cfg": 7,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": ["52:25", 0],
+      "positive": ["52:6", 0],
+      "negative": ["52:7", 0],
+      "latent_image": ["52:11", 0]
+    },
+    "class_type": "KSampler",
+    "_meta": {"title": "KSampler"}
+  },
+  "52:6": {
+    "inputs": {
+      "text": ["52:34", 0],
+      "clip": ["52:26", 0]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "CLIP Text Encode (Prompt)"}
+  },
+  "52:7": {
+    "inputs": {
+      "text": "",
+      "clip": ["52:26", 0]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {"title": "CLIP Text Encode (Negative)"}
+  },
+  "52:11": {
+    "inputs": {
+      "seconds": ["52:36", 0],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentAudio",
+    "_meta": {"title": "Empty Latent Audio"}
+  },
+  "52:12": {
+    "inputs": {
+      "samples": ["52:3", 0],
+      "vae": ["52:25", 2]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {"title": "VAE Decode Audio"}
+  },
+  "52:25": {
+    "inputs": {
+      "ckpt_name": "stable_audio_3_medium_base.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {"title": "Load Checkpoint"}
+  },
+  "52:26": {
+    "inputs": {
+      "clip_name": "t5gemma_b_b_ul2.safetensors",
+      "type": "stable_audio",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {"title": "Load CLIP"}
+  },
+  "52:28": {
+    "inputs": {
+      "prompt": ["52:40", 0],
+      "max_length": 256,
+      "sampling_mode": "on",
+      "sampling_mode.temperature": 0.7,
+      "sampling_mode.top_k": 64,
+      "sampling_mode.top_p": 0.95,
+      "sampling_mode.min_p": 0.05,
+      "sampling_mode.repetition_penalty": 1.05,
+      "sampling_mode.seed": 0,
+      "sampling_mode.presence_penalty": 0,
+      "thinking": false,
+      "use_default_template": true,
+      "clip": ["52:29", 0]
+    },
+    "class_type": "TextGenerate",
+    "_meta": {"title": "TextGenerate"}
+  },
+  "52:29": {
+    "inputs": {
+      "clip_name": "qwen3.5_2b_bf16.safetensors",
+      "type": "stable_diffusion",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {"title": "Load CLIP (Qwen)"}
+  },
+  "52:31": {
+    "inputs": {
+      "value": "Lo-fi hip-hop chill track with mellow electric piano"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {"title": "User Input Prompt"}
+  },
+  "52:34": {
+    "inputs": {
+      "switch": ["52:35", 0],
+      "on_false": ["52:31", 0],
+      "on_true": ["52:28", 0]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {"title": "Switch"}
+  },
+  "52:35": {
+    "inputs": {"value": true},
+    "class_type": "PrimitiveBoolean",
+    "_meta": {"title": "Enable Reprompt"}
+  },
+  "52:36": {
+    "inputs": {"value": 150},
+    "class_type": "PrimitiveFloat",
+    "_meta": {"title": "Duration (seconds)"}
+  },
+  "52:38": {
+    "inputs": {
+      "string": "SYSTEM_PROMPTS\n\nInput: USER_INPUT\nTarget audio length: AUDIO_LENGTH seconds.\nOutput:",
+      "find": "SYSTEM_PROMPTS",
+      "replace": ["52:49", 0]
+    },
+    "class_type": "StringReplace",
+    "_meta": {"title": "Text Replace (PROMPT TEMPLATE)"}
+  },
+  "52:39": {
+    "inputs": {
+      "string": ["52:38", 0],
+      "find": "USER_INPUT",
+      "replace": ["52:31", 0]
+    },
+    "class_type": "StringReplace",
+    "_meta": {"title": "Text Replace (USER INPUT)"}
+  },
+  "52:40": {
+    "inputs": {
+      "string": ["52:39", 0],
+      "find": "AUDIO_LENGTH",
+      "replace": ["52:42", 0]
+    },
+    "class_type": "StringReplace",
+    "_meta": {"title": "Text Replace (AUDIO LENGTH)"}
+  },
+  "52:41": {
+    "inputs": {
+      "expression": "a",
+      "values.a": ["52:36", 0]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {"title": "Math Expression"}
+  },
+  "52:42": {
+    "inputs": {"source": ["52:41", 1]},
+    "class_type": "PreviewAny",
+    "_meta": {"title": "Preview as Text"}
+  },
+  "52:43": {
+    "inputs": {
+      "choice": "Music",
+      "index": 0,
+      "option1": "Music",
+      "option2": "Instrument",
+      "option3": "SFX",
+      "option4": "One-shot",
+      "option5": ""
+    },
+    "class_type": "CustomCombo",
+    "_meta": {"title": "Category"}
+  },
+  "52:49": {
+    "inputs": {
+      "json_string": "{\"Music\": \"...\", \"Instrument\": \"...\", \"SFX\": \"...\", \"One-shot\": \"...\"}",
+      "key": ["52:43", 0]
+    },
+    "class_type": "JsonExtractString",
+    "_meta": {"title": "Extract Text from JSON"}
+  }
+}

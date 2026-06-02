@@ -59,20 +59,105 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
         yield {"type": "error", "message": f"WebSocket error: {str(e)}"}
         return
 
-    # Fetch Result
+    # Fetch Result (รองรับ Image, Video, และ Audio)
     time.sleep(0.5)
     try:
         history = requests.get(f"http://{server_address}/history/{prompt_id}").json()
-        outputs = history[prompt_id].get('outputs', {})
-        images = []
-        for node_output in outputs.values():
-            for img in node_output.get('images', []):
-                img_url = f"http://{server_address}/view?filename={img['filename']}&subfolder={img['subfolder']}&type={img['type']}"
-                img_data = requests.get(img_url).content
-                images.append({"filename": img['filename'], "data": img_data})
         
-        yield {"type": "complete", "images": images}
+        if prompt_id not in history:
+            yield {"type": "error", "message": "Prompt ID not found in history"}
+            return
+            
+        outputs = history[prompt_id].get('outputs', {})
+        
+        images = []
+        videos = []
+        audios = []  # 🆕 รองรับ Audio Output
+        
+        for node_id, node_output in outputs.items():
+            if not isinstance(node_output, dict):
+                continue
+                
+            # 1. ตรวจสอบ key 'images' (บาง Node เช่น SaveVideo ยัด .mp4 มาในนี้)
+            images_list = node_output.get('images', [])
+            if isinstance(images_list, list):
+                for item in images_list:
+                    if isinstance(item, dict) and 'filename' in item:
+                        filename = item['filename']
+                        subfolder = item.get('subfolder', '')
+                        item_type = item.get('type', 'output')
+                        file_url = f"http://{server_address}/view?filename={filename}&subfolder={subfolder}&type={item_type}"
+                        
+                        # 🕵️‍♂️ เช็คนามสกุลไฟล์ว่าเป็น Video หรือไม่
+                        if filename.lower().endswith(('.mp4', '.webm', '.mov', '.avi', '.mkv')):
+                            print(f"[DEBUG] 🎬 Found video disguised as image: {filename}")
+                            try:
+                                file_data = requests.get(file_url).content
+                                print(f"[DEBUG] ✅ Video fetched: {len(file_data)} bytes")
+                                videos.append({
+                                    "filename": filename,
+                                    "data": file_data,
+                                    "format": "video/mp4"
+                                })
+                            except Exception as fetch_err:
+                                print(f"[DEBUG] ❌ Failed to fetch video: {fetch_err}")
+                        else:
+                            # เป็นรูปภาพปกติ
+                            try:
+                                file_data = requests.get(file_url).content
+                                images.append({"filename": filename, "data": file_data})
+                            except Exception as fetch_err:
+                                print(f"[DEBUG] ❌ Failed to fetch image: {fetch_err}")
+            
+            # 2. ตรวจสอบ key สำหรับ Video โดยเฉพาะ (gifs, video, videos, animated)
+            video_keys = ['gifs', 'video', 'videos', 'animated']
+            for vkey in video_keys:
+                if vkey in node_output:
+                    videos_list = node_output[vkey]
+                    if isinstance(videos_list, list):
+                        for video in videos_list:
+                            if isinstance(video, dict) and 'filename' in video:
+                                video_url = f"http://{server_address}/view?filename={video['filename']}&subfolder={video.get('subfolder', '')}&type={video.get('type', 'output')}"
+                                print(f"[DEBUG] 🎬 Fetching video from '{vkey}' key: {video_url}")
+                                try:
+                                    video_data = requests.get(video_url).content
+                                    print(f"[DEBUG] ✅ Video fetched: {len(video_data)} bytes")
+                                    videos.append({
+                                        "filename": video['filename'],
+                                        "data": video_data,
+                                        "format": video.get('format', 'video/mp4')
+                                    })
+                                except Exception as fetch_err:
+                                    print(f"[DEBUG] ❌ Failed to fetch video: {fetch_err}")
+            
+            # 🆕 3. ตรวจสอบ key สำหรับ Audio (audio, audios)
+            audio_keys = ['audio', 'audios']
+            for akey in audio_keys:
+                if akey in node_output:
+                    audios_list = node_output[akey]
+                    if isinstance(audios_list, list):
+                        for audio in audios_list:
+                            if isinstance(audio, dict) and 'filename' in audio:
+                                audio_url = f"http://{server_address}/view?filename={audio['filename']}&subfolder={audio.get('subfolder', '')}&type={audio.get('type', 'output')}"
+                                print(f"[DEBUG] 🎵 Fetching audio from '{akey}' key: {audio_url}")
+                                try:
+                                    audio_data = requests.get(audio_url).content
+                                    print(f"[DEBUG] ✅ Audio fetched: {len(audio_data)} bytes")
+                                    audios.append({
+                                        "filename": audio['filename'],
+                                        "data": audio_data,
+                                        "format": audio.get('format', 'audio/mpeg')
+                                    })
+                                except Exception as fetch_err:
+                                    print(f"[DEBUG] ❌ Failed to fetch audio: {fetch_err}")
+        
+        print(f"[DEBUG] Final result - Images: {len(images)}, Videos: {len(videos)}, Audios: {len(audios)}")
+        yield {"type": "complete", "images": images, "videos": videos, "audios": audios}
+        
     except Exception as e:
+        import traceback
+        print(f"[ERROR] Failed to fetch result: {str(e)}")
+        traceback.print_exc()
         yield {"type": "error", "message": f"Failed to fetch result: {str(e)}"}
 
 
@@ -185,6 +270,223 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config):
             final_result = {"images": event["images"], "seed": actual_seed}
         yield event
 
+    if final_result:
+        yield {"type": "final_result", "data": final_result}
+
+
+# ✅ Video Generator for Streaming (รองรับ Audio สำหรับ Lipsync)
+def generate_video_stream(prompt_text, image1_filename, audio_filename, width, height, length, fps, config):
+    """Generator สำหรับ Video Mode แบบ Streaming (รองรับ Audio Input สำหรับ Lipsync)"""
+    client_id = get_client_id()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    workflow_path = os.path.join(base_dir, config["file"])
+    
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        workflow = json.load(f)
+
+    # ✅ Inject Prompt (รองรับทั้ง key "text" และ "value" สำหรับ PrimitiveStringMultiline)
+    if config.get("prompt_id") and config["prompt_id"] in workflow:
+        prompt_key = config.get("prompt_key", "text")  # default "text", Lipsync ใช้ "value"
+        workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt_text
+
+    # Inject Seed
+    actual_seed = random.randint(1, 10**14)
+    seed_key = config.get("seed_key", "seed")
+    if config.get("seed_id") and config["seed_id"] in workflow:
+        workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
+
+    # Inject Image
+    if config.get("image1_id") and config["image1_id"] in workflow:
+        workflow[config["image1_id"]]["inputs"]["image"] = image1_filename
+        workflow[config["image1_id"]]["inputs"]["subfolder"] = ""
+        workflow[config["image1_id"]]["inputs"]["type"] = "input"
+
+    # ✅ Inject Audio (สำหรับ Lipsync)
+    if config.get("is_lipsync") and config.get("audio_id") and config["audio_id"] in workflow:
+        if audio_filename:
+            workflow[config["audio_id"]]["inputs"]["audio"] = audio_filename
+            print(f"[Video] 🎵 Audio injected: {audio_filename}")
+            
+            # เปิด Audio Switch ให้ใช้ Custom Audio
+            if config.get("audio_switch_id") and config["audio_switch_id"] in workflow:
+                workflow[config["audio_switch_id"]]["inputs"]["switch"] = True
+                print("[Video] ✅ Audio switch enabled (using custom audio)")
+        else:
+            yield {"type": "error", "message": "Lipsync model requires audio file"}
+            return
+
+    # Inject Video Parameters
+    if config.get("width_id") and config["width_id"] in workflow:
+        workflow[config["width_id"]]["inputs"]["value"] = width
+    if config.get("height_id") and config["height_id"] in workflow:
+        workflow[config["height_id"]]["inputs"]["value"] = height
+    if config.get("length_id") and config["length_id"] in workflow:
+        workflow[config["length_id"]]["inputs"]["value"] = length
+    if config.get("fps_id") and config["fps_id"] in workflow:
+        workflow[config["fps_id"]]["inputs"]["value"] = fps
+
+    # Stream execution
+    final_result = None
+    for event in _stream_comfy_execution(workflow, client_id):
+        if event["type"] == "complete":
+            # สำหรับ Video เราจะมองหา video output แทน image
+            final_result = {"videos": event.get("videos", []), "seed": actual_seed}
+        yield event
+    
+    if final_result:
+        yield {"type": "final_result", "data": final_result}
+
+
+# ✅ NEW: Tools Generator for Streaming (RTX Upscale)
+def tools_stream(filename, scale, quality, config):
+    """Generator สำหรับ Tools Mode (Upscale) แบบ Streaming"""
+    client_id = get_client_id()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    workflow_path = os.path.join(base_dir, config["file"])
+    
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        workflow = json.load(f)
+
+    # ✅ Inject Input (Image หรือ Video)
+    if config.get("is_image_tool") and config.get("image_id") in workflow:
+        workflow[config["image_id"]]["inputs"]["image"] = filename
+        workflow[config["image_id"]]["inputs"]["subfolder"] = ""
+        workflow[config["image_id"]]["inputs"]["type"] = "input"
+        print(f"[Tools] 🖼️ Image injected: {filename}")
+        
+    elif config.get("is_video_tool") and config.get("video_id") in workflow:
+        video_key = config.get("video_key", "file")
+        workflow[config["video_id"]]["inputs"][video_key] = filename
+        print(f"[Tools] 🎬 Video injected: {filename}")
+
+    # ✅ Inject Scale
+    if config.get("scale_id") and config["scale_id"] in workflow:
+        scale_key = config.get("scale_key", "resize_type.scale")
+        workflow[config["scale_id"]]["inputs"][scale_key] = scale
+        print(f"[Tools] Scale: {scale}x")
+
+    # ✅ Inject Quality
+    if config.get("quality_id") and config["quality_id"] in workflow:
+        quality_key = config.get("quality_key", "quality")
+        workflow[config["quality_id"]]["inputs"][quality_key] = quality
+        print(f"[Tools] Quality: {quality}")
+
+    # Stream execution
+    final_result = None
+    for event in _stream_comfy_execution(workflow, client_id):
+        if event["type"] == "complete":
+            if config.get("is_video_tool"):
+                final_result = {"videos": event.get("videos", [])}
+            else:
+                final_result = {"images": event.get("images", [])}
+        yield event
+    
+    if final_result:
+        yield {"type": "final_result", "data": final_result}
+
+
+# 🆕 Audio Generator for Streaming (AceStep 1.5)
+def generate_audio_stream(tags, lyrics, duration, bpm, seed, config):
+    """Generator สำหรับ Audio Generation แบบ Streaming (AceStep 1.5)"""
+    client_id = get_client_id()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    workflow_path = os.path.join(base_dir, config["file"])
+    
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        workflow = json.load(f)
+
+    # ✅ Inject Tags (Style)
+    if config.get("tags_id") and config["tags_id"] in workflow:
+        workflow[config["tags_id"]]["inputs"]["tags"] = tags
+        print(f"[Audio] 🎵 Tags injected: {tags}")
+
+    # ✅ Inject Lyrics
+    if config.get("lyrics_id") and config["lyrics_id"] in workflow:
+        workflow[config["lyrics_id"]]["inputs"]["lyrics"] = lyrics
+        print(f"[Audio] 📝 Lyrics injected: {lyrics[:50]}...")
+
+    # ✅ Inject Seed
+    actual_seed = seed if seed != -1 else random.randint(1, 10**14)
+    seed_key = config.get("seed_key", "value")
+    if config.get("seed_id") and config["seed_id"] in workflow:
+        workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
+        print(f"[Audio] 🎲 Seed: {actual_seed}")
+
+    # ✅ Inject Duration
+    if config.get("duration_id") and config["duration_id"] in workflow:
+        duration_key = config.get("duration_key", "seconds")
+        workflow[config["duration_id"]]["inputs"][duration_key] = duration
+        # บาง workflow มี duration ใน node เดียวกับ tags ด้วย
+        if config.get("tags_id") and config["tags_id"] in workflow:
+            if "duration" in workflow[config["tags_id"]]["inputs"]:
+                workflow[config["tags_id"]]["inputs"]["duration"] = duration
+        print(f"[Audio] ⏱️ Duration: {duration}s")
+
+    # ✅ Inject BPM
+    if config.get("bpm_id") and config["bpm_id"] in workflow:
+        bpm_key = config.get("bpm_key", "bpm")
+        workflow[config["bpm_id"]]["inputs"][bpm_key] = bpm
+        print(f"[Audio] 🎼 BPM: {bpm}")
+
+    # Stream execution
+    final_result = None
+    for event in _stream_comfy_execution(workflow, client_id):
+        if event["type"] == "complete":
+            final_result = {"audios": event.get("audios", []), "seed": actual_seed}
+        yield event
+    
+    if final_result:
+        yield {"type": "final_result", "data": final_result}
+
+
+# 🆕 Stable Audio 3 Generator for Streaming
+def generate_stable_audio3_stream(prompt, duration, category, seed, enable_reprompt, config):
+    """Generator สำหรับ Stable Audio 3 แบบ Streaming"""
+    client_id = get_client_id()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    workflow_path = os.path.join(base_dir, config["file"])
+    
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        workflow = json.load(f)
+
+    # Inject Prompt (Node 52:31 - PrimitiveStringMultiline)
+    if config.get("prompt_id") and config["prompt_id"] in workflow:
+        prompt_key = config.get("prompt_key", "value")
+        workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt
+        print(f"[StableAudio3] 📝 Prompt injected: {prompt[:50]}...")
+
+    # Inject Duration (Node 52:36 - PrimitiveFloat)
+    if config.get("duration_id") and config["duration_id"] in workflow:
+        duration_key = config.get("duration_key", "value")
+        workflow[config["duration_id"]]["inputs"][duration_key] = float(duration)
+        print(f"[StableAudio3] ⏱️ Duration: {duration}s")
+
+    # Inject Category (Node 52:43 - CustomCombo)
+    if config.get("category_id") and config["category_id"] in workflow:
+        category_key = config.get("category_key", "index")
+        workflow[config["category_id"]]["inputs"][category_key] = int(category)
+        print(f"[StableAudio3] 🏷️ Category Index: {category}")
+
+    # Inject Seed (Node 52:3 - KSampler)
+    actual_seed = seed if seed != -1 else random.randint(1, 10**14)
+    if config.get("seed_id") and config["seed_id"] in workflow:
+        seed_key = config.get("seed_key", "seed")
+        workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
+        print(f"[StableAudio3] 🎲 Seed: {actual_seed}")
+
+    # Inject Reprompt Boolean (Node 52:35 - PrimitiveBoolean)
+    if config.get("reprompt_id") and config["reprompt_id"] in workflow:
+        reprompt_key = config.get("reprompt_key", "value")
+        workflow[config["reprompt_id"]]["inputs"][reprompt_key] = bool(enable_reprompt)
+        print(f"[StableAudio3] 🤖 Auto-Reprompt: {enable_reprompt}")
+
+    # Stream execution
+    final_result = None
+    for event in _stream_comfy_execution(workflow, client_id):
+        if event["type"] == "complete":
+            final_result = {"audios": event.get("audios", []), "seed": actual_seed}
+        yield event
+    
     if final_result:
         yield {"type": "final_result", "data": final_result}
 

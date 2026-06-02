@@ -1,0 +1,73 @@
+{
+  "1": {
+    "inputs": {
+      "resize_type": "scale by multiplier",
+      "resize_type.scale": 4,
+      "quality": "ULTRA",
+      "images": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "RTXVideoSuperResolution",
+    "_meta": {
+      "title": "RTX Video Super Resolution"
+    }
+  },
+  "6": {
+    "inputs": {
+      "file": "input.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "Load Video"
+    }
+  },
+  "7": {
+    "inputs": {
+      "video": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "Get Video Components"
+    }
+  },
+  "8": {
+    "inputs": {
+      "fps": [
+        "7",
+        2
+      ],
+      "images": [
+        "1",
+        0
+      ],
+      "audio": [
+        "7",
+        1
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "RTX_Upscaled",
+      "format": "auto",
+      "codec": "auto",
+      "video": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  }
+}

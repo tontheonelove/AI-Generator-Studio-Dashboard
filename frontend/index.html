@@ -28,7 +28,6 @@
         .gallery-img { aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
         .gallery-img:hover { transform: scale(1.05); border: 2px solid #10b981; }
 
-        /* ✅ Collapsible Animation */
         .collapsible-content {
             max-height: 0;
             overflow: hidden;
@@ -40,11 +39,17 @@
             opacity: 1;
             transition: max-height 0.4s ease-in, opacity 0.3s ease-in;
         }
-        .collapse-toggle .chevron {
-            transition: transform 0.3s ease;
-        }
-        .collapse-toggle.active .chevron {
-            transform: rotate(180deg);
+        .collapse-toggle .chevron { transition: transform 0.3s ease; }
+        .collapse-toggle.active .chevron { transform: rotate(180deg); }
+
+        .tab-btn { background-color: rgba(55, 65, 81, 0.5); color: #9ca3af; }
+        .tab-btn.active { background: linear-gradient(to right, #10b981, #14b8a6); color: white; }
+        .tab-btn:not(:disabled):hover { background-color: rgba(75, 85, 99, 0.7); }
+        .tab-btn.active:hover { background: linear-gradient(to right, #34d399, #2dd4bf); }
+
+        @media (max-width: 640px) {
+            .tab-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .tab-container::-webkit-scrollbar { display: none; }
         }
     </style>
 </head>
@@ -55,9 +60,8 @@
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-rocket text-emerald-500 text-2xl"></i>
                 <span class="font-bold text-xl">AI-Generation <span class="gradient-text">Studio</span></span>
-                <!-- ✅ Version Badge (แก้ class text-xs) -->
                 <span id="nav-version" class="hidden ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-mono text-emerald-400 select-none">
-                    🚀 V1.5 (27-5-26)
+                    🚀 V3 (2-6-26)
                 </span>
             </div>
             <div class="flex items-center gap-4">
@@ -78,13 +82,22 @@
         <div class="w-full lg:w-1/3">
             <div class="glass-panel rounded-2xl p-6 shadow-xl">
                 
-                <!-- Tab Switcher -->
-                <div class="flex gap-2 mb-4">
-                    <button id="tab-generate" onclick="switchTab('generate')" class="flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-emerald-600 text-white transition">
-                        🎨 Image Generate
+                <!-- 5 Tabs Switcher -->
+                <div class="flex gap-1 mb-4 overflow-x-auto tab-container">
+                    <button id="tab-image" onclick="switchTab('image')" class="tab-btn active flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                        <i class="fa-solid fa-image"></i><span>Image</span>
                     </button>
-                    <button id="tab-edit" onclick="switchTab('edit')" class="flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition">
-                        ✏️ Image Edit
+                    <button id="tab-video" onclick="switchTab('video')" class="tab-btn flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                        <i class="fa-solid fa-video"></i><span>Video</span>
+                    </button>
+                    <button id="tab-audio" onclick="switchTab('audio')" class="tab-btn flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                        <i class="fa-solid fa-music"></i><span>Audio</span>
+                    </button>
+                    <button id="tab-edit" onclick="switchTab('edit')" class="tab-btn flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i><span>Edit</span>
+                    </button>
+                    <button id="tab-tools" onclick="switchTab('tools')" class="tab-btn flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
+                        <i class="fa-solid fa-screwdriver-wrench"></i><span>Tools</span>
                     </button>
                 </div>
 
@@ -92,8 +105,8 @@
 
                 <div class="space-y-4">
                     
-                    <!-- === GENERATE MODE CONTROLS === -->
-                    <div id="generate-controls">
+                    <!-- IMAGE TAB -->
+                    <div id="image-controls" class="space-y-4">
                         <div class="mb-4">
                             <label class="block text-sm text-gray-300 mb-2">AI Model</label>
                             <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
@@ -113,7 +126,97 @@
                         </div>
                     </div>
 
-                    <!-- === EDIT MODE CONTROLS === -->
+                    <!-- VIDEO TAB -->
+                    <div id="video-controls" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">Video Model</label>
+                            <select id="video-model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="LTX Video 2.3">🎬 LTX Video 2.3 (Image-to-Video)</option>
+                                <option value="LTX 2.3 Lipsync">🎤 LTX 2.3 Lipsync (Audio + Image)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">📷 Input Image <span class="text-red-400">(Required)</span></label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('video-image-input').click()">
+                                <input type="file" id="video-image-input" accept="image/*" class="hidden" onchange="previewVideoImage(this)">
+                                <img id="video-image-preview" class="hidden max-h-40 mx-auto rounded-lg mb-2">
+                                <p id="video-image-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-upload mr-1"></i> Click to upload image</p>
+                            </div>
+                        </div>
+                        <div id="video-audio-container" class="hidden">
+                            <label class="block text-sm text-gray-300 mb-2">🎵 Audio File <span class="text-red-400">(Required for Lipsync)</span></label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('video-audio-input').click()">
+                                <input type="file" id="video-audio-input" accept="audio/*" class="hidden" onchange="previewAudio(this)">
+                                <audio id="video-audio-preview" class="hidden w-full mb-2" controls></audio>
+                                <p id="video-audio-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-music mr-1"></i> Click to upload audio (.wav, .mp3)</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Duration (seconds)</label>
+                                <input type="number" id="video-length-input" value="5" min="1" max="10" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">FPS</label>
+                                <input type="number" id="video-fps-input" value="24" min="12" max="30" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AUDIO TAB (AceStep 1.5 Only) -->
+                    <div id="audio-controls" class="hidden space-y-4">
+                        <div class="bg-purple-900/20 border border-purple-700/30 rounded-lg p-3 text-xs text-purple-300 mb-4">
+                            <i class="fa-solid fa-music mr-1"></i>
+                            <strong>AceStep 1.5</strong> - สร้างเพลงทั้งแบบมีเนื้อร้องและบรรเลง รองรับหลากหลายแนวเพลง
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="block text-sm text-gray-300">🎼 Style Tags</label>
+                                <button onclick="document.getElementById('audio-tags-input').value=''" class="text-xs text-gray-500 hover:text-red-400 transition">
+                                    <i class="fa-solid fa-trash-can"></i> Clear
+                                </button>
+                            </div>
+                            <input type="text" id="audio-tags-input" value="Euro EDM 140 Bpm" 
+                                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"
+                                placeholder="e.g., Pop, Rock, EDM, 120 BPM">
+                            <p class="text-xs text-gray-500 mt-1">ระบุแนวเพลง, BPM, อารมณ์</p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="block text-sm text-gray-300">📝 Lyrics</label>
+                                <button onclick="document.getElementById('audio-lyrics-input').value=''" class="text-xs text-gray-500 hover:text-red-400 transition">
+                                    <i class="fa-solid fa-trash-can"></i> Clear
+                                </button>
+                            </div>
+                            <textarea id="audio-lyrics-input" rows="4" 
+                                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm resize-y"
+                                    placeholder="ใส่เนื้อเพลง หรือพิมพ์ 'instrumental' สำหรับเพลงบรรเลง">instrumental</textarea>
+                            <p class="text-xs text-gray-500 mt-1">พิมพ์ "instrumental" สำหรับเพลงไม่มีเนื้อร้อง</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Duration (seconds)</label>
+                                <input type="number" id="audio-duration-input" value="60" min="10" max="180" 
+                                    class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">BPM</label>
+                                <input type="number" id="audio-bpm-input" value="120" min="40" max="240" 
+                                    class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Seed (-1 for Random)</label>
+                            <input type="number" id="audio-seed-input" value="-1" 
+                                class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- EDIT TAB -->
                     <div id="edit-controls" class="hidden space-y-4">
                         <div>
                             <label class="block text-sm text-gray-300 mb-2">Edit Model</label>
@@ -140,8 +243,60 @@
                         </div>
                     </div>
 
-                    <!-- Prompt -->
-                    <div>
+                    <!-- TOOLS TAB -->
+                    <div id="tools-controls" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">Tool Model</label>
+                            <select id="tools-model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm" onchange="handleToolsModelChange()">
+                                <option value="RTX Image Upscale">🖼️ RTX Image Upscale (4K Enhancement)</option>
+                                <option value="RTX Video Upscale">🎬 RTX Video Upscale (4K Enhancement)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="tools-image-container">
+                            <label class="block text-sm text-gray-300 mb-2">📷 Input Image <span class="text-red-400">(Required)</span></label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('tools-image-input').click()">
+                                <input type="file" id="tools-image-input" accept="image/*" class="hidden" onchange="previewToolsImage(this)">
+                                <img id="tools-image-preview" class="hidden max-h-40 mx-auto rounded-lg mb-2">
+                                <p id="tools-image-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-upload mr-1"></i> Click to upload image</p>
+                            </div>
+                        </div>
+                        
+                        <div id="tools-video-container" class="hidden">
+                            <label class="block text-sm text-gray-300 mb-2">🎬 Input Video <span class="text-red-400">(Required)</span></label>
+                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('tools-video-input').click()">
+                                <input type="file" id="tools-video-input" accept="video/*" class="hidden" onchange="previewToolsVideo(this)">
+                                <video id="tools-video-preview" class="hidden max-h-40 mx-auto rounded-lg mb-2" controls muted></video>
+                                <p id="tools-video-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-upload mr-1"></i> Click to upload video (.mp4)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Scale Factor</label>
+                                <select id="tools-scale-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                                    <option value="2">2x</option>
+                                    <option value="4" selected>4x (Recommended)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Quality</label>
+                                <select id="tools-quality-select" class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm">
+                                    <option value="PERFORMANCE">Performance</option>
+                                    <option value="QUALITY">Quality</option>
+                                    <option value="ULTRA" selected>Ultra</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3 text-xs text-blue-300">
+                            <i class="fa-solid fa-info-circle mr-1"></i>
+                            <strong>RTX Video Super Resolution</strong> uses NVIDIA RTX GPU for AI-powered upscaling.
+                        </div>
+                    </div>
+
+                    <!-- Prompt (Shared) -->
+                    <div id="prompt-container">
                         <div class="flex justify-between mb-2">
                             <label class="block text-sm text-gray-300">Prompt</label>
                             <button onclick="document.getElementById('prompt-input').value=''" class="text-xs text-gray-500 hover:text-red-400 transition">
@@ -224,9 +379,9 @@
                     </div>
                 </div>
 
-                <!-- ✅ Buttons Container (Generate + Cancel) -->
-                <div class="flex gap-2 mt-6">
-                    <button id="generate-btn" onclick="generate()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2 transition">
+                <!-- Generate Button -->
+                <div id="generate-btn-container" class="mt-6">
+                    <button id="generate-btn" onclick="generate()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg flex justify-center items-center gap-2 transition">
                         <span>✨ Generate Masterpiece</span>
                     </button>
                 </div>
@@ -252,13 +407,15 @@
                     </div>
 
                     <img id="result-image" class="hidden max-w-full max-h-[600px] object-contain rounded-lg shadow-2xl" src="">
+                    <video id="result-video" class="hidden max-w-full max-h-[600px] rounded-lg shadow-2xl" controls></video>
+                    <audio id="result-audio" class="hidden w-full max-w-[500px]" controls></audio>
                 </div>
 
                 <div id="action-bar" class="hidden p-4 border-t border-gray-700 flex justify-between items-center">
                     <div class="text-sm text-gray-400">
                         Seed: <span id="result-seed" class="font-mono text-emerald-400">-</span>
                     </div>
-                    <a id="download-link" href="#" download="ai-image.png" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+                    <a id="download-link" href="#" download="ai-output" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
                         <i class="fa-solid fa-download"></i> Download
                     </a>
                 </div>
@@ -310,11 +467,14 @@
         const loraSelect = document.getElementById('lora-select');
         const modelSelect = document.getElementById('model-select');
         let currentLoraList = [];
-        let currentMode = 'generate';
+        let currentMode = 'image';
         let uploadedImage1 = '';
         let uploadedImage2 = '';
+        let videoUploadedImage = '';
+        let videoUploadedAudio = '';
+        let toolsUploadedImage = '';
+        let toolsUploadedVideo = '';
 
-        // --- 📂 Collapsible Toggle ---
         function toggleCollapse(section) {
             const content = document.getElementById(`${section}-content`);
             const toggle = content.previousElementSibling;
@@ -322,34 +482,103 @@
             toggle.classList.toggle('active');
         }
 
-        // --- 🔄 Tab & Edit Mode Management ---
         function switchTab(mode) {
             currentMode = mode;
-            const tabGen = document.getElementById('tab-generate');
-            const tabEdit = document.getElementById('tab-edit');
-            const editControls = document.getElementById('edit-controls');
-            const genControls = document.getElementById('generate-controls');
-            const genOnlyControls = document.getElementById('generate-only-controls');
-            const presetsContainer = document.getElementById('presets-container');
-            const configTitle = document.getElementById('config-title');
+            
+            // Hide all content
+            document.getElementById('image-controls').classList.add('hidden');
+            document.getElementById('video-controls').classList.add('hidden');
+            document.getElementById('audio-controls').classList.add('hidden');
+            document.getElementById('edit-controls').classList.add('hidden');
+            document.getElementById('tools-controls').classList.add('hidden');
+            document.getElementById('prompt-container').classList.add('hidden');
+            document.getElementById('presets-container').classList.add('hidden');
+            document.getElementById('generate-only-controls').classList.add('hidden');
+            document.getElementById('generate-btn-container').classList.add('hidden');
+            
+            // Reset Result Display
+            document.getElementById('result-image').classList.add('hidden');
+            document.getElementById('result-video').classList.add('hidden');
+            document.getElementById('result-audio').classList.add('hidden');
+            document.getElementById('action-bar').classList.add('hidden');
+            document.getElementById('placeholder').classList.remove('hidden');
 
-            if (mode === 'edit') {
-                tabGen.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition';
-                tabEdit.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-emerald-600 text-white transition';
-                editControls.classList.remove('hidden');
-                genControls.classList.add('hidden');
-                genOnlyControls.classList.add('hidden');
-                presetsContainer.classList.add('hidden');
+            // Reset Video state
+            videoUploadedImage = '';
+            videoUploadedAudio = '';
+            const videoImgPreview = document.getElementById('video-image-preview');
+            const videoImgPlaceholder = document.getElementById('video-image-placeholder');
+            const videoAudioPreview = document.getElementById('video-audio-preview');
+            const videoAudioPlaceholder = document.getElementById('video-audio-placeholder');
+            
+            if (videoImgPreview) { videoImgPreview.classList.add('hidden'); videoImgPreview.src = ''; }
+            if (videoImgPlaceholder) videoImgPlaceholder.classList.remove('hidden');
+            if (videoAudioPreview) { videoAudioPreview.classList.add('hidden'); videoAudioPreview.src = ''; }
+            if (videoAudioPlaceholder) videoAudioPlaceholder.classList.remove('hidden');
+
+            // Reset Tools state
+            toolsUploadedImage = '';
+            toolsUploadedVideo = '';
+            const toolsImgPreview = document.getElementById('tools-image-preview');
+            const toolsImgPlaceholder = document.getElementById('tools-image-placeholder');
+            const toolsVidPreview = document.getElementById('tools-video-preview');
+            const toolsVidPlaceholder = document.getElementById('tools-video-placeholder');
+            
+            if (toolsImgPreview) { toolsImgPreview.classList.add('hidden'); toolsImgPreview.src = ''; }
+            if (toolsImgPlaceholder) toolsImgPlaceholder.classList.remove('hidden');
+            if (toolsVidPreview) { toolsVidPreview.classList.add('hidden'); toolsVidPreview.src = ''; }
+            if (toolsVidPlaceholder) toolsVidPlaceholder.classList.remove('hidden');
+
+            // Update active tab
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeTab = document.getElementById(`tab-${mode}`);
+            if (activeTab) activeTab.classList.add('active');
+            
+            const configTitle = document.getElementById('config-title');
+            const btn = document.getElementById('generate-btn');
+            
+            if (mode === 'image') {
+                document.getElementById('image-controls').classList.remove('hidden');
+                document.getElementById('prompt-container').classList.remove('hidden');
+                document.getElementById('presets-container').classList.remove('hidden');
+                document.getElementById('generate-only-controls').classList.remove('hidden');
+                document.getElementById('generate-btn-container').classList.remove('hidden');
+                configTitle.textContent = 'Image Settings';
+                btn.onclick = generate;
+                btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
+            } 
+            else if (mode === 'video') {
+                document.getElementById('video-controls').classList.remove('hidden');
+                document.getElementById('prompt-container').classList.remove('hidden');
+                document.getElementById('generate-btn-container').classList.remove('hidden');
+                configTitle.textContent = 'Video Settings';
+                btn.onclick = generateVideo;
+                btn.innerHTML = '<span>🎬 Generate Video</span>';
+                handleVideoModelChange();
+            } 
+            else if (mode === 'audio') {
+                document.getElementById('audio-controls').classList.remove('hidden');
+                document.getElementById('generate-btn-container').classList.remove('hidden');
+                configTitle.textContent = 'Audio Settings (AceStep 1.5)';
+                btn.onclick = generateAudio;
+                btn.innerHTML = '<span>🎵 Compose Music</span>';
+            } 
+            else if (mode === 'edit') {
+                document.getElementById('edit-controls').classList.remove('hidden');
+                document.getElementById('prompt-container').classList.remove('hidden');
+                document.getElementById('generate-btn-container').classList.remove('hidden');
                 configTitle.textContent = 'Edit Settings';
+                btn.onclick = generate;
+                btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
                 onEditModelChange();
-            } else {
-                tabGen.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-emerald-600 text-white transition';
-                tabEdit.className = 'flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-gray-700 text-gray-400 hover:bg-gray-600 transition';
-                editControls.classList.add('hidden');
-                genControls.classList.remove('hidden');
-                genOnlyControls.classList.remove('hidden');
-                presetsContainer.classList.remove('hidden');
-                configTitle.textContent = 'Configuration';
+            } 
+            else if (mode === 'tools') {
+                document.getElementById('tools-controls').classList.remove('hidden');
+                document.getElementById('generate-btn-container').classList.remove('hidden');
+                configTitle.textContent = 'Tools Settings';
+                btn.onclick = generateTools;
+                btn.innerHTML = '<span>⚡ Upscale</span>';
+                handleToolsModelChange();
             }
         }
 
@@ -367,6 +596,106 @@
             }
         }
 
+        function handleVideoModelChange() {
+            const model = document.getElementById('video-model-select').value;
+            const audioContainer = document.getElementById('video-audio-container');
+            if (model === 'LTX 2.3 Lipsync') {
+                audioContainer.classList.remove('hidden');
+            } else {
+                audioContainer.classList.add('hidden');
+            }
+        }
+        document.getElementById('video-model-select').addEventListener('change', handleVideoModelChange);
+
+        function handleToolsModelChange() {
+            const model = document.getElementById('tools-model-select').value;
+            const imgContainer = document.getElementById('tools-image-container');
+            const vidContainer = document.getElementById('tools-video-container');
+            if (model === 'RTX Image Upscale') {
+                imgContainer.classList.remove('hidden');
+                vidContainer.classList.add('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+                vidContainer.classList.remove('hidden');
+            }
+        }
+
+        function previewVideoImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const preview = document.getElementById('video-image-preview');
+            const placeholder = document.getElementById('video-image-placeholder');
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/api/upload-image', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.filename) {
+                        videoUploadedImage = data.filename;
+                        const reader = new FileReader();
+                        reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); };
+                        reader.readAsDataURL(file);
+                    }
+                }).catch(e => alert('Image upload failed: ' + e.message));
+        }
+
+        function previewAudio(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const preview = document.getElementById('video-audio-preview');
+            const placeholder = document.getElementById('video-audio-placeholder');
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/api/upload-audio', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.filename) {
+                        videoUploadedAudio = data.filename;
+                        const reader = new FileReader();
+                        reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); };
+                        reader.readAsDataURL(file);
+                    }
+                }).catch(e => alert('Audio upload failed: ' + e.message));
+        }
+
+        function previewToolsImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const preview = document.getElementById('tools-image-preview');
+            const placeholder = document.getElementById('tools-image-placeholder');
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/api/upload-image', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.filename) {
+                        toolsUploadedImage = data.filename;
+                        const reader = new FileReader();
+                        reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); };
+                        reader.readAsDataURL(file);
+                    }
+                }).catch(e => alert('Image upload failed: ' + e.message));
+        }
+
+        function previewToolsVideo(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const preview = document.getElementById('tools-video-preview');
+            const placeholder = document.getElementById('tools-video-placeholder');
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/api/upload-video', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.filename) {
+                        toolsUploadedVideo = data.filename;
+                        const reader = new FileReader();
+                        reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); };
+                        reader.readAsDataURL(file);
+                    }
+                }).catch(e => alert('Video upload failed: ' + e.message));
+        }
+
         async function previewImage(input, previewId) {
             const file = input.files[0];
             if (!file) return;
@@ -379,30 +708,20 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Upload failed');
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                    placeholder.classList.add('hidden');
-                };
+                reader.onload = (e) => { preview.src = e.target.result; preview.classList.remove('hidden'); placeholder.classList.add('hidden'); };
                 reader.readAsDataURL(file);
                 if (previewId === 'image1-preview') uploadedImage1 = data.filename;
                 else uploadedImage2 = data.filename;
-            } catch (e) {
-                alert('Upload failed: ' + e.message);
-            }
+            } catch (e) { alert('Upload failed: ' + e.message); }
         }
 
-        // --- 🎨 LoRA Management ---
         async function loadLoras(modelName) {
             try {
                 const res = await fetch(`/api/loras/${encodeURIComponent(modelName)}`);
                 const data = await res.json();
                 currentLoraList = data.loras || [];
                 loraSelect.innerHTML = '';
-                if (currentLoraList.length === 0) {
-                    loraSelect.innerHTML = '<option value="">No LoRA available</option>';
-                    return;
-                }
+                if (currentLoraList.length === 0) { loraSelect.innerHTML = '<option value="">No LoRA available</option>'; return; }
                 currentLoraList.forEach((lora, index) => {
                     const opt = document.createElement('option');
                     opt.value = index;
@@ -416,25 +735,21 @@
         }
         modelSelect.addEventListener('change', () => loadLoras(modelSelect.value));
 
-        // --- 🔊 Sound ---
         function playSound() {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                osc.connect(gain); gain.connect(audioCtx.destination);
                 osc.frequency.setValueAtTime(880, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
                 gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.5);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
             } catch (e) { console.warn('Sound skipped'); }
         }
 
-        // --- ✨ Prompt Helpers ---
         function addPrompt(text) {
             const input = document.getElementById('prompt-input');
             input.value = input.value.trim() ? input.value + ", " + text : text;
@@ -443,26 +758,25 @@
 
         function randomPrompt() {
             const prompts = [
-                "The iconic Big Ben clock tower and the Houses of Parliament in London at golden hour, the River Thames reflecting warm amber light, Westminster Bridge in the foreground, a classic red double-decker bus crossing, dramatic clouds lit by sunset, 8k",
+                "The iconic Big Ben clock tower and the Houses of Parliament in London at golden hour, 8k",
                 "cute cat wearing spacesuit on Mars, realistic, cinematic",
                 "samurai in cherry blossom forest, Japanese art style, 8k",
                 "underwater crystal palace, bioluminescent fish, 8k",
                 "cozy coffee shop in rainy forest, warm lighting",
                 "mechanical dragon breathing fire, steampunk, 8k",
-                "A green iguana basking on a moss-covered fallen log in a tropical rainforest, every scale and spine rendered in sharp detail, dewdrops clinging to its skin, a blurred waterfall and lush tropical foliage in the background, National Geographic wildlife photography style",
-                "A generous portion of classic British fish and chips served on a sheet of white paper, golden crispy beer-battered cod fillet alongside thick-cut chips, a wedge of lemon, mushy peas in a small dish, malt vinegar bottle nearby, wooden pub table, overhead shot",
-                "A photorealistic close-up portrait of a cute young Asian woman with a kawaii aesthetic. She has long, dark wavy hair styled in high twin tails with bangs. She is wearing white reindeer antler headbands and small white bunny hair clips. She has a cute white bunny sticker on her cheek. She is framing her face with her hands, gently touching her cheeks. She is wearing a cream-colored top with a cute bear print. Bright, soft high-key lighting, innocent and playful vibe, high resolution, 8k.",
-                "A photorealistic close-up selfie of a young Asian woman in a bedroom at night. She has dark hair in a messy high bun with a pearl hair clip and loose strands framing her face. She is wearing a cream-colored, ruffled coquette-style top with black piping and a black satin bow on the chest. She is leaning forward slightly, looking at the camera with a soft expression. In the background, a large black-framed mirror reflects a bed with white sheets and a window with night city lights. Dim lighting with a flash photography aesthetic, high resolution, 4k.",
-                "A photorealistic full-body shot of a young Asian woman crouching on a wooden floor, taking a mirror selfie. She has long, straight black hair with a blue flower hair clip. She is wearing a white long-sleeved floral crop top with ruched detailing, a white skirt, white knee-high socks with ruffled edges, and chunky pink sneakers. She holds a smartphone with a sticker-covered case and a pink grip. The background is a bright, sunlit room with large windows showing a city skyline, a clothing rack on the left, and a shoe display shelf on the right. High resolution, 4k, fashion photography style.",
-                "A photorealistic close-up portrait of a young Asian woman with a sweet, gentle smile, styled in a vintage cottagecore aesthetic. She has black hair in twin braids with bangs, wearing a cream knitted bonnet with cherry embroidery and red ribbons. Her outfit features a white camisole with red scalloped lace trim and a red bow, with a red knitted cardigan draped off her shoulders. Red gingham bows and cherry hair clips adorn her braids. She is holding a strawberry cupcake. The background is a cozy, warm-toned room with wooden furniture and a blurred retro TV. Soft lighting, high resolution, 8k.",
-                "Aerial view of Yuanyang rice terraces in Yunnan province at sunrise, thousands of cascading water-filled paddies reflecting golden and pink sky colors, morning mist weaving between terrace layers, lush green hillside with scattered palm trees, drone photography",
-                "A turquoise river winds through a lush canyon. Thick moss and dense ferns blanket the rocky walls; multiple waterfalls cascade from above, enveloped in mist. At noon, sunlight filters through the dense canopy, dappling the river surface with shimmering light. The atmosphere is humid and fresh, pulsing with primal jungle vitality. No humans, text, or artificial traces present.",
-                "An ultra-realistic close-up of a golden retriever outdoors under soft daylight. Hair is exquisitely detailed: strands distinct, color transitioning naturally from warm gold to light cream, light glinting delicately at the tips; a gentle breeze adds subtle volume. Undercoat is soft and dense; guard hairs are long and well-defined, with visible layering. Eyes are moist, expressive; nose is slightly damp with fine specular highlights. Background is softly blurred to emphasize the dog's tangible texture and vivid expression."
+                "A green iguana basking on a moss-covered fallen log in a tropical rainforest, National Geographic",
+                "A generous portion of classic British fish and chips, wooden pub table, overhead shot",
+                "A photorealistic close-up portrait of a cute young Asian woman with a kawaii aesthetic, 8k.",
+                "A photorealistic close-up selfie of a young Asian woman in a bedroom at night, 4k.",
+                "A photorealistic full-body shot of a young Asian woman taking a mirror selfie, 4k.",
+                "A photorealistic portrait of a young Asian woman, cottagecore aesthetic, 8k.",
+                "Aerial view of Yuanyang rice terraces in Yunnan province at sunrise, drone photography",
+                "A turquoise river winds through a lush canyon with waterfalls",
+                "An ultra-realistic close-up of a golden retriever outdoors under soft daylight."
             ];
             document.getElementById('prompt-input').value = prompts[Math.floor(Math.random() * prompts.length)];
         }
 
-        // --- 🔄 Version Check System ---
         async function checkForUpdates() {
             try {
                 const res = await fetch('/api/version');
@@ -498,7 +812,6 @@
             }).catch(e => console.error('Failed to save seen version:', e));
         }
 
-        // --- 🏷️ Load Version Badge ---
         async function loadVersionBadge() {
             try {
                 const res = await fetch('/api/version');
@@ -510,18 +823,14 @@
                     badge.textContent = `🚀 V${data.version}${displayDate}`;
                     badge.classList.remove('hidden');
                 }
-            } catch (e) {
-                console.warn('Failed to load version badge:', e);
-            }
+            } catch (e) { console.warn('Failed to load version badge:', e); }
         }
 
-        // --- ⏳ Queue Status Polling ---
         async function checkStatus() {
             try {
                 const res = await fetch('/api/status');
                 const data = await res.json();
                 const btn = document.getElementById('generate-btn');
-                // ไม่ override ถ้ากำลัง busy อยู่ (เพราะ generate() จัดการเอง)
                 if (data.is_processing && !btn.classList.contains('busy')) {
                     btn.disabled = true;
                     btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Processing...';
@@ -529,7 +838,10 @@
                     btn.classList.remove('from-emerald-500', 'to-teal-600');
                 } else if (!data.is_processing && !btn.classList.contains('busy')) {
                     btn.disabled = false;
-                    btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
+                    if (currentMode === 'video') btn.innerHTML = '<span>🎬 Generate Video</span>';
+                    else if (currentMode === 'audio') btn.innerHTML = '<span>🎵 Compose Music</span>';
+                    else if (currentMode === 'tools') btn.innerHTML = '<span>⚡ Upscale</span>';
+                    else btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
                     btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
                     btn.classList.add('from-emerald-500', 'to-teal-600');
                 }
@@ -537,17 +849,18 @@
         }
         setInterval(checkStatus, 2000);
 
-        // --- 🚀 Main Generate Function (SSE + Cancel Support) ---
         async function generate() {
             const btn = document.getElementById('generate-btn');
             const loading = document.getElementById('loading');
+            const loadingTitle = document.getElementById('loading-title');
+            const loadingDetail = document.getElementById('loading-detail');
             const placeholder = document.getElementById('placeholder');
             const resultImg = document.getElementById('result-image');
+            const resultVideo = document.getElementById('result-video');
+            const resultAudio = document.getElementById('result-audio');
             const actionBar = document.getElementById('action-bar');
 
-            if (!audioCtx) {
-                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-            }
+            if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
 
             let payload;
             if (currentMode === 'edit') {
@@ -557,17 +870,17 @@
                 if (editModel === 'Flux Face Swap' && !uploadedImage2) { alert("⚠️ Flux Face Swap requires Image 2!"); return; }
                 if (!prompt) { alert("Please enter a prompt!"); return; }
                 payload = {
-                    prompt, model: editModel, mode: "edit",
+                    prompt: prompt, model: editModel, mode: "edit",
                     image1_filename: uploadedImage1, image2_filename: uploadedImage2 || "",
                     seed: -1, width: 1024, height: 1024
                 };
-            } else {
+            } else if (currentMode === 'image') {
                 const prompt = document.getElementById('prompt-input').value;
                 if (!prompt) { alert("Please enter a prompt!"); return; }
                 const loraIndex = parseInt(loraSelect.value);
                 const selectedLora = currentLoraList[loraIndex] || {};
                 payload = {
-                    prompt, model: modelSelect.value,
+                    prompt: prompt, model: modelSelect.value,
                     seed: parseInt(document.getElementById('seed-input').value),
                     width: parseInt(document.getElementById('width-select').value),
                     height: parseInt(document.getElementById('height-select').value),
@@ -575,35 +888,27 @@
                     lora_strength: selectedLora.strength || 0.0,
                     mode: "generate"
                 };
-            }
+            } else { alert("⚠️ This feature is not available yet!"); return; }
 
             const statusRes = await fetch('/api/status');
             const statusData = await statusRes.json();
-            if (statusData.is_processing) {
-                alert("⚠️ System busy, please wait...");
-                return;
-            }
+            if (statusData.is_processing) { alert("⚠️ System busy, please wait..."); return; }
 
             btn.classList.add('busy');
             btn.disabled = true;
             btn.innerHTML = '<div class="loader mr-2"></div> Processing...';
             placeholder.classList.add('hidden');
             resultImg.classList.add('hidden');
+            resultVideo.classList.add('hidden');
+            resultAudio.classList.add('hidden');
             actionBar.classList.add('hidden');
             loading.classList.remove('hidden');
+            loadingTitle.textContent = 'Generating...';
+            loadingDetail.textContent = 'Please wait';
 
             try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.detail || 'Generation failed');
-                }
-
+                const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Generation failed'); }
                 const data = await res.json();
                 resultImg.src = data.base64;
                 resultImg.classList.remove('hidden');
@@ -612,7 +917,6 @@
                 document.getElementById('download-link').download = `ai-image-${data.seed}.png`;
                 actionBar.classList.remove('hidden');
                 playSound();
-
             } catch (e) {
                 alert("Error: " + e.message);
                 placeholder.classList.remove('hidden');
@@ -626,7 +930,271 @@
             }
         }
 
-        // --- 🖼️ Gallery Logic ---
+        async function generateVideo() {
+            const btn = document.getElementById('generate-btn');
+            const loading = document.getElementById('loading');
+            const loadingTitle = document.getElementById('loading-title');
+            const loadingDetail = document.getElementById('loading-detail');
+            const placeholder = document.getElementById('placeholder');
+            const resultImg = document.getElementById('result-image');
+            const resultVideo = document.getElementById('result-video');
+            const resultAudio = document.getElementById('result-audio');
+            const actionBar = document.getElementById('action-bar');
+
+            const model = document.getElementById('video-model-select').value;
+            if (!videoUploadedImage) { alert("⚠️ Please upload an image!"); return; }
+            if (model === 'LTX 2.3 Lipsync' && !videoUploadedAudio) { alert("⚠️ Lipsync requires an audio file!"); return; }
+            const prompt = document.getElementById('prompt-input').value;
+            if (!prompt) { alert("Please enter a prompt!"); return; }
+
+            const payload = {
+                prompt: prompt, model: model,
+                image1_filename: videoUploadedImage, audio_filename: videoUploadedAudio,
+                width: 480, height: 860,
+                length: parseInt(document.getElementById('video-length-input').value),
+                fps: parseFloat(document.getElementById('video-fps-input').value)
+            };
+
+            btn.classList.add('busy');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader mr-2"></div> Generating Video...';
+            placeholder.classList.add('hidden');
+            resultImg.classList.add('hidden');
+            resultVideo.classList.add('hidden');
+            resultAudio.classList.add('hidden');
+            actionBar.classList.add('hidden');
+            loading.classList.remove('hidden');
+            loadingTitle.textContent = 'Generating Video...';
+            loadingDetail.textContent = 'This may take several minutes...';
+
+            try {
+                const res = await fetch('/api/generate-video-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        try {
+                            const event = JSON.parse(line.slice(6));
+                            if (event.type === 'progress') {
+                                const pct = Math.round((event.value / event.max) * 100);
+                                loadingTitle.textContent = `${pct}%`;
+                                loadingDetail.textContent = `Step ${event.value} of ${event.max}`;
+                            } else if (event.type === 'executing') {
+                                if (event.node) loadingDetail.textContent = `Processing node ${event.node}...`;
+                            } else if (event.type === 'saved') {
+                                resultVideo.src = event.url;
+                                resultVideo.classList.remove('hidden');
+                                document.getElementById('result-seed').innerText = event.seed;
+                                document.getElementById('download-link').href = event.url;
+                                document.getElementById('download-link').download = `ai-video-${event.seed}.mp4`;
+                                actionBar.classList.remove('hidden');
+                                playSound();
+                            } else if (event.type === 'error') { throw new Error(event.message); }
+                        } catch (e) { if (e.message && !e.message.includes('JSON')) throw e; }
+                    }
+                }
+            } catch (e) {
+                alert("Error: " + e.message);
+                placeholder.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+                btn.classList.remove('busy');
+                btn.disabled = false;
+                btn.innerHTML = '<span>🎬 Generate Video</span>';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
+                btn.classList.add('from-emerald-500', 'to-teal-600');
+            }
+        }
+
+        async function generateAudio() {
+            const btn = document.getElementById('generate-btn');
+            const loading = document.getElementById('loading');
+            const loadingTitle = document.getElementById('loading-title');
+            const loadingDetail = document.getElementById('loading-detail');
+            const placeholder = document.getElementById('placeholder');
+            const resultImg = document.getElementById('result-image');
+            const resultVideo = document.getElementById('result-video');
+            const resultAudio = document.getElementById('result-audio');
+            const actionBar = document.getElementById('action-bar');
+
+            const tags = document.getElementById('audio-tags-input').value.trim();
+            const lyrics = document.getElementById('audio-lyrics-input').value.trim();
+
+            if (!tags) { alert("⚠️ Please enter style tags!"); return; }
+            if (!lyrics) { alert("⚠️ Please enter lyrics or 'instrumental'!"); return; }
+            
+            const payload = {
+                model: "AceStep 1.5 Audio",
+                tags: tags,
+                lyrics: lyrics,
+                duration: parseInt(document.getElementById('audio-duration-input').value),
+                bpm: parseInt(document.getElementById('audio-bpm-input').value),
+                seed: parseInt(document.getElementById('audio-seed-input').value)
+            };
+
+            btn.classList.add('busy');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader mr-2"></div> Composing...';
+            placeholder.classList.add('hidden');
+            resultImg.classList.add('hidden');
+            resultVideo.classList.add('hidden');
+            resultAudio.classList.add('hidden');
+            actionBar.classList.add('hidden');
+            loading.classList.remove('hidden');
+            loadingTitle.textContent = 'Composing Music...';
+            loadingDetail.textContent = 'This may take 1-3 minutes...';
+
+            try {
+                const res = await fetch('/api/generate-audio-stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        try {
+                            const event = JSON.parse(line.slice(6));
+                            if (event.type === 'progress') {
+                                const pct = Math.round((event.value / event.max) * 100);
+                                loadingTitle.textContent = `${pct}%`;
+                                loadingDetail.textContent = `Step ${event.value} of ${event.max}`;
+                            } else if (event.type === 'executing') {
+                                if (event.node) loadingDetail.textContent = `Processing node ${event.node}...`;
+                            } else if (event.type === 'saved') {
+                                resultAudio.src = event.url;
+                                resultAudio.classList.remove('hidden');
+                                document.getElementById('result-seed').innerText = '-';
+                                document.getElementById('download-link').href = event.url;
+                                document.getElementById('download-link').download = event.filename;
+                                actionBar.classList.remove('hidden');
+                                playSound();
+                            } else if (event.type === 'error') {
+                                throw new Error(event.message);
+                            }
+                        } catch (e) {
+                            if (e.message && !e.message.includes('JSON')) throw e;
+                        }
+                    }
+                }
+            } catch (e) {
+                alert("Error: " + e.message);
+                placeholder.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+                btn.classList.remove('busy');
+                btn.disabled = false;
+                btn.innerHTML = '<span>🎵 Compose Music</span>';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
+                btn.classList.add('from-emerald-500', 'to-teal-600');
+            }
+        }
+
+        async function generateTools() {
+            const btn = document.getElementById('generate-btn');
+            const loading = document.getElementById('loading');
+            const loadingTitle = document.getElementById('loading-title');
+            const loadingDetail = document.getElementById('loading-detail');
+            const placeholder = document.getElementById('placeholder');
+            const resultImg = document.getElementById('result-image');
+            const resultVideo = document.getElementById('result-video');
+            const resultAudio = document.getElementById('result-audio');
+            const actionBar = document.getElementById('action-bar');
+
+            const model = document.getElementById('tools-model-select').value;
+            const filename = model === 'RTX Image Upscale' ? toolsUploadedImage : toolsUploadedVideo;
+
+            if (!filename) { alert(`⚠️ Please upload ${model === 'RTX Image Upscale' ? 'an image' : 'a video'}!`); return; }
+
+            const payload = {
+                model: model, filename: filename,
+                scale: parseInt(document.getElementById('tools-scale-select').value),
+                quality: document.getElementById('tools-quality-select').value
+            };
+
+            btn.classList.add('busy');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader mr-2"></div> Upscaling...';
+            placeholder.classList.add('hidden');
+            resultImg.classList.add('hidden');
+            resultVideo.classList.add('hidden');
+            resultAudio.classList.add('hidden');
+            actionBar.classList.add('hidden');
+            loading.classList.remove('hidden');
+            loadingTitle.textContent = 'Upscaling...';
+            loadingDetail.textContent = 'This may take several minutes for videos...';
+
+            try {
+                const res = await fetch('/api/tools-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        try {
+                            const event = JSON.parse(line.slice(6));
+                            if (event.type === 'progress') {
+                                const pct = Math.round((event.value / event.max) * 100);
+                                loadingTitle.textContent = `${pct}%`;
+                                loadingDetail.textContent = `Processing frame ${event.value} of ${event.max}`;
+                            } else if (event.type === 'executing') {
+                                if (event.node) loadingDetail.textContent = `Processing node ${event.node}...`;
+                            } else if (event.type === 'saved') {
+                                if (event.is_video) {
+                                    resultVideo.src = event.url;
+                                    resultVideo.classList.remove('hidden');
+                                    document.getElementById('download-link').href = event.url;
+                                    document.getElementById('download-link').download = event.filename;
+                                } else {
+                                    resultImg.src = event.base64;
+                                    resultImg.classList.remove('hidden');
+                                    document.getElementById('download-link').href = event.base64;
+                                    document.getElementById('download-link').download = event.filename;
+                                }
+                                document.getElementById('result-seed').innerText = '-';
+                                actionBar.classList.remove('hidden');
+                                playSound();
+                            } else if (event.type === 'error') { throw new Error(event.message); }
+                        } catch (e) { if (e.message && !e.message.includes('JSON')) throw e; }
+                    }
+                }
+            } catch (e) {
+                alert("Error: " + e.message);
+                placeholder.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+                btn.classList.remove('busy');
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚡ Upscale</span>';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
+                btn.classList.add('from-emerald-500', 'to-teal-600');
+            }
+        }
+
         async function openGallery() {
             document.getElementById('galleryModal').classList.remove('hidden');
             const list = document.getElementById('galleryList');
@@ -635,17 +1203,24 @@
                 const res = await fetch('/api/history');
                 const data = await res.json();
                 list.innerHTML = "";
-                if (data.length === 0) {
-                    list.innerHTML = "<p class='text-gray-500 col-span-full text-center'>No history yet.</p>";
-                    return;
-                }
+                if (data.length === 0) { list.innerHTML = "<p class='text-gray-500 col-span-full text-center'>No history yet.</p>"; return; }
                 data.forEach(item => {
                     const div = document.createElement('div');
                     div.className = "relative group";
-                    div.innerHTML = `
-                        <img src="/api/outputs/${item.filename}" class="gallery-img w-full" onclick="loadFromGallery('${item.prompt.replace(/'/g, "\\'")}', ${item.seed}, '${item.model}')">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1 text-[10px] truncate opacity-0 group-hover:opacity-100">${item.prompt}</div>
-                    `;
+                    if (item.filename.endsWith('.mp4')) {
+                        div.innerHTML = `<video src="/api/outputs/${item.filename}" class="gallery-img w-full" onclick="loadFromGallery('${item.prompt.replace(/'/g, "\\'")}', ${item.seed}, '${item.model}')"></video>
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1 text-[10px] truncate opacity-0 group-hover:opacity-100">${item.prompt}</div>
+                            <div class="absolute top-1 right-1 bg-black/70 text-white text-[10px] px-1 rounded">🎬</div>`;
+                    } else if (item.filename.endsWith('.mp3')) {
+                        div.innerHTML = `<div class="gallery-img w-full bg-gray-800 flex items-center justify-center cursor-pointer" onclick="loadFromGallery('${item.prompt.replace(/'/g, "\\'")}', ${item.seed}, '${item.model}')">
+                                <i class="fa-solid fa-music text-3xl text-purple-400"></i>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1 text-[10px] truncate opacity-0 group-hover:opacity-100">${item.prompt}</div>
+                            <div class="absolute top-1 right-1 bg-black/70 text-white text-[10px] px-1 rounded">🎵</div>`;
+                    } else {
+                        div.innerHTML = `<img src="/api/outputs/${item.filename}" class="gallery-img w-full" onclick="loadFromGallery('${item.prompt.replace(/'/g, "\\'")}', ${item.seed}, '${item.model}')">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 p-1 text-[10px] truncate opacity-0 group-hover:opacity-100">${item.prompt}</div>`;
+                    }
                     list.appendChild(div);
                 });
             } catch (e) { list.innerHTML = "<p class='text-red-400'>Load failed</p>"; }
@@ -658,11 +1233,10 @@
             document.getElementById('seed-input').value = seed;
             document.getElementById('model-select').value = model;
             loadLoras(model);
-            switchTab('generate');
+            switchTab('image');
             closeGallery();
         }
 
-        // Init
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(checkForUpdates, 1000);
             loadLoras(modelSelect.value);

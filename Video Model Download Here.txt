@@ -1,0 +1,87 @@
++++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
+
+อย่าลืม Install Node ให้เรียบร้อยนะครับ หากไม่มั่นใจ ให้ Import Workflow ไปยัง Comfyui คุณ แล้ว Install Missing Node ครับ
+
+--------------------------------------------------------------------------------
+
+***[LTX2.3 I2V (GGUF) ] ***
+
+[LTX-2.3-GGUF]  Model สำหรับ VRAM 8GB. ขึ้นไป =>วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/LTX-2.3-GGUF/resolve/main/distilled-1.1/ltx-2.3-22b-distilled-1.1-Q3_K_M.gguf?download=true
+
+
+[Text Encoder] มี 2 ไฟล์  =>วางไฟล์ที่ /model/textencoders
+
+[gemma-3-12b-it-Q4_0.gguf] [textencoders]
+https://huggingface.co/unsloth/gemma-3-12b-it-GGUF/resolve/main/gemma-3-12b-it-Q4_0.gguf?download=true
+
+[ltx-2.3_text_projection_bf16.safetensors] [textencoders]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/text_encoders/ltx-2.3_text_projection_bf16.safetensors?download=true
+
+
+[ltx-2.3-22b-distilled-lora-384.safetensors]  =>วางไฟล์ที่ /model/loras
+https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384.safetensors?download=true
+
+[ltx-2.3-spatial-upscaler-x2-1.1.safetensors]  =>วางไฟล์ที่ /models/latent_upscale_models
+https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors?download=true
+
+
+[VAE] มี 3 ไฟล์ => วางไฟล์ที่ /model/vae
+
+[LTX23_audio_vae_bf16.safetensors]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/LTX23_audio_vae_bf16.safetensors?download=true
+
+[LTX23_video_vae_bf16.safetensors]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/LTX23_video_vae_bf16.safetensors?download=true
+
+[taeltx2.3.safetensors]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/taeltx2_3.safetensors?download=true
+
+
+
+[MelBandRoformer_fp16.safetensors]   => วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Kijai/MelBandRoFormer_comfy/resolve/main/MelBandRoformer_fp16.safetensors?download=true
+
+--------------------------------------------------------------------------------
+
+
+***[LTX2.3 LIPSYNC (GGUF) ] *** 
+
+
+[LTX-2.3-GGUF]  Model สำหรับ VRAM 8GB. ขึ้นไป =>วางไฟล์ที่ /model/unet
+https://huggingface.co/unsloth/LTX-2.3-GGUF/resolve/main/distilled-1.1/ltx-2.3-22b-distilled-1.1-Q3_K_M.gguf?download=true
+
+
+[Text Encoder] มี 2 ไฟล์  =>วางไฟล์ที่ /model/textencoders
+
+[gemma-3-12b-it-Q4_0.gguf] [textencoders]
+https://huggingface.co/unsloth/gemma-3-12b-it-GGUF/resolve/main/gemma-3-12b-it-Q4_0.gguf?download=true
+
+[ltx-2.3_text_projection_bf16.safetensors]  [textencoders]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/text_encoders/ltx-2.3_text_projection_bf16.safetensors?download=true
+
+
+[ltx-2.3-spatial-upscaler-x2-1.1.safetensors]  =>วางไฟล์ที่ /models/latent_upscale_models
+https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors?download=true
+
+
+[VAE] มี 3 ไฟล์ => วางไฟล์ที่ /model/vae
+
+[LTX23_audio_vae_bf16.safetensors] [VAE]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/LTX23_audio_vae_bf16.safetensors?download=true
+
+[LTX23_video_vae_bf16.safetensors] [VAE]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/LTX23_video_vae_bf16.safetensors?download=true
+
+[taeltx2.3.safetensors] [VAE]
+https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/vae/taeltx2_3.safetensors?download=true
+
+
+[ltx-2.3-22b-distilled-lora-384.safetensors]  =>วางไฟล์ที่ /model/loras
+https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384.safetensors?download=true
+
+
+[MelBandRoformer_fp16.safetensors]   => วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Kijai/MelBandRoFormer_comfy/resolve/main/MelBandRoformer_fp16.safetensors?download=true
+
+

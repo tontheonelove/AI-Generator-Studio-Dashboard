@@ -1,0 +1,25 @@
++++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
+
+--------------------------------------------------------------------------------
+
+[ACESTEP1.5] [BASE]
+
+[acestep_v1.5_xl_base_bf16.safetensors]  => วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/diffusion_models/acestep_v1.5_xl_base_bf16.safetensors?download=true
+
+
+[TEXT ENCODER]  2 ไฟล์  =>วางไฟล์ที่ /model/textencoders  
+
+[qwen_0.6b_ace15.safetensors] [textencoders]
+https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/text_encoders/qwen_0.6b_ace15.safetensors?download=true
+
+[qwen_4b_ace15.safetensors]  [textencoders]
+https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/text_encoders/qwen_4b_ace15.safetensors?download=true
+
+
+[ace_1.5_vae.safetensors]  วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/vae/ace_1.5_vae.safetensors?download=true
+
+
+
+--------------------------------------------------------------------------------

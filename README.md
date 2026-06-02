@@ -2,6 +2,35 @@
 
 <img src=ex.png/>
 
+## 🚀🚀 Update (2-6-69) BIG UPDATE
+
+📽️ New Feature Video Generation  
+   - LTX2.3 Image2Video (GGUF)
+   - LTX2.3 Lipsync (GGUF)
+
+🎵 New Feature Music Generation
+   - Acestep1.5
+   - StableAudio3
+
+🖼️ New Feature tools
+   - RTX Image Upscale  (RTX GPU ONLY)
+   - RTX Video Upscale  (RTX GPU ONLY)
+
+📢 For ImageEdit / Video Change path on config.json (edit your comfyui path)
+
+```
+{
+    "comfyui_input_dir": "D:/ComfyUI_windows_portable/ComfyUI/input",
+    "comfyui_output_dir": "D:/ComfyUI_windows_portable/ComfyUI/output"
+}
+```
+
+📱 Upgrade Frontend & Backend
+
+✅ Link Model Update!!
+
+---
+
 ## 🔥🔥 Update (29-5-26) 
 
 💻 New Feature Image & Image Edit Added 
@@ -10,6 +39,8 @@
    - Qwen image 2512 (with Loras 4 Step ) (Image)
    - Meinamix Anime (Image)
    - Wan2.2 (Image)
+
+📢 For Image Edit Change path on config.json (edit your comfyui path)
 
 📱 Upgrade Frontend & Backend
 
