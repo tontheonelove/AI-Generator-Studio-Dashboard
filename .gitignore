@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 venv/
 .env
-history.db
 
 # OS
 .DS_Store
