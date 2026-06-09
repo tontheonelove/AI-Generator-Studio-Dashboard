@@ -1,0 +1,63 @@
+{
+  "2": {
+    "inputs": {
+      "image": "720417663_2405855803237398_3210998589624537028_n.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "3": {
+    "inputs": {
+      "prompt": "Describe this image for detail.",
+      "max_length": 256,
+      "sampling_mode": "on",
+      "sampling_mode.temperature": 0.7,
+      "sampling_mode.top_k": 64,
+      "sampling_mode.top_p": 0.95,
+      "sampling_mode.min_p": 0.05,
+      "sampling_mode.repetition_penalty": 1.05,
+      "sampling_mode.seed": 0,
+      "sampling_mode.presence_penalty": 0,
+      "thinking": false,
+      "use_default_template": true,
+      "clip": [
+        "11",
+        0
+      ],
+      "image": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "TextGenerate",
+    "_meta": {
+      "title": "Generate Text"
+    }
+  },
+  "11": {
+    "inputs": {
+      "clip_name": "qwen3.5_4b_bf16.safetensors",
+      "type": "stable_diffusion",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "12": {
+    "inputs": {
+      "text_0": "This is a vertical, full-length photograph capturing a young woman in a contemplative pose inside a building with a large window.\n\n**Subject:**\nThe central figure is a young East Asian woman with long, straight black hair pulled back into a low ponytail. She is seen from the back and side, leaning against a wide wooden windowsill. Her body is angled away from the camera, but her head is turned over her left shoulder to look directly at the viewer with a soft, gentle smile. She has fair skin and is wearing subtle makeup that highlights her cheeks. She is dressed in a white, sleeveless crop top with thin straps and light-wash blue denim jeans. A delicate gold necklace is visible around her neck. Her right hand rests on the windowsill, while her left arm is bent behind her back.\n\n**Setting and Background:**\nShe is positioned next to a large, dark-framed window that dominates the right side of the frame. Through the window, a bright, sunlit outdoor scene is visible. The background is filled with lush green trees and foliage, suggesting a park or garden setting. The lighting outside is bright and natural, creating a strong contrast with the slightly warmer, indoor lighting on the woman. The wall next to the window is",
+      "text": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "ShowText|pysssss",
+    "_meta": {
+      "title": "Show Text 🐍"
+    }
+  }
+}

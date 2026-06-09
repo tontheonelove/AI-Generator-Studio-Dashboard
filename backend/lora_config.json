@@ -1,4 +1,32 @@
-{
+{ 
+  "Z-image x PID4K": [
+    {
+      "label": "🚫 No LoRA",
+      "filename": "",
+      "strength": 0.0
+    },
+    {
+      "label": "📸 Realistic Snapshot v5",
+      "filename": "RealisticSnapshot-Zimage-Turbov5.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📲 NiceGirls UltraReal",
+      "filename": "NIceAsians_Zimage.safetensors",
+      "strength": 0.7
+    },
+    {
+      "label": "🤭 NSFW_master",
+      "filename": "NSFW_master_ZIT_000017532.safetensors",
+      "strength": 0.8
+    },
+    {
+      "label": "📱 Lenovo UltraReal",
+      "filename": "lenovo_z.safetensors",
+      "strength": 0.8
+    }
+  ],
+
   "Z-Image Turbo": [
     {
       "label": "🚫 No LoRA",

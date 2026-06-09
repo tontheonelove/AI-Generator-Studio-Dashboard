@@ -26,6 +26,11 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
         prompt_id = response.json()['prompt_id']
         yield {"type": "status", "message": "Queued", "prompt_id": prompt_id}
     except Exception as e:
+        print(f"\n{'='*60}")
+        print(f"[ERROR] ❌ Failed to queue prompt: {str(e)}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"[ERROR] ComfyUI Response: {e.response.text[:1000]}")
+        print(f"{'='*60}\n")
         yield {"type": "error", "message": f"Failed to queue: {str(e)}"}
         return
 
@@ -59,7 +64,7 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
         yield {"type": "error", "message": f"WebSocket error: {str(e)}"}
         return
 
-    # Fetch Result (รองรับ Image, Video, และ Audio)
+    # ✅ Fetch Result (อยู่นอก try/except ของ WebSocket)
     time.sleep(0.5)
     try:
         history = requests.get(f"http://{server_address}/history/{prompt_id}").json()
@@ -72,7 +77,8 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
         
         images = []
         videos = []
-        audios = []  # 🆕 รองรับ Audio Output
+        audios = []
+        text_outputs = {}  # 🆕 รองรับ Text Output
         
         for node_id, node_output in outputs.items():
             if not isinstance(node_output, dict):
@@ -105,7 +111,7 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
                             # เป็นรูปภาพปกติ
                             try:
                                 file_data = requests.get(file_url).content
-                                images.append({"filename": filename, "data": file_data})
+                                images.append({"filename": filename, "data": file_data, "node_id": node_id})
                             except Exception as fetch_err:
                                 print(f"[DEBUG] ❌ Failed to fetch image: {fetch_err}")
             
@@ -130,7 +136,7 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
                                 except Exception as fetch_err:
                                     print(f"[DEBUG] ❌ Failed to fetch video: {fetch_err}")
             
-            # 🆕 3. ตรวจสอบ key สำหรับ Audio (audio, audios)
+            # 3. ตรวจสอบ key สำหรับ Audio (audio, audios)
             audio_keys = ['audio', 'audios']
             for akey in audio_keys:
                 if akey in node_output:
@@ -150,9 +156,26 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
                                     })
                                 except Exception as fetch_err:
                                     print(f"[DEBUG] ❌ Failed to fetch audio: {fetch_err}")
+            
+            # 🆕 4. ตรวจสอบ key สำหรับ Text (รองรับทั้ง string และ list)
+            text_value = None
+            for key in ['string', 'text', 'result', 'output', 'value', 'data']:
+                if key in node_output:
+                    val = node_output[key]
+                    if isinstance(val, str):
+                        text_value = val
+                        print(f"[DEBUG] 📝 Found text (string) in key '{key}' from node {node_id}: {text_value[:50]}...")
+                        break
+                    elif isinstance(val, list) and len(val) > 0 and isinstance(val[0], str):
+                        text_value = val[0]
+                        print(f"[DEBUG] 📝 Found text (list) in key '{key}' from node {node_id}: {text_value[:50]}...")
+                        break
+            
+            if text_value:
+                text_outputs[node_id] = text_value
         
-        print(f"[DEBUG] Final result - Images: {len(images)}, Videos: {len(videos)}, Audios: {len(audios)}")
-        yield {"type": "complete", "images": images, "videos": videos, "audios": audios}
+        print(f"[DEBUG] Final result - Images: {len(images)}, Videos: {len(videos)}, Audios: {len(audios)}, Texts: {len(text_outputs)}")
+        yield {"type": "complete", "images": images, "videos": videos, "audios": audios, "text_outputs": text_outputs}
         
     except Exception as e:
         import traceback
@@ -170,13 +193,14 @@ def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_
     with open(workflow_path, "r", encoding="utf-8") as f:
         workflow = json.load(f)
 
-    # Inject Parameters (เหมือนเดิมทุกประการ)
-    if config["prompt_id"] in workflow:
-        workflow[config["prompt_id"]]["inputs"]["text"] = prompt_text
+    # 🆕 Inject Prompt (รองรับทั้ง key "text" และ "value" สำหรับ PrimitiveStringMultiline)
+    if config.get("prompt_id") and config["prompt_id"] in workflow:
+        prompt_key = config.get("prompt_key", "text")  # default "text"
+        workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt_text
     
     seed_key = config.get("seed_key", "seed")
     actual_seed = seed if seed != -1 else random.randint(1, 10**14)
-    if config["seed_id"] in workflow:
+    if config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
     if "latent_id" in config and config["latent_id"] in workflow:
@@ -200,7 +224,15 @@ def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_
     final_result = None
     for event in _stream_comfy_execution(workflow, client_id):
         if event["type"] == "complete":
-            final_result = {"images": event["images"], "seed": actual_seed}
+            images = event.get("images", [])
+            # 🎯 Filter เฉพาะ Node ที่ต้องการ (ถ้ามีการระบุ output_node_id ใน config)
+            if "output_node_id" in config and images:
+                target_node = str(config["output_node_id"])
+                filtered = [img for img in images if str(img.get("node_id")) == target_node]
+                if filtered:
+                    print(f"[ComfyClient] 🎯 Filtered to Node {target_node} ('Finally'): {len(filtered)} image(s)")
+                    images = filtered
+            final_result = {"images": images, "seed": actual_seed}
         yield event
     
     if final_result:
@@ -378,7 +410,56 @@ def tools_stream(filename, scale, quality, config):
             if config.get("is_video_tool"):
                 final_result = {"videos": event.get("videos", [])}
             else:
-                final_result = {"images": event.get("images", [])}
+                images = event.get("images", [])
+                # 🎯 Filter เฉพาะ Node ที่ต้องการ (ถ้ามีการระบุ output_node_id)
+                if "output_node_id" in config and images:
+                    target_node = str(config["output_node_id"])
+                    filtered = [img for img in images if str(img.get("node_id")) == target_node]
+                    if filtered:
+                        print(f"[Tools] 🎯 Filtered to Node {target_node} ('Finally'): {len(filtered)} image(s)")
+                        images = filtered
+                final_result = {"images": images}
+        yield event
+    
+    if final_result:
+        yield {"type": "final_result", "data": final_result}
+
+
+# 🆕 LLM Generator for Streaming (Image to Text)
+def llm_stream(filename, prompt, config):
+    """Generator สำหรับ LLM Mode (Image to Text) แบบ Streaming"""
+    client_id = get_client_id()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    workflow_path = os.path.join(base_dir, config["file"])
+    
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        workflow = json.load(f)
+    
+    # Inject Image
+    if config.get("image_id") and config["image_id"] in workflow:
+        workflow[config["image_id"]]["inputs"]["image"] = filename
+        workflow[config["image_id"]]["inputs"]["subfolder"] = ""
+        workflow[config["image_id"]]["inputs"]["type"] = "input"
+        print(f"[LLM] 🖼️ Image injected: {filename}")
+    
+    # Inject Prompt
+    if config.get("prompt_id") and config["prompt_id"] in workflow:
+        prompt_key = config.get("prompt_key", "prompt")
+        workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt
+        print(f"[LLM] 📝 Prompt injected: {prompt[:50]}...")
+    
+    # Stream execution
+    final_result = None
+    for event in _stream_comfy_execution(workflow, client_id):
+        if event["type"] == "complete":
+            # ดึง text จาก output_node_id
+            if "output_node_id" in config:
+                target_node = str(config["output_node_id"])
+                text = event.get("text_outputs", {}).get(target_node, "")
+                print(f"[LLM] 🎯 Retrieved text from Node {target_node}: {text[:50]}...")
+                final_result = {"text": text}
+            else:
+                final_result = {"text": ""}
         yield event
     
     if final_result:
@@ -439,58 +520,6 @@ def generate_audio_stream(tags, lyrics, duration, bpm, seed, config):
         yield {"type": "final_result", "data": final_result}
 
 
-# 🆕 Stable Audio 3 Generator for Streaming
-def generate_stable_audio3_stream(prompt, duration, category, seed, enable_reprompt, config):
-    """Generator สำหรับ Stable Audio 3 แบบ Streaming"""
-    client_id = get_client_id()
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    workflow_path = os.path.join(base_dir, config["file"])
-    
-    with open(workflow_path, "r", encoding="utf-8") as f:
-        workflow = json.load(f)
-
-    # Inject Prompt (Node 52:31 - PrimitiveStringMultiline)
-    if config.get("prompt_id") and config["prompt_id"] in workflow:
-        prompt_key = config.get("prompt_key", "value")
-        workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt
-        print(f"[StableAudio3] 📝 Prompt injected: {prompt[:50]}...")
-
-    # Inject Duration (Node 52:36 - PrimitiveFloat)
-    if config.get("duration_id") and config["duration_id"] in workflow:
-        duration_key = config.get("duration_key", "value")
-        workflow[config["duration_id"]]["inputs"][duration_key] = float(duration)
-        print(f"[StableAudio3] ⏱️ Duration: {duration}s")
-
-    # Inject Category (Node 52:43 - CustomCombo)
-    if config.get("category_id") and config["category_id"] in workflow:
-        category_key = config.get("category_key", "index")
-        workflow[config["category_id"]]["inputs"][category_key] = int(category)
-        print(f"[StableAudio3] 🏷️ Category Index: {category}")
-
-    # Inject Seed (Node 52:3 - KSampler)
-    actual_seed = seed if seed != -1 else random.randint(1, 10**14)
-    if config.get("seed_id") and config["seed_id"] in workflow:
-        seed_key = config.get("seed_key", "seed")
-        workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
-        print(f"[StableAudio3] 🎲 Seed: {actual_seed}")
-
-    # Inject Reprompt Boolean (Node 52:35 - PrimitiveBoolean)
-    if config.get("reprompt_id") and config["reprompt_id"] in workflow:
-        reprompt_key = config.get("reprompt_key", "value")
-        workflow[config["reprompt_id"]]["inputs"][reprompt_key] = bool(enable_reprompt)
-        print(f"[StableAudio3] 🤖 Auto-Reprompt: {enable_reprompt}")
-
-    # Stream execution
-    final_result = None
-    for event in _stream_comfy_execution(workflow, client_id):
-        if event["type"] == "complete":
-            final_result = {"audios": event.get("audios", []), "seed": actual_seed}
-        yield event
-    
-    if final_result:
-        yield {"type": "final_result", "data": final_result}
-
-
 # ==========================================
 # 🔧 ORIGINAL FUNCTIONS (BACKWARD COMPATIBLE)
 # ==========================================
@@ -513,15 +542,16 @@ def generate_image(prompt_text, seed, width, height, lora_filename, lora_strengt
     with open(workflow_path, "r", encoding="utf-8") as f:
         workflow = json.load(f)
 
-    # Inject Prompt
-    if config["prompt_id"] in workflow:
-        workflow[config["prompt_id"]]["inputs"]["text"] = prompt_text
+    # 🆕 Inject Prompt (รองรับ prompt_key)
+    if config.get("prompt_id") and config["prompt_id"] in workflow:
+        prompt_key = config.get("prompt_key", "text")
+        workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt_text
     
     # Inject Seed
     seed_key = config.get("seed_key", "seed")
     actual_seed = seed if seed != -1 else random.randint(1, 10**14)
     
-    if config["seed_id"] in workflow:
+    if config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
     # Inject Resolution
@@ -590,8 +620,17 @@ def generate_image(prompt_text, seed, width, height, lora_filename, lora_strengt
             img_data = requests.get(img_url).content
             output_images.append({
                 "filename": img['filename'],
-                "data": img_data
+                "data": img_data,
+                "node_id": node_id
             })
+    
+    # 🎯 Filter เฉพาะ Node ที่ต้องการ (ถ้ามีการระบุ output_node_id)
+    if "output_node_id" in config and output_images:
+        target_node = str(config["output_node_id"])
+        filtered = [img for img in output_images if str(img.get("node_id")) == target_node]
+        if filtered:
+            print(f"[ComfyClient] 🎯 Filtered to Node {target_node} ('Finally'): {len(filtered)} image(s)")
+            output_images = filtered
     
     return {
         "images": output_images,

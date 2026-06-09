@@ -74,4 +74,24 @@ https://huggingface.co/lightx2v/Wan2.2-Lightning/blob/main/Wan2.2-T2V-A14B-4step
 
 --------------------------------------------------------------------------------
 
+***[ Z-Image Turbo X PID4K ]***
+
+[ z_image_bf16 ]  Model สำหรับ VRAM 12GB. ขึ้นไป =>วางไฟล์ที่ /model/unet
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/diffusion_models/z_image_bf16.safetensors?download=true
+
+[ qwen_3_4b ]  text encode  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors?download=true
+
+[ AE ]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/vae/ae.safetensors?download=true
+
+[ pid_flux1_1024_to_4096_4step_bf16 ] =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/PixelDiT/resolve/main/diffusion_models/pid_flux1_1024_to_4096_4step_bf16.safetensors?download=true
+
+[ gemma_2_2b_it_elm_bf16.safetensors ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/PixelDiT/resolve/main/text_encoders/gemma_2_2b_it_elm_bf16.safetensors?download=true
+
+
+--------------------------------------------------------------------------------
+
 

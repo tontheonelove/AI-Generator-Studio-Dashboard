@@ -1,11 +1,11 @@
 {
-  "version": "3.0",
-  "release_date": "2026-06-02",
+  "version": "3.1",
+  "release_date": "2026-06-09",
   "features": [
-    "🚀 LTX2.3 VIDEO Added",
-    "📸 ACESTEP1.5 Added",
-    "📱 RTX Upscale Added",
-    "🔥 Upgrade Frontend & Backend",
+    "🚀 Z-Image X PID 4K Added",
+    "📸 Nvidia PID Upscale Added",
+    "📱 LLM Image to Text Added",
+    "🔥 Fix Some Bug",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"
 

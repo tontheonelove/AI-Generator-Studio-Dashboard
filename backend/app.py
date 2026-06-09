@@ -12,12 +12,13 @@ import shutil
 import re
 import requests
 
-# ✅ Import เฉพาะฟังก์ชันที่ใช้งาน (ไม่มี Stable Audio 3)
+# ✅ Import ฟังก์ชันทั้งหมดจาก comfy_client (เพิ่ม llm_stream)
 from .comfy_client import (
     generate_image, generate_edit, 
     generate_image_stream, generate_edit_stream, 
     generate_video_stream, tools_stream,
-    generate_audio_stream
+    generate_audio_stream,
+    llm_stream  # 🆕 เพิ่ม LLM Stream
 )
 from .database import init_db, save_history, get_history
 
@@ -82,7 +83,12 @@ def load_lora_config():
 init_db()
 
 WORKFLOW_SETTINGS = {
-    # === Generate Models ===
+    # === Images Models ===
+    "Z-image x PID4K": {
+        "file": "workflow/z_image_turbo_to_pid_4K.json",
+        "prompt_id": "92", "prompt_key": "value", "seed_id": "70", "latent_id": "68",
+        "lora_id": "97", "output_node_id": "80"  
+    },
     "Z-Image Turbo": {
         "file": "workflow/image_z_image_turbo.json",
         "prompt_id": "57:27", "seed_id": "57:3", "latent_id": "57:13", "lora_id": "57:62"
@@ -146,8 +152,21 @@ WORKFLOW_SETTINGS = {
         "video_id": "6", "video_key": "file", "scale_id": "1", "scale_key": "resize_type.scale",
         "quality_id": "1", "quality_key": "quality", "is_video_tool": True
     },
+    "NvidiaPID Upscale 4K": {
+        "file": "workflow/pid_upscale_4k.json",
+        "image_id": "8", "output_node_id": "27", "is_image_tool": True
+    },
+    # 🆕 LLM Tool
+    "Qwen3.5 Image to Text": {
+        "file": "workflow/llm_qwen3_5_text_gen.json",
+        "image_id": "2",
+        "prompt_id": "3",
+        "prompt_key": "prompt",
+        "output_node_id": "12",
+        "is_llm_tool": True
+    },
     
-    # === Audio Models (เหลือแค่ AceStep 1.5) ===
+    # === Audio Models ===
     "AceStep 1.5 Audio": {
         "file": "workflow/acestep15.json",
         "tags_id": "94", "lyrics_id": "94", "seed_id": "109", "seed_key": "value",
@@ -193,6 +212,12 @@ class AudioGenerationRequest(BaseModel):
     bpm: int = 72
     seed: int = -1
 
+# 🆕 NEW: LLM Request Model
+class LLMRequest(BaseModel):
+    model: str
+    filename: str
+    prompt: str = "Describe this image in detail."
+
 # === Basic Endpoints ===
 @app.get("/api/status")
 def get_status():
@@ -212,6 +237,9 @@ def serve_output(filename: str):
 @app.get("/api/loras/{model_name}")
 def get_loras(model_name: str):
     config = load_lora_config()
+    # 🎯 ถ้าเป็น z-image x PID4K ให้ดึง LoRA ของ Z-Image Turbo มาใช้
+    if model_name == "Z-image x PID4K":
+        model_name = "Z-Image Turbo"
     loras = config.get(model_name, [])
     return {"loras": loras}
 
@@ -480,6 +508,72 @@ async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
             is_processing = False
             print("[Queue-Audio-SSE] 🔓 Unlocked")
 
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+# 🆕 NEW: LLM Stream Endpoint
+@app.post("/api/llm-stream")
+async def llm_stream_endpoint(req: LLMRequest):
+    global is_processing
+    
+    if is_processing:
+        async def error_stream():
+            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    
+    if req.model not in WORKFLOW_SETTINGS:
+        async def error_stream():
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    
+    config = WORKFLOW_SETTINGS[req.model]
+    workflow_path = os.path.join(BASE_DIR, config["file"])
+    
+    if not os.path.exists(workflow_path):
+        async def error_stream():
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    
+    if not req.filename:
+        async def error_stream():
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Image required'})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+    
+    is_processing = True
+    print(f"[Queue-LLM-SSE] 🔒 Locked - {req.model}")
+    
+    async def event_generator():
+        global is_processing
+        try:
+            stream_fn = llm_stream(req.filename, req.prompt, config)
+            
+            final_result = None
+            for event in stream_fn:
+                if event["type"] == "final_result":
+                    final_result = event["data"]
+                elif event["type"] == "complete":
+                    pass
+                else:
+                    yield f"data: {json.dumps(event)}\n\n"
+            
+            if final_result and final_result.get("text"):
+                text = final_result['text']
+                save_event = {
+                    "type": "saved",
+                    "text": text,
+                    "is_text": True
+                }
+                # ใช้ ensure_ascii=False เพื่อรองรับตัวอักษรพิเศษ/ภาษาไทย
+                yield f"data: {json.dumps(save_event, ensure_ascii=False)}\n\n"
+            else:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'No text generated'})}\n\n"
+        
+        except Exception as e:
+            traceback.print_exc()
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        finally:
+            is_processing = False
+            print("[Queue-LLM-SSE] 🔓 Unlocked")
+    
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 # === Simple Generate (Backward Compatible) ===

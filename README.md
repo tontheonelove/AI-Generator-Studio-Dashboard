@@ -2,6 +2,14 @@
 
 <img src=ex.png/>
 
+## 🔥🔥 Update (9-6-69) Update Feature
+
+📸 Z-Image X PID 4K Added (Intergrate Nvidia PID 4K)
+
+🖼️ LLM Image to Text Added (QWEN3.5)
+
+🛣️ Nvidia PID Upscale Added No Need RTX GPU
+
 ## 🚀🚀 Update (2-6-69) BIG UPDATE
 
 📽️ New Feature Video Generation  
