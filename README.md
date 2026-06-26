@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Update (26-6-26) Update Workflow & Model
+## 🚀 Update V3.2 (26-6-26) Update Workflow & Model
 
 - 🖼️ Krea 2 Turbo Added
 - 📸 Boogu 0.1 Turbo Added
@@ -12,7 +12,7 @@
 - 💻 LLM Gemma4 Image to Text Added
 
 
-## 🔥🔥 Update (9-6-26) Update Feature
+## 🔥🔥 Update V3.1 (9-6-26) Update Feature
 
 - 📸 Z-Image X PID 4K Added (Intergrate Nvidia PID 4K)
 - 🖼️ LLM Image to Text Added (QWEN3.5)
