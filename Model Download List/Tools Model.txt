@@ -13,8 +13,23 @@ https://huggingface.co/Comfy-Org/PixelDiT/resolve/main/text_encoders/gemma_2_2b_
 [flux2-vae.safetensors] =>วางไฟล์ที่ /model/vae
 https://huggingface.co/Comfy-Org/flux2-dev/blob/main/split_files/vae/flux2-vae.safetensors
 
+--------------------------------------------------------------------------------
 
 [QWEN3.5 LLM] [ Image to Text ] 
 
 [ qwen3.5_4b_bf16.safetensors ]  =>วางไฟล์ที่ /model/textencoders
 https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_4b_bf16.safetensors
+
+
+--------------------------------------------------------------------------------
+
+
+[GEMMA4 LLM] [ Image to Text ] 
+
+[ gemma4_e4b_it_fp8 ]   =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/gemma-4/resolve/main/text_encoders/gemma4_e4b_it_fp8_scaled.safetensors?download=true
+
+
+
+
+

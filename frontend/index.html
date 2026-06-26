@@ -110,6 +110,9 @@
                         <div class="mb-4">
                             <label class="block text-sm text-gray-300 mb-2">AI Model</label>
                             <select id="model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="Krea2 Turbo">⚡ Krea2 Turbo </option>
+                                <option value="Ideogram 4">🖼️ Ideogram 4 </option>
+                                <option value="Boogu Image Turbo">🎨 Boogu Image Turbo</option>
                                 <option value="Z-image x PID4K">🌟 Z-image x PID (4K Upscale)</option>
                                 <option value="Z-Image Turbo">📸 Z-Image Turbo</option>
                                 <option value="Z-Image Turbo-GGUF">📱 Z-Image Turbo-GGUF</option>
@@ -252,6 +255,7 @@
                                 <option value="RTX Image Upscale">🖼️ RTX Image Upscale (4K Enhancement)</option>
                                 <option value="RTX Video Upscale">🎬 RTX Video Upscale (4K Enhancement)</option>
                                 <option value="NvidiaPID Upscale 4K">🌟 NvidiaPID Upscale 4K</option>
+                                <option value="Gemma4 Image to Text">💎 Gemma4 Image to Text (Vision LLM)</option>
                                 <option value="Qwen3.5 Image to Text">🔤 Qwen3.5 Image to Text (Vision LLM)</option>
                             </select>
                         </div>
@@ -645,7 +649,7 @@
             scaleQualityContainer.classList.add('hidden');
             llmContainer.classList.add('hidden');
             
-            // แสดงตามโมเดลที่เลือก
+                        // แสดงตามโมเดลที่เลือก
             if (model === 'RTX Image Upscale') {
                 imgContainer.classList.remove('hidden');
                 scaleQualityContainer.classList.remove('hidden');
@@ -655,6 +659,9 @@
             } else if (model === 'NvidiaPID Upscale 4K') {
                 imgContainer.classList.remove('hidden');
             } else if (model === 'Qwen3.5 Image to Text') {
+                imgContainer.classList.remove('hidden');
+                llmContainer.classList.remove('hidden');
+            } else if (model === 'Gemma4 Image to Text') {
                 imgContainer.classList.remove('hidden');
                 llmContainer.classList.remove('hidden');
             }
@@ -880,7 +887,7 @@
                     btn.disabled = false;
                     if (currentMode === 'video') btn.innerHTML = '<span>🎬 Generate Video</span>';
                     else if (currentMode === 'audio') btn.innerHTML = '<span>🎵 Compose Music</span>';
-                    else if (currentMode === 'tools') btn.innerHTML = '<span>⚡ Upscale</span>';
+                    else if (currentMode === 'tools') btn.innerHTML = '<span>⚡ Generate</span>';
                     else btn.innerHTML = '<span>✨ Generate Masterpiece</span>';
                     btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
                     btn.classList.add('from-emerald-500', 'to-teal-600');
@@ -1161,7 +1168,7 @@
 
             const model = document.getElementById('tools-model-select').value;
             // 🎯 LLM Mode
-            if (model === 'Qwen3.5 Image to Text') {
+            if (model === 'Qwen3.5 Image to Text' || model === 'Gemma4 Image to Text') {
                 const filename = toolsUploadedImage;
                 if (!filename) { 
                     alert("⚠️ Please upload an image!"); 
@@ -1251,7 +1258,7 @@
                 return;
             }
 
-            const isImageTool = model === 'RTX Image Upscale' || model === 'NvidiaPID Upscale 4K';
+            const isImageTool = model === 'RTX Image Upscale' || model === 'NvidiaPID Upscale 4K' || model === 'Qwen3.5 Image to Text' || model === 'Gemma4 Image to Text';
             const filename = isImageTool ? toolsUploadedImage : toolsUploadedVideo;
 
             if (!filename) { 
@@ -1323,7 +1330,7 @@
                 loading.classList.add('hidden');
                 btn.classList.remove('busy');
                 btn.disabled = false;
-                btn.innerHTML = '<span>⚡ Upscale</span>';
+                btn.innerHTML = '<span>⚡ Generate</span>';
                 btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-600');
                 btn.classList.add('from-emerald-500', 'to-teal-600');
             }

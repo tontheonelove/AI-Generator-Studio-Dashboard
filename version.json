@@ -1,10 +1,11 @@
 {
-  "version": "3.1",
-  "release_date": "2026-06-09",
+  "version": "3.2",
+  "release_date": "2026-07-26",
   "features": [
-    "🚀 Z-Image X PID 4K Added",
-    "📸 Nvidia PID Upscale Added",
-    "📱 LLM Image to Text Added",
+    "🚀 Krea 2 Turbo Added",
+    "📸 Boogu 0.1 Turbo Added",
+    "📱 Ideogram-4 Added",
+    "🖼️ Gemma4 LLM Added",
     "🔥 Fix Some Bug",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"

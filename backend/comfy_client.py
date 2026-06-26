@@ -452,14 +452,43 @@ def llm_stream(filename, prompt, config):
     final_result = None
     for event in _stream_comfy_execution(workflow, client_id):
         if event["type"] == "complete":
-            # ดึง text จาก output_node_id
-            if "output_node_id" in config:
-                target_node = str(config["output_node_id"])
-                text = event.get("text_outputs", {}).get(target_node, "")
-                print(f"[LLM] 🎯 Retrieved text from Node {target_node}: {text[:50]}...")
-                final_result = {"text": text}
-            else:
-                final_result = {"text": ""}
+            # 🐛 DEBUG: แสดงข้อมูลทั้งหมดที่ได้จาก ComfyUI
+            print(f"\n{'='*70}")
+            print(f"[DEBUG LLM] 📦 Raw event keys: {list(event.keys())}")
+            print(f"[DEBUG LLM] 📦 text_outputs: {event.get('text_outputs', {})}")
+            print(f"[DEBUG LLM] 📦 images count: {len(event.get('images', []))}")
+            print(f"[DEBUG LLM] 🎯 Target Node ID: {config.get('output_node_id')}")
+            
+            # ลองดึง text จากหลายแหล่ง
+            text = ""
+            target_node = str(config.get("output_node_id", ""))
+            
+            # วิธีที่ 1: ดึงจาก text_outputs (มาตรฐาน)
+            if target_node and target_node in event.get("text_outputs", {}):
+                text = event["text_outputs"][target_node]
+                print(f"[DEBUG LLM] ✅ Found text in text_outputs[{target_node}]")
+            
+            # วิธีที่ 2: ถ้า text_outputs ว่าง ลองหาจากทุก node
+            if not text:
+                all_text = event.get("text_outputs", {})
+                if all_text:
+                    # ใช้ text จาก node แรกที่เจอ
+                    first_node = list(all_text.keys())[0]
+                    text = all_text[first_node]
+                    print(f"[DEBUG LLM] ⚠️ Fallback: Using text from node {first_node}")
+            
+            # วิธีที่ 3: ถ้ายังไม่มี ลองดูใน images (บาง node ยัด text มาใน images key)
+            if not text:
+                images = event.get("images", [])
+                if images:
+                    print(f"[DEBUG LLM] ⚠️ No text found, but found {len(images)} image(s)")
+            
+            print(f"[DEBUG LLM] 📝 Final text length: {len(text)}")
+            if text:
+                print(f"[DEBUG LLM] 📝 Text preview: {text[:100]}...")
+            print(f"{'='*70}\n")
+            
+            final_result = {"text": text}
         yield event
     
     if final_result:

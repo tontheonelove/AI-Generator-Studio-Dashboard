@@ -2,15 +2,25 @@
 
 <img src=ex.png/>
 
-## 🔥🔥 Update (9-6-69) Update Feature
+---
 
-📸 Z-Image X PID 4K Added (Intergrate Nvidia PID 4K)
+## 🚀 Update (26-6-26) Update Workflow & Model
 
-🖼️ LLM Image to Text Added (QWEN3.5)
+- 🖼️ Krea 2 Turbo Added
+- 📸 Boogu 0.1 Turbo Added
+- 🔥 Ideogram4 Added
+- 💻 LLM Gemma4 Image to Text Added
 
-🛣️ Nvidia PID Upscale Added No Need RTX GPU
 
-## 🚀🚀 Update (2-6-69) BIG UPDATE
+## 🔥🔥 Update (9-6-26) Update Feature
+
+- 📸 Z-Image X PID 4K Added (Intergrate Nvidia PID 4K)
+- 🖼️ LLM Image to Text Added (QWEN3.5)
+- 🛣️ Nvidia PID Upscale Added No Need RTX GPU
+
+---
+
+## 🚀🚀 Update (2-6-26) BIG UPDATE
 
 📽️ New Feature Video Generation  
    - LTX2.3 Image2Video (GGUF)

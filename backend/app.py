@@ -97,10 +97,23 @@ WORKFLOW_SETTINGS = {
         "file": "workflow/image_z_image_turbo_gguf.json",
         "prompt_id": "57:27", "seed_id": "57:3", "latent_id": "57:13", "lora_id": "57:62"
     },
+    "Krea2 Turbo": {
+        "file": "workflow/krea2_turbo.json","prompt_id": "30:19","prompt_key": "value",
+        "seed_id": "30:3","latent_id": "30:5",
+    },
+    "Ideogram 4": {
+        "file": "workflow/Ideogram-4.json","prompt_id": "185","prompt_key": "high_level_description",
+        "seed_id": "211:165","seed_key": "noise_seed","width_id": "200","height_id": "201","prompt_width_key": "width",
+        "prompt_height_key": "height","lora_id": "219","lora_type": "power_lora",
+    },
     "Flux 2 Klein-GGUF": {
         "file": "workflow/image_flux2_text_to_image_9b.json",
         "prompt_id": "75:74", "seed_id": "75:73", "width_id": "75:68", "height_id": "75:69",
         "seed_key": "noise_seed", "lora_id": "10"
+    },
+     "Boogu Image Turbo": {
+        "file": "workflow/boogu_image_turbo.json","prompt_id": "34:11","prompt_key": "text",
+        "seed_id": "34:32","latent_id": "34:8",
     },
     "Qwen Image 2512": {
         "file": "workflow/image_qwen_image_2512.json",
@@ -162,7 +175,15 @@ WORKFLOW_SETTINGS = {
         "image_id": "2",
         "prompt_id": "3",
         "prompt_key": "prompt",
-        "output_node_id": "12",
+        "output_node_id": "7",
+        "is_llm_tool": True
+    },
+    "Gemma4 Image to Text": {
+        "file": "workflow/gemma4.json",
+        "image_id": "2",      
+        "prompt_id": "1",    
+        "prompt_key": "prompt",
+        "output_node_id": "12", 
         "is_llm_tool": True
     },
     
@@ -240,6 +261,7 @@ def get_loras(model_name: str):
     # 🎯 ถ้าเป็น z-image x PID4K ให้ดึง LoRA ของ Z-Image Turbo มาใช้
     if model_name == "Z-image x PID4K":
         model_name = "Z-Image Turbo"
+    
     loras = config.get(model_name, [])
     return {"loras": loras}
 

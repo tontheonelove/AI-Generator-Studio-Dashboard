@@ -1,0 +1,335 @@
+{
+  "25": {
+    "inputs": {
+      "images": [
+        "162",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "158": {
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "159": {
+    "inputs": {
+      "conditioning": [
+        "167",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "162": {
+    "inputs": {
+      "samples": [
+        "211:161",
+        0
+      ],
+      "vae": [
+        "158",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "166": {
+    "inputs": {
+      "unet_name": "ideogram4_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "167": {
+    "inputs": {
+      "text": [
+        "185",
+        0
+      ],
+      "clip": [
+        "219",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "185": {
+    "inputs": {
+      "width": [
+        "200",
+        0
+      ],
+      "height": [
+        "201",
+        0
+      ],
+      "high_level_description": "A photorealistic, vertical mirror selfie of a fit young Asian woman standing in a large, modern gym. She has dark hair pulled back and is wearing white wireless earbuds. She is dressed in casual athletic wear: a tight black short-sleeved crop top and baggy grey sweatpants, revealing her midriff. She holds a smartphone with a beige patterned case in her hand, smiling softly at the reflection. The background features a long corridor of the gym with rows of black industrial pendant lights hanging from the ceiling, various weight machines, and other gym-goers exercising in the distance. Bright, cool-toned artificial lighting, high resolution, fitness lifestyle aesthetic.",
+      "background": "",
+      "style": "photo",
+      "style.photo": "",
+      "aesthetics": "",
+      "lighting": "",
+      "medium": "",
+      "style_palette_data": "",
+      "elements_data": "",
+      "bg_brightness": 34,
+      "import_mode": "when empty",
+      "output_format": "compact"
+    },
+    "class_type": "Ideogram4PromptBuilderKJ",
+    "_meta": {
+      "title": "Ideogram 4 Prompt Builder KJ"
+    }
+  },
+  "198": {
+    "inputs": {
+      "shift": 6,
+      "model": [
+        "219",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "199": {
+    "inputs": {
+      "source": [
+        "185",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview as Text"
+    }
+  },
+  "200": {
+    "inputs": {
+      "value": 1024
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Width"
+    }
+  },
+  "201": {
+    "inputs": {
+      "value": 1024
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Height"
+    }
+  },
+  "208": {
+    "inputs": {
+      "unet_name": "ideogram4_unconditional_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Unconditional Diffusion Model"
+    }
+  },
+  "212": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Batch Size"
+    }
+  },
+  "213": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_fp8_scaled.safetensors",
+      "type": "ideogram4",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "219": {
+    "inputs": {
+      "PowerLoraLoaderHeaderWidget": {
+        "type": "PowerLoraLoaderHeaderWidget"
+      },
+      "➕ Add Lora": "",
+      "model": [
+        "166",
+        0
+      ],
+      "clip": [
+        "213",
+        0
+      ]
+    },
+    "class_type": "Power Lora Loader (rgthree)",
+    "_meta": {
+      "title": "Power Lora Loader (rgthree)"
+    }
+  },
+  "229": {
+    "inputs": {
+      "PowerLoraLoaderHeaderWidget": {
+        "type": "PowerLoraLoaderHeaderWidget"
+      },
+      "➕ Add Lora": "",
+      "model": [
+        "208",
+        0
+      ]
+    },
+    "class_type": "Power Lora Loader (rgthree)",
+    "_meta": {
+      "title": "Power Lora Loader (rgthree)"
+    }
+  },
+  "211:184": {
+    "inputs": {
+      "cfg": 3,
+      "start_percent": 0.7,
+      "end_percent": 1,
+      "model": [
+        "198",
+        0
+      ]
+    },
+    "class_type": "CFGOverride",
+    "_meta": {
+      "title": "CFG Override"
+    }
+  },
+  "211:182": {
+    "inputs": {
+      "cfg": 6,
+      "model": [
+        "211:184",
+        0
+      ],
+      "positive": [
+        "167",
+        0
+      ],
+      "model_negative": [
+        "229",
+        0
+      ],
+      "negative": [
+        "159",
+        0
+      ]
+    },
+    "class_type": "DualModelGuider",
+    "_meta": {
+      "title": "Dual Model CFG Guider"
+    }
+  },
+  "211:165": {
+    "inputs": {
+      "noise_seed": 1108261887800756
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "211:163": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "211:190": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 28,
+      "denoise": 1,
+      "model": [
+        "198",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "211:161": {
+    "inputs": {
+      "noise": [
+        "211:165",
+        0
+      ],
+      "guider": [
+        "211:182",
+        0
+      ],
+      "sampler": [
+        "211:163",
+        0
+      ],
+      "sigmas": [
+        "211:190",
+        0
+      ],
+      "latent_image": [
+        "211:160",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "211:160": {
+    "inputs": {
+      "width": [
+        "185",
+        3
+      ],
+      "height": [
+        "185",
+        4
+      ],
+      "batch_size": [
+        "212",
+        0
+      ]
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux 2 Latent"
+    }
+  }
+}
