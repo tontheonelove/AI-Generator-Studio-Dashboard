@@ -4,6 +4,14 @@
 
 ---
 
+## 🚀 Update V3.3 ... Coming Soon !
+
+- 😄 Krea 2 Edit Identity Added (Image Edit)
+- 📢 Krea 2 Controlnet Added (Image Edit)
+- 🖼️ Krea 2 Added 5 Loras (Image Generation)
+ 
+---
+
 ## 🚀 Update V3.2 (26-6-26) Update Workflow & Model
 
 - 🖼️ Krea 2 Turbo Added
