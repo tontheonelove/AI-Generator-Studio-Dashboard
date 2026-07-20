@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Update V3.3 ... Coming Soon !
+## 🚀 Update V3.3 (20-7-26) Update Workflow & Model
 
 - 😄 Krea 2 Edit Identity Added (Image Edit)
 - 📢 Krea 2 Controlnet Added (Image Edit)
