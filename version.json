@@ -1,11 +1,10 @@
 {
-  "version": "3.2",
-  "release_date": "2026-07-26",
+  "version": "3.3",
+  "release_date": "2026-07-20",
   "features": [
-    "🚀 Krea 2 Turbo Added",
-    "📸 Boogu 0.1 Turbo Added",
-    "📱 Ideogram-4 Added",
-    "🖼️ Gemma4 LLM Added",
+    "🚀 Krea 2 Edit Identity Added (Image Edit)",
+    "📸 Krea 2 Controlnet Added (Image Edit)",
+    "📱 Krea 2 Added 5 Loras",
     "🔥 Fix Some Bug",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"

@@ -225,6 +225,9 @@
                         <div>
                             <label class="block text-sm text-gray-300 mb-2">Edit Model</label>
                             <select id="edit-model-select" onchange="onEditModelChange()" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="Krea2 Identity Edit">🎭 Krea2 Identity Edit (1 Ref Image)</option>
+                                <option value="Krea2 Identity Edit (2 Ref)">🎭 Krea2 Identity Edit (2 Ref Images)</option>
+                                <option value="KREA-2-CONTROLNET">🎯 KREA-2-CONTROLNET (Auto Prompt + Depth)</option>
                                 <option value="Flux Face Swap">🔄 Flux Face Swap (2 Images Required)</option>
                                 <option value="Qwen Image Edit">✏️ Qwen Image Edit (Image2 Optional)</option>
                             </select>
@@ -615,13 +618,49 @@
             const model = document.getElementById('edit-model-select').value;
             const img2Container = document.getElementById('image2-container');
             const img2Label = document.getElementById('image2-label');
-            img2Container.classList.remove('hidden');
-            if (model === 'Flux Face Swap') {
-                img2Label.textContent = '(Required)';
-                img2Label.className = 'text-red-400';
+            const promptInput = document.getElementById('prompt-input');  // 🆕 เพิ่ม
+            const promptLabel = document.querySelector('label[for="prompt-input"]');  // 🆕 เพิ่ม
+            
+            // 🎯 จัดการ Image 2
+            if (model === 'Krea2 Identity Edit' || model === 'KREA-2-CONTROLNET') {
+                img2Container.classList.add('hidden');
             } else {
-                img2Label.textContent = '(Optional)';
-                img2Label.className = 'text-yellow-400';
+                img2Container.classList.remove('hidden');
+                
+                if (model === 'Flux Face Swap') {
+                    img2Label.textContent = '(Required)';
+                    img2Label.className = 'text-red-400';
+                } else if (model === 'Krea2 Identity Edit (2 Ref)') {
+                    img2Label.textContent = '(Required)';
+                    img2Label.className = 'text-red-400';
+                } else {
+                    img2Label.textContent = '(Optional)';
+                    img2Label.className = 'text-yellow-400';
+                }
+            }
+            
+            // 🎯 จัดการ Prompt (เปลี่ยน placeholder ตามโมเดล)
+            if (model === 'KREA-2-CONTROLNET') {
+                // KREA-2-CONTROLNET ใช้คำสั่งสั้นๆ (Gemma4 จะ gen prompt ยาวให้)
+                if (promptLabel) promptLabel.innerHTML = '🎯 Short Instruction (Auto-Prompt by Gemma4)';
+                if (promptInput) {
+                    promptInput.placeholder = 'e.g., "change hair to blonde", "add sunglasses", "make her smile"';
+                    promptInput.rows = 2;
+                }
+            } else if (model === 'Krea2 Identity Edit' || model === 'Krea2 Identity Edit (2 Ref)') {
+                // Krea2 Identity Edit ใช้ prompt ปกติ
+                if (promptLabel) promptLabel.innerHTML = '📝 Edit Instruction';
+                if (promptInput) {
+                    promptInput.placeholder = 'e.g., "Change background to Night Club", "Make them stand side by side"';
+                    promptInput.rows = 3;
+                }
+            } else {
+                // โมเดลอื่นๆ (Flux Face Swap, Qwen Image Edit)
+                if (promptLabel) promptLabel.innerHTML = '📝 Prompt';
+                if (promptInput) {
+                    promptInput.placeholder = 'Describe what you want to generate or edit...';
+                    promptInput.rows = 4;
+                }
             }
         }
 

@@ -121,5 +121,32 @@
       "filename": "low_noise_model.safetensors",
       "strength": 1.0
     }
-  ]
+  ],
+  "Krea2 Turbo": [
+    {
+        "label": "Lenovo UltraReal",
+        "filename": "lenovo_krea2.safetensors",
+        "strength": 1.0
+    },
+    {
+        "label": "BloomGirls UltraRealism",
+        "filename": "bloomgirls-ultrarealism-krea2_4k.safetensors",
+        "strength": 1.0
+    },
+    {
+        "label": "Cinematic Shot",
+        "filename": "zy_Cinematic_Shot_K2.safetensors",
+        "strength": 0.8
+    },
+    {
+        "label": "AsianMix Lora",
+        "filename": "hina_krea2Turbo_lora_tqd_v3.0.safetensors",
+        "strength": 0.9
+    },
+    {
+        "label": "Realistic Snapshot",
+        "filename": "RealisticSnapshotKrea2.safetensors",
+        "strength": 0.7
+    }
+  ]   
 }

@@ -99,7 +99,7 @@ WORKFLOW_SETTINGS = {
     },
     "Krea2 Turbo": {
         "file": "workflow/krea2_turbo.json","prompt_id": "30:19","prompt_key": "value",
-        "seed_id": "30:3","latent_id": "30:5",
+        "seed_id": "30:3","latent_id": "30:5","lora_id": "30:51"
     },
     "Ideogram 4": {
         "file": "workflow/Ideogram-4.json","prompt_id": "185","prompt_key": "high_level_description",
@@ -130,6 +130,26 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Edit Models ===
+    "Krea2 Identity Edit": {
+        "file": "workflow/krea2_edit_single_ref.json","prompt_id": "84","prompt_key": "prompt",
+        "seed_id": "53","seed_key": "seed","image1_id": "72","lora_id": "71","single_image_only": True 
+    },
+
+    "Krea2 Identity Edit (2 Ref)": {
+        "file": "workflow/krea2_edit_two_ref.json","prompt_id": "84","prompt_key": "prompt",
+        "seed_id": "53","seed_key": "seed","image1_id": "72","image2_id": "86","lora_id": "71",
+        "require_both_images": True
+    },
+    "KREA-2-CONTROLNET": {
+        "file": "workflow/KREA-2-CONTROLNET.json",
+        "prompt_id": "99",
+        "prompt_key": "string_b",
+        "seed_id": "87",
+        "seed_key": "seed",
+        "image1_id": "78",
+        "output_node_id": "101",
+        "single_image_only": True,
+    },
     "Flux Face Swap": {
         "file": "workflow/flux_faceswap.json",
         "prompt_id": "64", "seed_id": "111", "seed_key": "noise_seed",

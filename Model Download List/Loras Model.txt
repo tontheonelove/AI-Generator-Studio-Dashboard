@@ -1,6 +1,25 @@
 นี่คือ Model ทั้งหมดที่อยู่บน Studio เลือกโหลดแค่ที่จะใช้ได้ หรือ Download ทั้งหมดได้
 วางไฟล์ .safetensors ที่ /model/loras  restart Comfyui 1 รอบก็พร้อมใช้
 
+[ Krea2 Turbo]
+
+1. [ Lenovo UltraReal ]
+https://civitai.com/models/1662740/lenovo-ultrareal?modelVersionId=3075606
+
+2.[ Realistic Snapshot ]
+https://civitai.com/models/2268008/realistic-snapshot-z-image-turbo-krea-2?modelVersionId=3084537
+
+3. [ BloomGirls UltraRealism ]
+https://civitai.com/models/2735553/krea-2-bloomgirls-ultrarealism?modelVersionId=3075850
+
+4. [ Cinematic Shot ]
+https://civitai.com/models/432586/cinematic-shot?modelVersionId=3085969
+
+5. [ AsianMix Lora ]
+https://civitai.com/models/2746042/krea2-turbo-asianmix-lora?modelVersionId=3146162
+
+
+
 [ Z-image Turbo + Z-image Turbo GGUF ]
 
 1. [ Realistic Snapshot ]
@@ -36,5 +55,3 @@ https://civitai.com/models/2462105/ultra-real-klein-9b?modelVersionId=2846977
 
 --------------------------------------------------------------------------------
 
-
-[ wait for update soon]

@@ -1,5 +1,46 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+Krea2 Identity Edit  (ทั้ง 1Ref และ 2Ref)
+
+[ krea2edit Custom Node ] ต้องติดตั้งค้นหาที่ install missing node บน Comfyui ก่อน หรือ git clone ใน Folder Custom-node
+https://github.com/lbouaraba/comfyui-krea2edit
+
+[ krea2_turbo_fp8_scaled.safetensors ]  วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/Krea-2/blob/main/diffusion_models/krea2_turbo_fp8_scaled.safetensors
+
+[ qwen3vl_4b_bf16.safetensors ] วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Qwen3-VL/blob/b58e627c376915e49cb6bba978416085aa31767f/text_encoders/qwen3vl_4b_bf16.safetensors
+
+[ krea2-identity-edit ] วางไฟล์ที่ /model/loras
+https://huggingface.co/conradlocke/krea2-identity-edit/blob/main/krea2_identity_edit_v1_1.safetensors
+
+[ krea2RealVae ] วางไฟล์ที่ /model/vae
+https://huggingface.co/martineux/altkreas/blob/main/krea2RealVae_v10.safetensors
+
+
+
+Krea2 Controlnet Depth
+
+[ krea2-controlnet Custom Node ] ต้องติดตั้ง git clone ใน Folder Custom-node
+https://github.com/facok/comfyui-krea2-controlnet
+
+[ DepthAnythingV3 Custom Node ] ต้องติดตั้ง git clone ใน Folder Custom-node
+https://github.com/PozzettiAndrea/ComfyUI-DepthAnythingV3
+
+[ krea2_turbo_fp8_scaled.safetensors ]  วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/Krea-2/blob/main/diffusion_models/krea2_turbo_fp8_scaled.safetensors
+
+[ qwen3vl_4b_bf16.safetensors ] วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Qwen3-VL/blob/b58e627c376915e49cb6bba978416085aa31767f/text_encoders/qwen3vl_4b_bf16.safetensors
+
+[ depth-control-lora ]  วางไฟล์ที่ /model/loras
+https://huggingface.co/Patil/Krea-2-depth-controlnet/blob/c23e54ddc17fb9b86ac4d9213e2fd8212c8ad924/depth-control-lora.safetensors
+
+[ gemma4_e4b_it_fp8 ]   =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/gemma-4/resolve/main/text_encoders/gemma4_e4b_it_fp8_scaled.safetensors?download=true
+
+
+
 --------------------------------------------------------------------------------
 
 ***[Qwen Image Edit 2511]*** (GGUF)
