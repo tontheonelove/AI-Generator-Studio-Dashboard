@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Update V3.4 (20-7-27) Update Workflow & Model
+## 🚀 Update V3.4 (10-8-26) Update Workflow & Model
 
 - 🚀 MINIMAX H3 T2V (FP8 & GGUF) (Text To Video)
 - 🚀 MINIMAX H3 I2V (FP8 & GGUF) (Image To Video)
