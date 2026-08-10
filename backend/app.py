@@ -173,6 +173,40 @@ WORKFLOW_SETTINGS = {
         "image1_id": "167", "audio_id": "372", "audio_switch_id": "376",
         "width_id": "292", "height_id": "293", "fps_id": "285", "video_output_node": "140", "is_lipsync": True
     },
+    "MiniMax H3 I2V": {
+        "file": "workflow/minimax_h3_i2v_fp8.json","prompt_id": "105:104",
+        "prompt_key": "prompt","seed_id": "105:15","seed_key": "noise_seed",
+        "image1_id": "114","width_id": "105:104","width_key": "width",
+        "height_id": "105:104","height_key": "height","length_id": "105:111",
+        "length_key": "value","fps_id": "105:91","fps_key": "fps",
+        "aspect_ratio_id": "135","aspect_ratio_key": "aspect_ratio","megapixels_id": "135",
+        "megapixels_key": "megapixels", "video_output_node": "92","portrait_resolution_fix": True
+    },
+    "MiniMax H3 I2V (GGUF)": {
+        "file": "workflow/minimax_h3_i2v_gguf.json","prompt_id": "105:104","prompt_key": "prompt",
+        "seed_id": "105:15","seed_key": "noise_seed","image1_id": "114","width_id": "105:104",
+        "width_key": "width","height_id": "105:104","height_key": "height","length_id": "105:111",
+        "length_key": "value","fps_id": "105:91","fps_key": "fps",
+        "aspect_ratio_id": "135","aspect_ratio_key": "aspect_ratio","megapixels_id": "135",
+        "megapixels_key": "megapixels","video_output_node": "92","portrait_resolution_fix": True
+    },
+    "MiniMax H3 T2V": {
+        "file": "workflow/minimax_h3_t2v_fp8.json","prompt_id": "105:104","prompt_key": "prompt",
+        "seed_id": "105:15","seed_key": "noise_seed","width_id": "105:104",
+        "width_key": "width","height_id": "105:104","height_key": "height",
+        "length_id": "105:111","length_key": "value","fps_id": "105:91",
+        "fps_key": "fps","aspect_ratio_id": "115","aspect_ratio_key": "aspect_ratio",
+        "megapixels_id": "115","megapixels_key": "megapixels","video_output_node": "92",
+        "portrait_resolution_fix": True,"no_image_required": True
+    },
+    "MiniMax H3 T2V (GGUF)": {
+        "file": "workflow/minimax_h3_t2v_gguf.json","prompt_id": "105:104","prompt_key": "prompt",
+        "seed_id": "105:15","seed_key": "noise_seed","width_id": "105:104","width_key": "width",
+        "height_id": "105:104","height_key": "height","length_id": "105:111","length_key": "value",
+        "fps_id": "105:91","fps_key": "fps","aspect_ratio_id": "115","aspect_ratio_key": "aspect_ratio",
+        "megapixels_id": "115","megapixels_key": "megapixels","video_output_node": "92",
+        "portrait_resolution_fix": True,"no_image_required": True
+    },
     
     # === Tools Models ===
     "RTX Image Upscale": {
@@ -232,12 +266,14 @@ class GenerationRequest(BaseModel):
 class VideoGenerationRequest(BaseModel):
     prompt: str
     model: str
-    image1_filename: str
+    image1_filename: str = ""  
     audio_filename: str = ""
     width: int = 480
     height: int = 860
     length: int = 5
     fps: float = 24.0
+    aspect_ratio: str = "9:16 (Portrait Widescreen)"
+    megapixels: float = 1.0
 
 class ToolsRequest(BaseModel):
     model: str
@@ -401,6 +437,7 @@ async def generate_stream_endpoint(req: GenerationRequest):
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
+
 @app.post("/api/generate-video-stream")
 async def generate_video_stream_endpoint(req: VideoGenerationRequest):
     global is_processing
@@ -415,7 +452,9 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
     if not os.path.exists(os.path.join(BASE_DIR, config["file"])):
         async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'})}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
-    if not req.image1_filename:
+    
+    # 🆕 แก้ validation ให้ข้ามสำหรับ T2V models
+    if not config.get("no_image_required") and not req.image1_filename:
         async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'Image required'})}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
@@ -425,7 +464,7 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
     async def event_generator():
         global is_processing
         try:
-            stream_fn = generate_video_stream(req.prompt, req.image1_filename, req.audio_filename, req.width, req.height, req.length, req.fps, config)
+            stream_fn = generate_video_stream(req.prompt, req.image1_filename, req.audio_filename, req.width, req.height, req.length, req.fps, req.aspect_ratio, req.megapixels, config)
             final_result = None
             for event in stream_fn:
                 if event["type"] == "final_result": final_result = event["data"]

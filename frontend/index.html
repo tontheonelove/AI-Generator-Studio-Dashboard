@@ -135,12 +135,16 @@
                         <div>
                             <label class="block text-sm text-gray-300 mb-2">Video Model</label>
                             <select id="video-model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="MiniMax H3 I2V">🎬 MiniMax H3 I2V (Image to Video)</option>
+                                <option value="MiniMax H3 I2V (GGUF)">🎬 MiniMax H3 I2V GGUF (Low VRAM)</option>
+                                <option value="MiniMax H3 T2V">🎬 MiniMax H3 T2V (Text to Video)</option>
+                                <option value="MiniMax H3 T2V (GGUF)">🎬 MiniMax H3 T2V GGUF (Low VRAM)</option>
                                 <option value="LTX Video 2.3">🎬 LTX Video 2.3 (Image-to-Video)</option>
                                 <option value="LTX 2.3 Lipsync">🎤 LTX 2.3 Lipsync (Audio + Image)</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm text-gray-300 mb-2">📷 Input Image <span class="text-red-400">(Required)</span></label>
+                        <div id="video-image-container">
+                            <label class="block text-sm text-gray-300 mb-2">📷 Input Image <span class="text-red-400" id="video-image-label">(Required)</span></label>
                             <div class="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('video-image-input').click()">
                                 <input type="file" id="video-image-input" accept="image/*" class="hidden" onchange="previewVideoImage(this)">
                                 <img id="video-image-preview" class="hidden max-h-40 mx-auto rounded-lg mb-2">
@@ -155,18 +159,42 @@
                                 <p id="video-audio-placeholder" class="text-gray-400 text-sm"><i class="fa-solid fa-music mr-1"></i> Click to upload audio (.wav, .mp3)</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div id="duration-fps-container" class="space-y-3">
                             <div>
-                                <label class="block text-xs text-gray-400 mb-1">Duration (seconds)</label>
-                                <input type="number" id="video-length-input" value="5" min="1" max="10" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                                <label class="block text-xs text-gray-400 mb-1">⏱️ Duration (seconds)</label>
+                                <input type="number" id="video-length-input" value="5" min="1" max="10" step="0.5" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm" placeholder="5">
                             </div>
-                            <div>
-                                <label class="block text-xs text-gray-400 mb-1">FPS</label>
+                            <div id="fps-input-container">
+                                <label class="block text-xs text-gray-400 mb-1">🎞️ FPS</label>
                                 <input type="number" id="video-fps-input" value="24" min="12" max="30" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
                             </div>
                         </div>
-                    </div>
 
+                        <div id="aspect-ratio-container">
+                            <label class="block text-xs text-gray-400 mb-1">📐 Aspect Ratio</label>
+                            <select id="video-aspect-ratio" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                                <option value="9:16 (Portrait Widescreen)" selected>📱 9:16 Portrait (TikTok/Reels)</option>
+                                <option value="16:9 (Landscape Widescreen)">🖥️ 16:9 Landscape (YouTube)</option>
+                                <option value="1:1 (Square)">⬜ 1:1 Square (Instagram)</option>
+                                <option value="4:3 (Classic)">📺 4:3 Classic</option>
+                                <option value="3:4 (Portrait Classic)">📷 3:4 Portrait Classic</option>
+                                <option value="21:9 (Ultrawide)">🎞️ 21:9 Ultrawide (Cinema)</option>
+                            </select>
+                        </div>
+
+                        <div id="megapixels-container">
+                            <label class="block text-xs text-gray-400 mb-1">📊 Resolution (Megapixels)</label>
+                            <select id="video-megapixels" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm">
+                                <option value="0.6">0.6 MP - 1056 x 608 (HD)</option>
+                                <option value="0.8">0.8 MP - 1216 x 672</option>
+                                <option value="1.0" selected>1.0 MP - 1376 x 768 (Recommended)</option>
+                                <option value="1.2">1.2 MP - 1504 x 832</option>
+                                <option value="1.5">1.5 MP - 1664 x 928 (2K)</option>
+                                <option value="1.8">1.8 MP - 1824 x 1024</option>
+                                <option value="2.0">2.0 MP - 1920 x 1088 (Full HD)</option>
+                            </select>
+                        </div>
+                    </div>
                     <!-- AUDIO TAB (AceStep 1.5 Only) -->
                     <div id="audio-controls" class="hidden space-y-4">
                         <div class="bg-purple-900/20 border border-purple-700/30 rounded-lg p-3 text-xs text-purple-300 mb-4">
@@ -664,13 +692,84 @@
             }
         }
 
+        // 🆕 MiniMax H3 Resolution Mapping
+        const minimaxResolutions = {
+            '0.2': { width: 608, height: 352 },
+            '0.3': { width: 736, height: 416 },
+            '0.4': { width: 864, height: 480 },
+            '0.5': { width: 960, height: 544 },
+            '0.6': { width: 1056, height: 608 },
+            '0.7': { width: 1152, height: 640 },
+            '0.8': { width: 1216, height: 672 },
+            '0.9': { width: 1280, height: 736 },
+            '0.98': { width: 1344, height: 768 },
+            '1.0': { width: 1376, height: 768 },
+            '1.2': { width: 1504, height: 832 },
+            '1.5': { width: 1664, height: 928 },
+            '1.8': { width: 1824, height: 1024 },
+            '2.0': { width: 1920, height: 1088 }
+        };
+
+        function updateMiniMaxResolution() {
+            const model = document.getElementById('video-model-select').value;
+            if (model !== 'MiniMax H3 I2V' && model !== 'MiniMax H3 I2V (GGUF)' && model !== 'MiniMax H3 T2V' && model !== 'MiniMax H3 T2V (GGUF)') return;
+            
+            const megapixels = document.getElementById('video-megapixels').value;
+            const aspectRatio = document.getElementById('video-aspect-ratio').value;
+            const res = minimaxResolutions[megapixels];
+            
+            if (res) {
+                let width = res.width;
+                let height = res.height;
+                
+                // 🆕 สำหรับ Portrait (9:16, 3:4) ต้องสลับ width/height
+                if (aspectRatio.includes('Portrait') || aspectRatio.includes('3:4')) {
+                    [width, height] = [height, width];
+                }
+                
+                console.log(`[MiniMax] Resolution: ${width} x ${height} (${megapixels} MP)`);
+                
+                // ไม่ต้องส่งค่าไป backend ที่นี่ แต่ส่งตอน generateVideo
+            }
+        }
+
         function handleVideoModelChange() {
             const model = document.getElementById('video-model-select').value;
             const audioContainer = document.getElementById('video-audio-container');
+            const aspectRatioContainer = document.getElementById('aspect-ratio-container');
+            const megapixelsContainer = document.getElementById('megapixels-container');
+            const durationFpsContainer = document.getElementById('duration-fps-container');
+            const fpsInputContainer = document.getElementById('fps-input-container');
+            const imageContainer = document.getElementById('video-image-container');  // 🆕 เพิ่ม
+            
+            // จัดการ Audio Container (สำหรับ Lipsync)
             if (model === 'LTX 2.3 Lipsync') {
                 audioContainer.classList.remove('hidden');
             } else {
                 audioContainer.classList.add('hidden');
+            }
+            
+            // 🆕 จัดการ Image Container (สำหรับ T2V)
+            if (model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)') {
+                if (imageContainer) imageContainer.classList.add('hidden');  // ซ่อน image upload
+            } else {
+                if (imageContainer) imageContainer.classList.remove('hidden');  // แสดง image upload
+            }
+            
+            // จัดการ UI สำหรับ MiniMax H3 vs LTX
+            if (model === 'MiniMax H3 I2V' || model === 'MiniMax H3 I2V (GGUF)' || model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)') {
+                // MiniMax H3 ใช้ aspect ratio + megapixels + duration
+                if (aspectRatioContainer) aspectRatioContainer.classList.remove('hidden');
+                if (megapixelsContainer) megapixelsContainer.classList.remove('hidden');
+                if (durationFpsContainer) durationFpsContainer.classList.remove('hidden');
+                if (fpsInputContainer) fpsInputContainer.classList.add('hidden');
+                updateMiniMaxResolution();
+            } else {
+                // LTX ใช้ duration/fps
+                if (aspectRatioContainer) aspectRatioContainer.classList.add('hidden');
+                if (megapixelsContainer) megapixelsContainer.classList.add('hidden');
+                if (durationFpsContainer) durationFpsContainer.classList.remove('hidden');
+                if (fpsInputContainer) fpsInputContainer.classList.remove('hidden');
             }
         }
         document.getElementById('video-model-select').addEventListener('change', handleVideoModelChange);
@@ -1028,20 +1127,48 @@
             const actionBar = document.getElementById('action-bar');
 
             const model = document.getElementById('video-model-select').value;
-            if (!videoUploadedImage) { alert("⚠️ Please upload an image!"); return; }
+            if (model !== 'MiniMax H3 T2V' && model !== 'MiniMax H3 T2V (GGUF)' && !videoUploadedImage) { 
+                alert("⚠️ Please upload an image!"); 
+                return; 
+            }
             if (model === 'LTX 2.3 Lipsync' && !videoUploadedAudio) { alert("⚠️ Lipsync requires an audio file!"); return; }
             const prompt = document.getElementById('prompt-input').value;
             if (!prompt) { alert("Please enter a prompt!"); return; }
 
+            // 🆕 คำนวณ resolution สำหรับ MiniMax H3
+            let width = 480, height = 860, megapixels = null;
+            if (model === 'MiniMax H3 I2V' || model === 'MiniMax H3 I2V (GGUF)' || model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)') {
+                megapixels = parseFloat(document.getElementById('video-megapixels').value);
+                const res = minimaxResolutions[megapixels.toString()];
+                if (res) {
+                    let widthVal = res.width;
+                    let heightVal = res.height;
+                    
+                    const aspectRatio = document.getElementById('video-aspect-ratio').value;
+                    if (aspectRatio.includes('Portrait') || aspectRatio.includes('3:4')) {
+                        [widthVal, heightVal] = [heightVal, widthVal];
+                    }
+                    
+                    width = widthVal;
+                    height = heightVal;
+                }
+            } else {
+                width = 480;
+                height = 860;
+            }
+
             const payload = {
                 prompt: prompt, model: model,
                 image1_filename: videoUploadedImage, audio_filename: videoUploadedAudio,
-                width: 480, height: 860,
-                length: parseInt(document.getElementById('video-length-input').value),
-                fps: parseFloat(document.getElementById('video-fps-input').value)
+                width: width,
+                height: height,
+                length: parseInt(document.getElementById('video-length-input').value) || 5,  // ✅ ใช้ duration สำหรับทุกโมเดล
+                fps: parseFloat(document.getElementById('video-fps-input').value) || 24.0,
+                aspect_ratio: document.getElementById('video-aspect-ratio').value,
+                megapixels: megapixels
             };
 
-            btn.classList.add('busy');
+            btn.classList.add('busy')
             btn.disabled = true;
             btn.innerHTML = '<div class="loader mr-2"></div> Generating Video...';
             placeholder.classList.add('hidden');

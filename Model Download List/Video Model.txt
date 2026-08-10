@@ -4,6 +4,37 @@
 
 --------------------------------------------------------------------------------
 
+**** INIMAX H3 FP8 VRAM 12GB ขึ้นไป ****
+
+[ minimax_h3_fl2va_pruned_fp8_scaled ]   =>วางไฟล์ที่ /model/unet
+https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_fl2va_pruned_fp8_scaled.safetensors
+
+[ Text Encoder ] มี 2 ไฟล์  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/realrebelai/MiniMax-H3_GGUFs/blob/main/qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf
+
+[ LORA 4 STEP TURBO ]  =>วางไฟล์ที่ /model/loras
+https://huggingface.co/Kijai/MiniMax-H3_comfy/blob/main/loras/minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors
+
+VAE มี 2 ตัว    => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/vae
+
+
+***** MINIMAX H3 FP8 VRAM 8GB ขึ้นไป *****
+
+[ MiniMax-H3-FL2VA-Q3_K_M ]  =>วางไฟล์ที่ /model/unet
+https://huggingface.co/realrebelai/MiniMax-H3_GGUFs/blob/main/MiniMax-H3-FL2VA-Q3_K_M.gguf
+
+[ Text Encoder ] มี 2 ไฟล์  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/realrebelai/MiniMax-H3_GGUFs/blob/main/qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf
+
+[ LORA 4 STEP TURBO ]  =>วางไฟล์ที่ /model/loras
+https://huggingface.co/Kijai/MiniMax-H3_comfy/blob/main/loras/minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors
+
+[ VAE มี 2 ตัว ]    => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/vae
+
+
+
 ***[LTX2.3 I2V (GGUF) ] ***
 
 [LTX-2.3-GGUF]  Model สำหรับ VRAM 8GB. ขึ้นไป =>วางไฟล์ที่ /model/unet

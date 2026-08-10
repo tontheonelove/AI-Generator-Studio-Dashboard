@@ -307,7 +307,7 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config):
 
 
 # ✅ Video Generator for Streaming (รองรับ Audio สำหรับ Lipsync)
-def generate_video_stream(prompt_text, image1_filename, audio_filename, width, height, length, fps, config):
+def generate_video_stream(prompt_text, image1_filename, audio_filename, width, height, length, fps, aspect_ratio, megapixels, config):
     """Generator สำหรับ Video Mode แบบ Streaming (รองรับ Audio Input สำหรับ Lipsync)"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -318,7 +318,7 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
 
     # ✅ Inject Prompt (รองรับทั้ง key "text" และ "value" สำหรับ PrimitiveStringMultiline)
     if config.get("prompt_id") and config["prompt_id"] in workflow:
-        prompt_key = config.get("prompt_key", "text")  # default "text", Lipsync ใช้ "value"
+        prompt_key = config.get("prompt_key", "text")
         workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt_text
 
     # Inject Seed
@@ -327,8 +327,8 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
     if config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
-    # Inject Image
-    if config.get("image1_id") and config["image1_id"] in workflow:
+    # Inject Image (ถ้ามี image1_id ใน config และ user ส่งรูปมา)
+    if config.get("image1_id") and config["image1_id"] in workflow and image1_filename:
         workflow[config["image1_id"]]["inputs"]["image"] = image1_filename
         workflow[config["image1_id"]]["inputs"]["subfolder"] = ""
         workflow[config["image1_id"]]["inputs"]["type"] = "input"
@@ -347,27 +347,41 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
             yield {"type": "error", "message": "Lipsync model requires audio file"}
             return
 
-    # Inject Video Parameters
+    # Inject Video Parameters (รองรับ custom key)
     if config.get("width_id") and config["width_id"] in workflow:
-        workflow[config["width_id"]]["inputs"]["value"] = width
+        width_key = config.get("width_key", "value")
+        workflow[config["width_id"]]["inputs"][width_key] = width
     if config.get("height_id") and config["height_id"] in workflow:
-        workflow[config["height_id"]]["inputs"]["value"] = height
+        height_key = config.get("height_key", "value")
+        workflow[config["height_id"]]["inputs"][height_key] = height
     if config.get("length_id") and config["length_id"] in workflow:
-        workflow[config["length_id"]]["inputs"]["value"] = length
+        length_key = config.get("length_key", "value")
+        workflow[config["length_id"]]["inputs"][length_key] = length
     if config.get("fps_id") and config["fps_id"] in workflow:
-        workflow[config["fps_id"]]["inputs"]["value"] = fps
+        fps_key = config.get("fps_key", "value")
+        workflow[config["fps_id"]]["inputs"][fps_key] = fps
+
+    # 🆕 Inject Aspect Ratio (สำหรับ MiniMax H3)
+    if config.get("aspect_ratio_id") and config["aspect_ratio_id"] in workflow:
+        aspect_ratio_key = config.get("aspect_ratio_key", "aspect_ratio")
+        workflow[config["aspect_ratio_id"]]["inputs"][aspect_ratio_key] = aspect_ratio
+        print(f"[Video] 📐 Aspect Ratio: {aspect_ratio}")
+    
+    # 🆕 Inject Megapixels (สำหรับ MiniMax H3)
+    if config.get("megapixels_id") and config["megapixels_id"] in workflow:
+        megapixels_key = config.get("megapixels_key", "megapixels")
+        workflow[config["megapixels_id"]]["inputs"][megapixels_key] = megapixels
+        print(f"[Video] 📊 Megapixels: {megapixels}")
 
     # Stream execution
     final_result = None
     for event in _stream_comfy_execution(workflow, client_id):
         if event["type"] == "complete":
-            # สำหรับ Video เราจะมองหา video output แทน image
             final_result = {"videos": event.get("videos", []), "seed": actual_seed}
         yield event
     
     if final_result:
         yield {"type": "final_result", "data": final_result}
-
 
 # ✅ NEW: Tools Generator for Streaming (RTX Upscale)
 def tools_stream(filename, scale, quality, config):

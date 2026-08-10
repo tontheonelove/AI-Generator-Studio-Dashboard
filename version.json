@@ -1,10 +1,9 @@
 {
-  "version": "3.3",
-  "release_date": "2026-07-20",
+  "version": "3.4",
+  "release_date": "2026-08-10",
   "features": [
-    "🚀 Krea 2 Edit Identity Added (Image Edit)",
-    "📸 Krea 2 Controlnet Added (Image Edit)",
-    "📱 Krea 2 Added 5 Loras",
+    "🚀 MINIMAX H3 T2V (FP8 & GGUF)",
+    "🚀 MINIMAX H3 I2V (FP8 & GGUF)",
     "🔥 Fix Some Bug",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"

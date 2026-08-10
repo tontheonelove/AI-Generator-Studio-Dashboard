@@ -1,0 +1,293 @@
+{
+  "92": {
+    "inputs": {
+      "filename_prefix": "video/MiniMax_H3",
+      "format": "auto",
+      "codec": "auto",
+      "video": [
+        "105:91",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "114": {
+    "inputs": {
+      "image": "528ffedf961f7c2f2f5c40ab7e374a8b.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "119": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "megapixels": 1,
+      "resolution_steps": 32
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "Scale Image to Total Pixels"
+    }
+  },
+  "120": {
+    "inputs": {
+      "image": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "Get Image Size"
+    }
+  },
+  "135": {
+    "inputs": {
+      "aspect_ratio": "9:16 (Portrait Widescreen)",
+      "megapixels": 0.6,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "105:11": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "105:24": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "105:23": {
+    "inputs": {
+      "samples": [
+        "105:14",
+        0
+      ],
+      "vae": [
+        "105:24",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "105:10": {
+    "inputs": {
+      "samples": [
+        "105:14",
+        0
+      ],
+      "vae": [
+        "105:11",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "105:14": {
+    "inputs": {
+      "noise": [
+        "105:15",
+        0
+      ],
+      "guider": [
+        "105:16",
+        0
+      ],
+      "sampler": [
+        "105:17",
+        0
+      ],
+      "sigmas": [
+        "105:9",
+        0
+      ],
+      "latent_image": [
+        "105:104",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "105:16": {
+    "inputs": {
+      "model": [
+        "105:134",
+        0
+      ],
+      "conditioning": [
+        "105:104",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider"
+    }
+  },
+  "105:15": {
+    "inputs": {
+      "noise_seed": 664693214349170
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "105:91": {
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "images": [
+        "105:10",
+        0
+      ],
+      "audio": [
+        "105:23",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "105:104": {
+    "inputs": {
+      "prompt": "Selfie-style video of a pretty young office woman with long black hair and a pink flower hair clip, wearing a cream cable-knit sweater, gray trousers, and a black lanyard with a blank ID badge, standing in a bright modern office with wooden desks and monitors softly blurred behind her. One arm is extended holding the selfie camera at a high angle; the other hand holds a kraft paper coffee cup with a white lid. She smiles sweetly at the camera, blinks naturally, tilts her head slightly, then gently raises the coffee cup toward the lens in a small playful \"cheers\" gesture, her smile widening. Hair sways softly, subtle natural handheld selfie sway, warm friendly mood, realistic skin texture, smooth gentle motion, high detail.\n\n\n0–1.5s — Warm opening:\nSoft smile, natural blink, tiny head tilt\nSubtle selfie-arm micro-sway for realism\n\n1.5–3.5s — Main action:\nCoffee cup lifts gently toward the camera in a cute \"cheers\" motion\nSmile widens, eyes brighten\n\n3.5–5s — Hold the charm:\nHolds the pose, eyes sparkle, slight shoulder shrug\nGentle handheld sway continues to the end\n",
+      "width": [
+        "135",
+        0
+      ],
+      "height": [
+        "135",
+        1
+      ],
+      "length": [
+        "105:107",
+        1
+      ],
+      "clip": [
+        "105:122",
+        0
+      ],
+      "vae": [
+        "105:11",
+        0
+      ],
+      "first_frame": [
+        "114",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ImageToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Image to Video"
+    }
+  },
+  "105:107": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "105:111",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  },
+  "105:111": {
+    "inputs": {
+      "value": 5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (duration)"
+    }
+  },
+  "105:122": {
+    "inputs": {
+      "clip_name": "qwen3vl-32B-MiniMax-H3-Q4_K_M.gguf",
+      "type": "minimax"
+    },
+    "class_type": "CLIPLoaderGGUF",
+    "_meta": {
+      "title": "CLIPLoader (GGUF)"
+    }
+  },
+  "105:17": {
+    "inputs": {
+      "sampler_name": "sa_solver"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "105:9": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 4,
+      "denoise": 1,
+      "model": [
+        "105:134",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "105:134": {
+    "inputs": {
+      "lora_name": "minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors",
+      "strength_model": 0.75,
+      "model": [
+        "105:136",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "105:136": {
+    "inputs": {
+      "unet_name": "MiniMax-H3-FL2VA-Q3_K_M.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {
+      "title": "Unet Loader (GGUF)"
+    }
+  }
+}
