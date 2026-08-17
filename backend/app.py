@@ -207,6 +207,34 @@ WORKFLOW_SETTINGS = {
         "megapixels_id": "115","megapixels_key": "megapixels","video_output_node": "92",
         "portrait_resolution_fix": True,"no_image_required": True
     },
+    "LTX 2.5 T2V": {
+        "file": "workflow/ltx2_5_t2v.json",
+        "prompt_id": "405:376",
+        "prompt_key": "value",
+        "seed_ids": ["405:338", "405:339"], 
+        "seed_key": "noise_seed",
+        "aspect_ratio_id": "409",
+        "aspect_ratio_key": "aspect_ratio",
+        "megapixels_id": "409",
+        "megapixels_key": "megapixels",
+        "fps_id": "405:361",
+        "fps_key": "value",
+        "length_id": "405:362",
+        "length_key": "value",
+        "video_output_node": "75",
+        "no_image_required": True,
+        "no_audio_required": True, 
+    },
+    "LTX 2.5 I2V": {
+        "file": "workflow/ltx2_5_i2v.json","prompt_id": "398:376",
+        "prompt_key": "value","seed_ids": ["398:338", "398:339"],
+        "seed_key": "noise_seed","image1_id": "395",
+        "aspect_ratio_id": "403","aspect_ratio_key": "aspect_ratio",
+        "megapixels_id": "403","megapixels_key": "megapixels",
+        "fps_id": "398:361","fps_key": "value",
+        "length_id": "398:362","length_key": "value",
+        "video_output_node": "75","no_audio_required": True,
+    },
     
     # === Tools Models ===
     "RTX Image Upscale": {

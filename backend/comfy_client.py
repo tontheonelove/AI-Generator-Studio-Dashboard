@@ -321,10 +321,18 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
         prompt_key = config.get("prompt_key", "text")
         workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt_text
 
-    # Inject Seed
+    # Inject Seed (รองรับทั้ง seed_id เดียว หรือ seed_ids แบบ list)
     actual_seed = random.randint(1, 10**14)
     seed_key = config.get("seed_key", "seed")
-    if config.get("seed_id") and config["seed_id"] in workflow:
+    
+    # 🆕 รองรับ seed_ids (list) สำหรับ LTX 2.5
+    seed_ids = config.get("seed_ids", [])
+    if isinstance(seed_ids, list) and len(seed_ids) > 0:
+        for sid in seed_ids:
+            if sid in workflow:
+                workflow[sid]["inputs"][seed_key] = actual_seed
+        print(f"[Video] 🎲 Seeds injected into {len(seed_ids)} nodes: {seed_ids}")
+    elif config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
     # Inject Image (ถ้ามี image1_id ใน config และ user ส่งรูปมา)

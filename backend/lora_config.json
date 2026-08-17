@@ -124,6 +124,11 @@
   ],
   "Krea2 Turbo": [
     {
+        "label": "M87 NSFW + Enhance",
+        "filename": "m87_lora_v1.safetensors",
+        "strength": 1.0
+    },
+    {
         "label": "Lenovo UltraReal",
         "filename": "lenovo_krea2.safetensors",
         "strength": 1.0

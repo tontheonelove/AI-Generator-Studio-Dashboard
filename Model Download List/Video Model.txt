@@ -4,9 +4,25 @@
 
 --------------------------------------------------------------------------------
 
-**** INIMAX H3 FP8 VRAM 12GB ขึ้นไป ****
+[ LTX2.5 VIDEO ] ใช้ Model ร่สมกันทั้ง T2V + I2V
 
-[ minimax_h3_fl2va_pruned_fp8_scaled ]   =>วางไฟล์ที่ /model/unet
+[ ltx-2.5-22b-distilled ]   วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Lightricks/LTX-2.5/blob/main/diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors
+
+
+[ Text Encoder ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Lightricks/LTX-2.5/resolve/main/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors?download=true
+
+[ Upscale Model ] =>วางไฟล์ที่ >> latent_upscale_models 
+https://huggingface.co/Lightricks/LTX-2.5/resolve/main/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors?download=true
+
+[VAE] 2 ตัว โหลดทั้งคู่  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Lightricks/LTX-2.5/tree/main/vae
+
+
+**** MINIMAX H3 FP8 VRAM 12GB ขึ้นไป ****
+
+[ minimax_h3_fl2va_pruned_fp8_scaled ]   วางไฟล์ที่ /model/diffusion_models
 https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/diffusion_models/minimax_h3_fl2va_pruned_fp8_scaled.safetensors
 
 [ Text Encoder ] มี 2 ไฟล์  =>วางไฟล์ที่ /model/textencoders

@@ -18,6 +18,9 @@ https://civitai.com/models/432586/cinematic-shot?modelVersionId=3085969
 5. [ AsianMix Lora ]
 https://civitai.com/models/2746042/krea2-turbo-asianmix-lora?modelVersionId=3146162
 
+6. [ M87 NSFW + Enhance ]
+https://huggingface.co/mgwr/M87/blob/main/m87_lora_v1.safetensors
+
 
 
 [ Z-image Turbo + Z-image Turbo GGUF ]

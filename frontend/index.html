@@ -135,10 +135,12 @@
                         <div>
                             <label class="block text-sm text-gray-300 mb-2">Video Model</label>
                             <select id="video-model-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm">
+                                <option value="LTX 2.5 T2V">🎬 LTX 2.5 T2V (Video + Audio Auto)</option>
+                                <option value="LTX 2.5 I2V">🎬 LTX 2.5 I2V (Image + Video + Audio)</option>
                                 <option value="MiniMax H3 I2V">🎬 MiniMax H3 I2V (Image to Video)</option>
                                 <option value="MiniMax H3 I2V (GGUF)">🎬 MiniMax H3 I2V GGUF (Low VRAM)</option>
                                 <option value="MiniMax H3 T2V">🎬 MiniMax H3 T2V (Text to Video)</option>
-                                <option value="MiniMax H3 T2V (GGUF)">🎬 MiniMax H3 T2V GGUF (Low VRAM)</option>
+                                <option value="MiniMax H3 T2V (GGUF)">🎬 MiniMax H3 T2V GGUF (Low VRAM)</option>                               
                                 <option value="LTX Video 2.3">🎬 LTX Video 2.3 (Image-to-Video)</option>
                                 <option value="LTX 2.3 Lipsync">🎤 LTX 2.3 Lipsync (Audio + Image)</option>
                             </select>
@@ -712,7 +714,8 @@
 
         function updateMiniMaxResolution() {
             const model = document.getElementById('video-model-select').value;
-            if (model !== 'MiniMax H3 I2V' && model !== 'MiniMax H3 I2V (GGUF)' && model !== 'MiniMax H3 T2V' && model !== 'MiniMax H3 T2V (GGUF)') return;
+            const resolutionModels = ['MiniMax H3 I2V', 'MiniMax H3 I2V (GGUF)', 'MiniMax H3 T2V', 'MiniMax H3 T2V (GGUF)', 'LTX 2.5 T2V', 'LTX 2.5 I2V'];
+            if (!resolutionModels.includes(model)) return;
             
             const megapixels = document.getElementById('video-megapixels').value;
             const aspectRatio = document.getElementById('video-aspect-ratio').value;
@@ -749,23 +752,25 @@
                 audioContainer.classList.add('hidden');
             }
             
-            // 🆕 จัดการ Image Container (สำหรับ T2V)
-            if (model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)') {
-                if (imageContainer) imageContainer.classList.add('hidden');  // ซ่อน image upload
+            // 🆕 ซ่อน Image สำหรับ T2V models (MiniMax + LTX 2.5)
+            const noImageModels = ['MiniMax H3 T2V', 'MiniMax H3 T2V (GGUF)', 'LTX 2.5 T2V'];
+            if (noImageModels.includes(model)) {
+                if (imageContainer) imageContainer.classList.add('hidden');
             } else {
-                if (imageContainer) imageContainer.classList.remove('hidden');  // แสดง image upload
+                if (imageContainer) imageContainer.classList.remove('hidden');
             }
             
-            // จัดการ UI สำหรับ MiniMax H3 vs LTX
-            if (model === 'MiniMax H3 I2V' || model === 'MiniMax H3 I2V (GGUF)' || model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)') {
-                // MiniMax H3 ใช้ aspect ratio + megapixels + duration
+            // 🆕 LTX 2.5 ใช้ aspect ratio + megapixels ด้วย
+            if (model === 'MiniMax H3 I2V' || model === 'MiniMax H3 I2V (GGUF)' || 
+                model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)' || 
+                model === 'LTX 2.5 T2V' || model === 'LTX 2.5 I2V') {
                 if (aspectRatioContainer) aspectRatioContainer.classList.remove('hidden');
                 if (megapixelsContainer) megapixelsContainer.classList.remove('hidden');
                 if (durationFpsContainer) durationFpsContainer.classList.remove('hidden');
                 if (fpsInputContainer) fpsInputContainer.classList.add('hidden');
                 updateMiniMaxResolution();
             } else {
-                // LTX ใช้ duration/fps
+                // LTX 2.3 ใช้ duration/fps
                 if (aspectRatioContainer) aspectRatioContainer.classList.add('hidden');
                 if (megapixelsContainer) megapixelsContainer.classList.add('hidden');
                 if (durationFpsContainer) durationFpsContainer.classList.remove('hidden');
@@ -1127,7 +1132,8 @@
             const actionBar = document.getElementById('action-bar');
 
             const model = document.getElementById('video-model-select').value;
-            if (model !== 'MiniMax H3 T2V' && model !== 'MiniMax H3 T2V (GGUF)' && !videoUploadedImage) { 
+            const noImageModels = ['MiniMax H3 T2V', 'MiniMax H3 T2V (GGUF)', 'LTX 2.5 T2V'];
+            if (!noImageModels.includes(model) && !videoUploadedImage) { 
                 alert("⚠️ Please upload an image!"); 
                 return; 
             }
@@ -1137,7 +1143,8 @@
 
             // 🆕 คำนวณ resolution สำหรับ MiniMax H3
             let width = 480, height = 860, megapixels = null;
-            if (model === 'MiniMax H3 I2V' || model === 'MiniMax H3 I2V (GGUF)' || model === 'MiniMax H3 T2V' || model === 'MiniMax H3 T2V (GGUF)') {
+            const resolutionModels = ['MiniMax H3 I2V', 'MiniMax H3 I2V (GGUF)', 'MiniMax H3 T2V', 'MiniMax H3 T2V (GGUF)', 'LTX 2.5 T2V', 'LTX 2.5 I2V'];
+            if (resolutionModels.includes(model)) {
                 megapixels = parseFloat(document.getElementById('video-megapixels').value);
                 const res = minimaxResolutions[megapixels.toString()];
                 if (res) {

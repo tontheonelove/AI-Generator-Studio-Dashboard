@@ -4,6 +4,14 @@
 
 ---
 
+## 🚀 Update V3.5 (17-8-26) Update Workflow & Model
+
+- 🚀 LTX 2.5 VIDEO T2V (BASE) (Text To Video)
+- 🚀 LTX 2.5 VIDEO I2V (BASE) (Image To Video)
+- 🔥 KREA2 TURBO LORA  👉 M87 NSFW + Enhance 
+
+---
+
 ## 🚀 Update V3.4 (10-8-26) Update Workflow & Model
 
 - 🚀 MINIMAX H3 T2V (FP8 & GGUF) (Text To Video)

@@ -1,9 +1,10 @@
 {
-  "version": "3.4",
-  "release_date": "2026-08-10",
+  "version": "3.5",
+  "release_date": "2026-08-17",
   "features": [
-    "🚀 MINIMAX H3 T2V (FP8 & GGUF)",
-    "🚀 MINIMAX H3 I2V (FP8 & GGUF)",
+    "🚀 LTX2.5 VIDEO T2V (BASE)",
+    "🚀 LTX2.5 VIDEO I2V (BASE)",
+    "🔥 KREA2 TURBO LORA  👉 M87 NSFW + Enhance",
     "🔥 Fix Some Bug",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"
