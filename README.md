@@ -4,6 +4,12 @@
 
 ---
 
+## 🚀 Version 4.0 (21-8-26)  UI-INTERFACE UPDATE ALL ***  
+  - Release Nextjs UI Frontend
+  - Improve Backend to Fast
+  
+---
+
 For Update
 
 ## Update 
