@@ -10,26 +10,15 @@
   
 ---
 
-For Update
+## New Instalation (First time) แนะนำ ** เพื่อความ Clean
 
-## How to Update 
-1. Double-click `update_windows_only.bat`
-2. Double-click `run_windows_only.bat`
-3. Wait for setup (first time: 5-10 minutes)
-4. Browser opens automatically
-
-
-New Instalation (First time)
-
-# AI-Generation Studio v4.0
-
-## Requirements
-- Python 3.10+ (Add to PATH)
+### Requirements (สิ่งที่ต้องมี)
+- Python 3.10+ (Add to PATH) 
 - Node.js 20+ LTS
 - NVIDIA GPU + Driver
-- ComfyUI (running on port 8188)
+- ComfyUI (running on port 8188) ต้องเปิดตลอด เพราะใช้เป็น backend server
 
-## How to Installation
+## How to Installation (วิธีติดตั้งใหม่)
 
 1. git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
 2. Double-click `run_windows_only.bat`
@@ -38,7 +27,15 @@ New Instalation (First time)
 
 ## Access
 - **Local:** http://localhost:3000
-- **LAN:** See IP in launcher window
+- **LAN:** See IP in launcher window example http://192.168.1.100:3000
+
+---
+
+## How to Update (วิธีอัพเดต)
+1. Double-click `update_windows_only.bat`
+2. Double-click `run_windows_only.bat`
+3. Wait for setup (first time: 5-10 minutes)
+4. Browser opens automatically
 
 ---
 
