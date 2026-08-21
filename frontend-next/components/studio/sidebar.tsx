@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, Image as ImageIcon, Video, Music, Wand2, Wrench,
-  Menu, Sparkles, LayoutGrid,
+  Menu, Sparkles, LayoutGrid, UserCircle,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ const ITEMS = [
   { href: '/audio', label: 'Audio Generation', icon: Music, color: 'from-pink-500 to-rose-500' },
   { href: '/edit', label: 'Edit', icon: Wand2, color: 'from-orange-500 to-red-500' },
   { href: '/tools', label: 'Tools', icon: Wrench, color: 'from-amber-500 to-yellow-500' },
+  { href: '/about', label: 'About', icon: UserCircle, color: 'from-rose-500 to-orange-500' },
 ];
 
 function NavItems({ pathname, onItemClick }: { 

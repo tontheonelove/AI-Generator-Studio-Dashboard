@@ -15,6 +15,7 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string; color: stri
   '/edit': { title: 'Image Edit', subtitle: 'Transform your images', color: 'from-orange-500 to-red-500' },
   '/tools': { title: 'Tools', subtitle: 'Professional AI tools', color: 'from-amber-500 to-yellow-500' },
   '/gallery': { title: 'Gallery', subtitle: 'Browse your creations', color: 'from-violet-500 to-fuchsia-500' },
+  '/about': { title: 'About', subtitle: 'Meet the developer', color: 'from-rose-500 to-orange-500' }, 
 };
 
 export function Header() {
