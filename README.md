@@ -12,7 +12,7 @@
 
 For Update
 
-## Update 
+## How to Update 
 1. Double-click `update_windows_only.bat`
 2. Double-click `run_windows_only.bat`
 3. Wait for setup (first time: 5-10 minutes)
@@ -29,10 +29,12 @@ New Instalation (First time)
 - NVIDIA GPU + Driver
 - ComfyUI (running on port 8188)
 
-## Installation
-1. Double-click `run_windows_only.bat`
-2. Wait for setup (first time: 5-10 minutes)
-3. Browser opens automatically
+## How to Installation
+
+1. git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
+2. Double-click `run_windows_only.bat`
+3. Wait for setup (first time: 5-10 minutes)
+4. Browser opens automatically
 
 ## Access
 - **Local:** http://localhost:3000
