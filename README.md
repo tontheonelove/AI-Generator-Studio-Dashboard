@@ -35,7 +35,7 @@
 
 1. git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
 2. cd AI-Generator-Studio-Dashboard
-3. ./run_linux.sh
+3. ./run_linux_only.sh
 4. Browser opens automatically
 
 ## Access
@@ -52,8 +52,8 @@
 ---
 
 ## How to Update (วิธีอัพเดต) 👉 Linux
-1. ./update_linux.sh
-2. ./run_linux.sh
+1. ./update_linux_only.sh
+2. ./run_linux_only.sh
 3. Browser opens automatically
 
 ---
