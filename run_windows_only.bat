@@ -1,76 +1,146 @@
 @echo off
-title AI-Image-Generator-Studio - Setup
+chcp 65001 >nul 2>&1
+title AI-Generation Studio v4.0 - Launcher
 color 0B
 
+cd /d "%~dp0"
+
 echo.
-echo ==========================================
-echo    AI-Image-Generator-Studio - Auto Launcher
-echo ==========================================
+echo ========================================================
+echo    AI-Generation Studio v4.0 - Auto Launcher
+echo ========================================================
+echo [DEBUG] Working directory: %CD%
 echo.
 
-REM 1. Check Python
+echo [1/6] Checking Python...
 where python >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Notfound Python
-    echo Please Install Python 3.10+ from https://python.org
-    echo Check on "Add Python to PATH" 
-    echo.
+    echo [ERROR] Python not found!
+    echo Please install Python 3.10+ from https://python.org
     pause
     exit /b 1
 )
-
-echo [1/4] detected Python: 
+echo [OK] Python:
 python --version
 echo.
 
-REM 2. create venv if not available
-if not exist "venv" (
-    echo [2/4] creating.. Virtual Environment...
-    python -m venv venv
-    if errorlevel 1 (
-        echo [ERROR] create venv fail !!!
-        pause
-        exit /b 1
-    )
-) else (
-    echo [2/4] detected Virtual Environment
-)
-echo.
-
-REM 3. Install Library
-echo [3/4] Installing/update Library (wait)...
-call venv\Scripts\activate.bat
-pip install -r requirements.txt
+echo [2/6] Checking Node.js...
+where node >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] install Library fail !!
+    echo [ERROR] Node.js not found!
+    echo Please install Node.js 20+ from https://nodejs.org
     pause
     exit /b 1
 )
-echo [INFO] Library Ready to use 
+echo [OK] Node.js:
+node --version
+call npm --version
 echo.
 
-REM 4. run app
-echo [4/4] starting Backend Server...
-echo.
-echo ==========================================
-echo  starting Server...
-echo ==========================================
+echo [3/6] Checking required folders...
+if not exist "backend" (
+    echo [ERROR] backend folder not found!
+    pause
+    exit /b 1
+)
+echo [OK] backend/ exists
+
+if not exist "frontend-next" (
+    echo [ERROR] frontend-next folder not found!
+    pause
+    exit /b 1
+)
+echo [OK] frontend-next/ exists
+
+if not exist "venv" (
+    echo [WARNING] venv not found, creating...
+    python -m venv venv
+)
+echo [OK] venv/ exists
 echo.
 
-start "AI-Generate-Server" cmd /k "cd /d %~dp0 && call venv\Scripts\activate.bat && uvicorn backend.app:app --host 0.0.0.0 --port 8000"
+echo [4/6] Installing Python dependencies...
+call venv\Scripts\activate.bat
+call pip install -r requirements.txt -q
+echo [OK] Python dependencies ready
+echo.
+
+echo [5/6] Setting up Next.js...
+cd /d "%~dp0frontend-next"
+echo [DEBUG] Now in: %CD%
+
+if exist "node_modules" goto :skip_npm
+
+echo Installing npm packages (first time only, may take 2-5 minutes)...
+call npm install
+if errorlevel 1 (
+    echo [ERROR] npm install failed!
+    pause
+    exit /b 1
+)
+
+:skip_npm
+cd /d "%~dp0"
+echo [DEBUG] Back to: %CD%
+echo [OK] Next.js ready
+echo.
+
+REM === Get Local IP Address ===
+echo [INFO] Detecting local IP address...
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /r /c:"IPv4.*Address"') do (
+    for /f "tokens=1" %%b in ("%%a") do (
+        set "LOCAL_IP=%%b"
+        goto :got_ip
+    )
+)
+:got_ip
+if not defined LOCAL_IP set "LOCAL_IP=YOUR_IP_ADDRESS"
+echo [OK] Local IP: %LOCAL_IP%
+echo.
+
+echo [6/6] Starting servers...
+echo.
+
+echo Starting Backend Server on port 8000...
+start "Backend Server (Port 8000)" cmd /k "cd /d "%~dp0" && call venv\Scripts\activate.bat && echo. && echo ======================================================== && echo  Backend Server (FastAPI) && echo  Local:   http://localhost:8000 && echo  Network: http://%LOCAL_IP%:8000 && echo  API Docs: http://localhost:8000/docs && echo ======================================================== && echo. && uvicorn backend.app:app --host 0.0.0.0 --port 8000"
+
+echo Waiting 5 seconds for backend to start...
+timeout /t 5 /nobreak >nul
+
+echo Starting Frontend Server on port 3000 (LAN Access Enabled)...
+start "Frontend Server (Port 3000 - LAN)" cmd /k "cd /d "%~dp0frontend-next" && echo. && echo ======================================================== && echo  Frontend Server (Next.js) - LAN Access Enabled && echo  Local:   http://localhost:3000 && echo  Network: http://%LOCAL_IP%:3000 && echo ======================================================== && echo. && echo  To access from other devices on the same network: && echo  Open browser and go to: http://%LOCAL_IP%:3000 && echo ======================================================== && echo. && npm run dev -- --hostname 0.0.0.0"
+
+echo Waiting 10 seconds for frontend to compile...
+timeout /t 10 /nobreak >nul
+
+echo Opening browser (local access)...
+start "" "http://localhost:3000"
 
 echo.
-echo [LAUNCH] wait 5 sec open browser...
-timeout /t 5 /nobreak
-
-echo [LAUNCH] openbrowser...
-start "" "http://localhost:8000"
-
+echo ========================================================
 echo.
-echo ==========================================
-echo    SUCCESS! ready to use
-echo    The Server window is already open separately.
-echo    To close it, close the Server window.
-echo ==========================================
+echo    [OK] SUCCESS! AI-Generation Studio v4.0 is ready!
+echo.
+echo    [LOCAL ACCESS - This Computer]
+echo    Frontend: http://localhost:3000
+echo    Backend:  http://localhost:8000
+echo    API Docs: http://localhost:8000/docs
+echo.
+echo    [NETWORK ACCESS - Other Devices on Same LAN]
+echo    Frontend: http://%LOCAL_IP%:3000
+echo    Backend:  http://%LOCAL_IP%:8000
+echo.
+echo    [HOW TO ACCESS FROM OTHER DEVICES]
+echo    1. Make sure all devices are on the same WiFi/network
+echo    2. Open browser on other device
+echo    3. Go to: http://%LOCAL_IP%:3000
+echo    4. Start generating!
+echo.
+echo    [IMPORTANT NOTES]
+echo    - Keep this window and both server windows open
+echo    - To stop: close all server windows or press Ctrl+C
+echo    - First access may take 30-60 seconds to compile
+echo.
+echo ========================================================
 echo.
 pause

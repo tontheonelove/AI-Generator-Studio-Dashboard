@@ -4,6 +4,36 @@
 
 ---
 
+For Update
+
+## Update 
+1. Double-click `update_windows_only.bat`
+2. Double-click `run_windows_only.bat`
+3. Wait for setup (first time: 5-10 minutes)
+4. Browser opens automatically
+
+
+New Instalation (First time)
+
+# AI-Generation Studio v4.0
+
+## Requirements
+- Python 3.10+ (Add to PATH)
+- Node.js 20+ LTS
+- NVIDIA GPU + Driver
+- ComfyUI (running on port 8188)
+
+## Installation
+1. Double-click `run_windows_only.bat`
+2. Wait for setup (first time: 5-10 minutes)
+3. Browser opens automatically
+
+## Access
+- **Local:** http://localhost:3000
+- **LAN:** See IP in launcher window
+
+---
+
 ## 🚀 Update V3.5 (17-8-26) Update Workflow & Model
 
 - 🚀 LTX 2.5 VIDEO T2V (BASE) (Text To Video)

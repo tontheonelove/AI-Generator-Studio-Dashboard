@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 import base64
@@ -8,19 +7,19 @@ import os
 import traceback
 import time
 import json
-import shutil
 import re
 import requests
 
-# ✅ Import ฟังก์ชันทั้งหมดจาก comfy_client (เพิ่ม llm_stream)
+
+# ✅ Import ฟังก์ชันทั้งหมดจาก comfy_client
 from .comfy_client import (
     generate_image, generate_edit, 
     generate_image_stream, generate_edit_stream, 
     generate_video_stream, tools_stream,
     generate_audio_stream,
-    llm_stream  # 🆕 เพิ่ม LLM Stream
+    llm_stream
 )
-from .database import init_db, save_history, get_history
+from .database import init_db, save_history, get_history, delete_history
 
 app = FastAPI(title="AI-Image-Generator-API")
 is_processing = False
@@ -36,7 +35,8 @@ app.add_middleware(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+
+# ❌ ลบ FRONTEND_DIR และ app.mount() ออก เพราะใช้ Next.js แทนแล้ว
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 
@@ -81,6 +81,7 @@ def load_lora_config():
         return {}
 
 init_db()
+
 
 WORKFLOW_SETTINGS = {
     # === Images Models ===
@@ -134,7 +135,6 @@ WORKFLOW_SETTINGS = {
         "file": "workflow/krea2_edit_single_ref.json","prompt_id": "84","prompt_key": "prompt",
         "seed_id": "53","seed_key": "seed","image1_id": "72","lora_id": "71","single_image_only": True 
     },
-
     "Krea2 Identity Edit (2 Ref)": {
         "file": "workflow/krea2_edit_two_ref.json","prompt_id": "84","prompt_key": "prompt",
         "seed_id": "53","seed_key": "seed","image1_id": "72","image2_id": "86","lora_id": "71",
@@ -251,7 +251,6 @@ WORKFLOW_SETTINGS = {
         "file": "workflow/pid_upscale_4k.json",
         "image_id": "8", "output_node_id": "27", "is_image_tool": True
     },
-    # 🆕 LLM Tool
     "Qwen3.5 Image to Text": {
         "file": "workflow/llm_qwen3_5_text_gen.json",
         "image_id": "2",
@@ -317,7 +316,6 @@ class AudioGenerationRequest(BaseModel):
     bpm: int = 72
     seed: int = -1
 
-# 🆕 NEW: LLM Request Model
 class LLMRequest(BaseModel):
     model: str
     filename: str
@@ -332,6 +330,28 @@ def get_status():
 def api_history():
     return get_history()
 
+@app.delete("/api/history/{filename}")
+def delete_history_item(filename: str):
+    """Delete a history item and its output file"""
+    try:
+        # 1. ลบจาก database
+        deleted_from_db = delete_history(filename)
+        if not deleted_from_db:
+            print(f"[Delete Warning] Not found in DB: {filename}")
+        
+        # 2. ลบไฟล์จาก outputs folder
+        filepath = os.path.join(OUTPUT_DIR, filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            print(f"[Delete] ✅ File removed: {filename}")
+        else:
+            print(f"[Delete Warning] File not found: {filename}")
+        
+        return {"success": True, "message": "Deleted successfully"}
+    except Exception as e:
+        print(f"[Delete Error] {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/outputs/{filename}")
 def serve_output(filename: str):
     filepath = os.path.join(OUTPUT_DIR, filename)
@@ -342,7 +362,6 @@ def serve_output(filename: str):
 @app.get("/api/loras/{model_name}")
 def get_loras(model_name: str):
     config = load_lora_config()
-    # 🎯 ถ้าเป็น z-image x PID4K ให้ดึง LoRA ของ Z-Image Turbo มาใช้
     if model_name == "Z-image x PID4K":
         model_name = "Z-Image Turbo"
     
@@ -405,10 +424,12 @@ async def upload_audio(file: UploadFile = File(...)):
 async def generate_stream_endpoint(req: GenerationRequest):
     global is_processing
     if is_processing:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     if req.model not in WORKFLOW_SETTINGS:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     config = WORKFLOW_SETTINGS[req.model]
@@ -416,16 +437,18 @@ async def generate_stream_endpoint(req: GenerationRequest):
     if not os.path.exists(workflow_path):
         missing_file = config["file"]
         async def error_stream(): 
-            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing: {missing_file}'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing: {missing_file}'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     is_edit_mode = req.mode == "edit"
     if is_edit_mode:
         if not req.image1_filename:
-            async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'Image 1 required'})}\n\n"
+            async def error_stream(): 
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Image 1 required'}, ensure_ascii=False)}\n\n"
             return StreamingResponse(error_stream(), media_type="text/event-stream")
         if config.get("require_both_images", False) and not req.image2_filename:
-            async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'{req.model} requires both images'})}\n\n"
+            async def error_stream(): 
+                yield f"data: {json.dumps({'type': 'error', 'message': f'{req.model} requires both images'}, ensure_ascii=False)}\n\n"
             return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     is_processing = True
@@ -441,9 +464,13 @@ async def generate_stream_endpoint(req: GenerationRequest):
 
             final_result = None
             for event in stream_fn:
-                if event["type"] == "final_result": final_result = event["data"]
-                elif event["type"] == "complete": pass
-                else: yield f"data: {json.dumps(event)}\n\n"
+                if event["type"] == "final_result": 
+                    final_result = event["data"]
+                elif event["type"] == "complete": 
+                    pass
+                else: 
+                    # ✅ เพิ่ม ensure_ascii=False เพื่อรองรับภาษาไทย
+                    yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
             if final_result and final_result.get("images"):
                 img_data = final_result['images'][0]['data']
@@ -453,37 +480,49 @@ async def generate_stream_endpoint(req: GenerationRequest):
                 
                 save_history(req.prompt, req.model, final_result['seed'], req.width if not is_edit_mode else 0, req.height if not is_edit_mode else 0, filename)
                 b64_img = base64.b64encode(img_data).decode('utf-8')
-                yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'base64': f'data:image/png;base64,{b64_img}', 'seed': final_result['seed']})}\n\n"
+                yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'base64': f'data:image/png;base64,{b64_img}', 'seed': final_result['seed']}, ensure_ascii=False)}\n\n"
             else:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'No images generated'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'message': 'No images generated'}, ensure_ascii=False)}\n\n"
         except Exception as e:
             traceback.print_exc()
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
             print("[Queue-SSE] 🔓 Unlocked")
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    # ✅ เพิ่ม headers สำหรับ SSE
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @app.post("/api/generate-video-stream")
 async def generate_video_stream_endpoint(req: VideoGenerationRequest):
     global is_processing
     if is_processing:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     if req.model not in WORKFLOW_SETTINGS:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     config = WORKFLOW_SETTINGS[req.model]
     if not os.path.exists(os.path.join(BASE_DIR, config["file"])):
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
-    # 🆕 แก้ validation ให้ข้ามสำหรับ T2V models
     if not config.get("no_image_required") and not req.image1_filename:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'Image required'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Image required'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     is_processing = True
@@ -495,9 +534,12 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
             stream_fn = generate_video_stream(req.prompt, req.image1_filename, req.audio_filename, req.width, req.height, req.length, req.fps, req.aspect_ratio, req.megapixels, config)
             final_result = None
             for event in stream_fn:
-                if event["type"] == "final_result": final_result = event["data"]
-                elif event["type"] == "complete": pass
-                else: yield f"data: {json.dumps(event)}\n\n"
+                if event["type"] == "final_result": 
+                    final_result = event["data"]
+                elif event["type"] == "complete": 
+                    pass
+                else: 
+                    yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
             if final_result and final_result.get("videos"):
                 video_data = final_result['videos'][0]['data']
@@ -505,34 +547,42 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
                 filepath = os.path.join(OUTPUT_DIR, filename)
                 with open(filepath, "wb") as f: f.write(video_data)
                 save_history(req.prompt, req.model, final_result['seed'], req.width, req.height, filename)
-                yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'seed': final_result['seed']})}\n\n"
+                yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'seed': final_result['seed']}, ensure_ascii=False)}\n\n"
             else:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'No video generated'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'message': 'No video generated'}, ensure_ascii=False)}\n\n"
         except Exception as e:
             traceback.print_exc()
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
             print("[Queue-Video-SSE] 🔓 Unlocked")
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+    )
 
 @app.post("/api/tools-stream")
 async def tools_stream_endpoint(req: ToolsRequest):
     global is_processing
     if is_processing:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     if req.model not in WORKFLOW_SETTINGS:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     config = WORKFLOW_SETTINGS[req.model]
     if not os.path.exists(os.path.join(BASE_DIR, config["file"])):
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'Workflow file missing'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     if not req.filename:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'File required'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'File required'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     is_processing = True
@@ -544,9 +594,12 @@ async def tools_stream_endpoint(req: ToolsRequest):
             stream_fn = tools_stream(req.filename, req.scale, req.quality, config)
             final_result = None
             for event in stream_fn:
-                if event["type"] == "final_result": final_result = event["data"]
-                elif event["type"] == "complete": pass
-                else: yield f"data: {json.dumps(event)}\n\n"
+                if event["type"] == "final_result": 
+                    final_result = event["data"]
+                elif event["type"] == "complete": 
+                    pass
+                else: 
+                    yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
             if final_result:
                 is_video = config.get("is_video_tool", False)
@@ -554,39 +607,46 @@ async def tools_stream_endpoint(req: ToolsRequest):
                     video_data = final_result['videos'][0]['data']
                     filename = f"{int(time.time())}_upscaled.mp4"
                     with open(os.path.join(OUTPUT_DIR, filename), "wb") as f: f.write(video_data)
-                    yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'is_video': True})}\n\n"
+                    yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'is_video': True}, ensure_ascii=False)}\n\n"
                 elif not is_video and final_result.get("images"):
                     img_data = final_result['images'][0]['data']
                     filename = f"{int(time.time())}_upscaled.png"
                     with open(os.path.join(OUTPUT_DIR, filename), "wb") as f: f.write(img_data)
                     b64_img = base64.b64encode(img_data).decode('utf-8')
-                    yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'base64': f'data:image/png;base64,{b64_img}', 'is_video': False})}\n\n"
+                    yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'base64': f'data:image/png;base64,{b64_img}', 'is_video': False}, ensure_ascii=False)}\n\n"
                 else:
-                    yield f"data: {json.dumps({'type': 'error', 'message': 'No output generated'})}\n\n"
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'No output generated'}, ensure_ascii=False)}\n\n"
             else:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'Processing failed'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Processing failed'}, ensure_ascii=False)}\n\n"
         except Exception as e:
             traceback.print_exc()
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
             print("[Queue-Tools-SSE] 🔓 Unlocked")
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+    )
 
 @app.post("/api/generate-audio-stream")
 async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
     global is_processing
     if is_processing:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     if req.model not in WORKFLOW_SETTINGS:
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     config = WORKFLOW_SETTINGS[req.model]
     if not os.path.exists(os.path.join(BASE_DIR, config["file"])):
-        async def error_stream(): yield f"data: {json.dumps({'type': 'error', 'message': 'Workflow file missing'})}\n\n"
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     is_processing = True
@@ -598,40 +658,46 @@ async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
             stream_fn = generate_audio_stream(req.tags, req.lyrics, req.duration, req.bpm, req.seed, config)
             final_result = None
             for event in stream_fn:
-                if event["type"] == "final_result": final_result = event["data"]
-                elif event["type"] == "complete": pass
-                else: yield f"data: {json.dumps(event)}\n\n"
+                if event["type"] == "final_result": 
+                    final_result = event["data"]
+                elif event["type"] == "complete": 
+                    pass
+                else: 
+                    yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
             if final_result and final_result.get("audios"):
                 audio_data = final_result['audios'][0]['data']
                 filename = f"{int(time.time())}_audio.mp3"
                 with open(os.path.join(OUTPUT_DIR, filename), "wb") as f: f.write(audio_data)
                 print(f"[Audio-SSE Debug] ✅ Audio saved: {filename}")
-                yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'is_audio': True})}\n\n"
+                yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'is_audio': True}, ensure_ascii=False)}\n\n"
             else:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'No audio generated'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'message': 'No audio generated'}, ensure_ascii=False)}\n\n"
         except Exception as e:
             traceback.print_exc()
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
             print("[Queue-Audio-SSE] 🔓 Unlocked")
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+    )
 
-# 🆕 NEW: LLM Stream Endpoint
 @app.post("/api/llm-stream")
 async def llm_stream_endpoint(req: LLMRequest):
     global is_processing
     
     if is_processing:
         async def error_stream():
-            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': 'System busy'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     if req.model not in WORKFLOW_SETTINGS:
         async def error_stream():
-            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {req.model} not found'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     config = WORKFLOW_SETTINGS[req.model]
@@ -639,12 +705,12 @@ async def llm_stream_endpoint(req: LLMRequest):
     
     if not os.path.exists(workflow_path):
         async def error_stream():
-            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     if not req.filename:
         async def error_stream():
-            yield f"data: {json.dumps({'type': 'error', 'message': 'Image required'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Image required'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     is_processing = True
@@ -662,7 +728,7 @@ async def llm_stream_endpoint(req: LLMRequest):
                 elif event["type"] == "complete":
                     pass
                 else:
-                    yield f"data: {json.dumps(event)}\n\n"
+                    yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
             
             if final_result and final_result.get("text"):
                 text = final_result['text']
@@ -671,19 +737,22 @@ async def llm_stream_endpoint(req: LLMRequest):
                     "text": text,
                     "is_text": True
                 }
-                # ใช้ ensure_ascii=False เพื่อรองรับตัวอักษรพิเศษ/ภาษาไทย
                 yield f"data: {json.dumps(save_event, ensure_ascii=False)}\n\n"
             else:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'No text generated'})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'message': 'No text generated'}, ensure_ascii=False)}\n\n"
         
         except Exception as e:
             traceback.print_exc()
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
             print("[Queue-LLM-SSE] 🔓 Unlocked")
     
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(), 
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+    )
 
 # === Simple Generate (Backward Compatible) ===
 @app.post("/api/generate")
@@ -734,6 +803,7 @@ async def cancel_generation():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Cancel failed: {str(e)}")
 
+
 @app.get("/api/version")
 def get_version():
     version_path = os.path.join(BASE_DIR, "..", "version.json")
@@ -744,7 +814,6 @@ def get_version():
     except Exception as e:
         return {"version": "unknown", "features": [], "release_date": ""}
 
-app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

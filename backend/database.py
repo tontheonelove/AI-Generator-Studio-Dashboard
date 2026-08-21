@@ -39,3 +39,20 @@ def get_history(limit=50):
     rows = [dict(row) for row in c.fetchall()]
     conn.close()
     return rows
+
+def delete_history(filename: str):
+    """Delete a history item from database by filename"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "DELETE FROM history WHERE filename = ?",
+            (filename,)
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"[DB Delete Error] {e}")
+        return False
+    finally:
+        conn.close()
