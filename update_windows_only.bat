@@ -1,51 +1,125 @@
 @echo off
-title AI-Generation Studio - Updater
+chcp 65001 >nul 2>&1
+title AI-Generation Studio v4.0 - Updater
 color 0B
 
+cd /d "%~dp0"
+
+REM === Set Python paths from venv ===
+set "PYTHON_EXE=%~dp0venv\Scripts\python.exe"
+set "PIP_EXE=%~dp0venv\Scripts\pip.exe"
+
 echo.
-echo ==========================================
-echo    AI-Generation Studio - Auto Updater
-echo ==========================================
+echo ========================================================
+echo    AI-Generation Studio v4.0 - Auto Updater
+echo ========================================================
+echo [DEBUG] Working directory: %CD%
 echo.
 
-REM 1. ตรวจสอบ Git
+REM ==========================================
+REM 1. Check Git
+REM ==========================================
+echo [1/5] Checking Git...
 where git >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] notfound Git 
-    echo please install Git from https://git-scm.com/
+    echo [ERROR] Git not found!
+    echo Please install Git from https://git-scm.com/
     pause
     exit /b 1
 )
-echo [INFO] detected Git !
-
-REM 2. ตรวจสอบ/สร้าง venv
-if not exist "venv" (
-    echo [INFO] notfound venv creating new.. Virtual Environment ...
-    python -m venv venv
-)
-call venv\Scripts\activate.bat
-
-REM 3. ดึงโค้ดล่าสุด
+echo [OK] Git detected
 echo.
-echo [1/2] pull sourcecode from GitHub...
+
+REM ==========================================
+REM 2. Check / Create venv
+REM ==========================================
+echo [2/5] Checking Virtual Environment...
+if not exist "venv" (
+    echo [WARNING] venv not found, creating new...
+    python -m venv venv
+    if errorlevel 1 (
+        echo [ERROR] Failed to create venv!
+        pause
+        exit /b 1
+    )
+)
+
+REM Verify venv python exists
+if not exist "%PYTHON_EXE%" (
+    echo [ERROR] venv python.exe not found at: %PYTHON_EXE%
+    echo [INFO] Deleting broken venv and recreating...
+    rmdir /s /q venv
+    python -m venv venv
+    if errorlevel 1 (
+        echo [ERROR] Failed to recreate venv!
+        pause
+        exit /b 1
+    )
+)
+echo [OK] venv ready
+echo.
+
+REM ==========================================
+REM 3. Pull latest code from GitHub
+REM ==========================================
+echo [3/5] Pulling latest code from GitHub...
+echo.
 git pull
 if errorlevel 1 (
-    echo [ERROR] pull fail (check internet Or there are some unfinished editing files on the computer.)
+    echo.
+    echo [ERROR] git pull failed!
+    echo Possible causes:
+    echo   - No internet connection
+    echo   - Uncommitted local changes (run 'git stash' first)
+    echo   - Merge conflict (resolve manually then retry)
+    echo.
     pause
     exit /b 1
 )
-echo [SUCCESS] The latest code has been successfully retrieved.
-
-REM 4. อัปเดต Library
 echo.
-echo [2/2] checking and updating Library...
-pip install -r requirements.txt --upgrade
-echo [SUCCESS] Library ready to use
-
+echo [OK] Source code updated successfully
 echo.
-echo ==========================================
-echo    ✅ Update complete!
-echo    Close this window and run run.bat to run the application.
-echo ==========================================
+
+REM ==========================================
+REM 4. Update Python dependencies
+REM ==========================================
+echo [4/5] Updating Python dependencies...
+call "%PIP_EXE%" install -r requirements.txt --upgrade -q
+if errorlevel 1 (
+    echo [ERROR] pip install failed!
+    pause
+    exit /b 1
+)
+echo [OK] Python dependencies updated
+echo.
+
+REM ==========================================
+REM 5. Update Next.js dependencies
+REM ==========================================
+echo [5/5] Updating Next.js dependencies...
+if exist "frontend-next\package.json" (
+    cd /d "%~dp0frontend-next"
+    call npm install
+    if errorlevel 1 (
+        echo [ERROR] npm install failed!
+        cd ..
+        pause
+        exit /b 1
+    )
+    cd /d "%~dp0"
+    echo [OK] Next.js dependencies updated
+) else (
+    echo [SKIP] frontend-next/package.json not found
+)
+echo.
+
+echo ========================================================
+echo.
+echo    [OK] Update complete!
+echo.
+echo    Close this window and run run_windows_only.bat
+echo    to start the application.
+echo.
+echo ========================================================
 echo.
 pause
