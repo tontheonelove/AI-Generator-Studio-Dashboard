@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Sparkles, Copy, Check } from 'lucide-react';
+import { Download, Sparkles, Copy, Check, Music } from 'lucide-react';
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

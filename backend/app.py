@@ -275,6 +275,26 @@ WORKFLOW_SETTINGS = {
         "duration_id": "98", "duration_key": "seconds", "bpm_id": "94", "bpm_key": "bpm",
         "is_audio_tool": True, "audio_output_node": "107"
     },
+    "YuE2 T2M": {
+        "file": "workflow/audio_yue2_text2music.json",
+        "tags_id": "33:36", "tags_key": "value",       # ใช้ tags field แทน style
+        "lyrics_id": "33:37", "lyrics_key": "value",
+        "seed_id": "33:34", "seed_key": "seed",
+        "duration_id": "33:25", "duration_key": "max_duration",
+        "is_audio_tool": True,
+        "audio_output_node": "10"
+    },
+        "YuE2 Music Cover": {
+        "file": "workflow/audio_yue2_music_cover.json",
+        "audio_id": "45",                                    # LoadAudio node
+        "tags_id": "33:25", "tags_key": "style",             # style field
+        "lyrics_id": "33:25", "lyrics_key": "lyrics",        # lyrics field
+        "duration_id": "33:25", "duration_key": "max_duration",  # max_duration field
+        "seed_id": "33:34", "seed_key": "seed",
+        "is_audio_tool": True,
+        "is_cover_mode": True,                               # ✅ flag สำหรับบังคับ audio input
+        "audio_output_node": "10"
+    },
 }
 
 # === Pydantic Models ===
@@ -315,6 +335,7 @@ class AudioGenerationRequest(BaseModel):
     duration: int = 60
     bpm: int = 72
     seed: int = -1
+    audio_filename: str = ""
 
 class LLMRequest(BaseModel):
     model: str
@@ -649,13 +670,24 @@ async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
+    # ✅ บังคับ audio สำหรับ Cover mode
+    if config.get("is_cover_mode") and not req.audio_filename:
+        async def error_stream():
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Music Cover requires an audio file'}, ensure_ascii=False)}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+
     is_processing = True
     print(f"[Queue-Audio-SSE] 🔒 Locked - {req.model}")
 
     async def event_generator():
         global is_processing
         try:
-            stream_fn = generate_audio_stream(req.tags, req.lyrics, req.duration, req.bpm, req.seed, config)
+            # ✅ ส่ง audio_filename ด้วย
+            stream_fn = generate_audio_stream(
+                req.tags, req.lyrics, req.duration, req.bpm, req.seed, 
+                config, 
+                audio_filename=req.audio_filename  # ✅ เพิ่ม parameter
+            )
             final_result = None
             for event in stream_fn:
                 if event["type"] == "final_result": 
@@ -667,7 +699,7 @@ async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
 
             if final_result and final_result.get("audios"):
                 audio_data = final_result['audios'][0]['data']
-                filename = f"{int(time.time())}_audio.mp3"
+                filename = f"{int(time.time())}_audio.flac"  # ✅ ใช้ .flac แทน .mp3
                 with open(os.path.join(OUTPUT_DIR, filename), "wb") as f: f.write(audio_data)
                 print(f"[Audio-SSE Debug] ✅ Audio saved: {filename}")
                 yield f"data: {json.dumps({'type': 'saved', 'filename': filename, 'url': f'/api/outputs/{filename}', 'is_audio': True}, ensure_ascii=False)}\n\n"

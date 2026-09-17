@@ -1,5 +1,17 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+
+[ YUE 2 Text to Music && Music Cover ]
+
+ [ yue2_3b_bf16.safetensors ] => วางไฟล์ที่ /model/checkpoint
+  
+ https://huggingface.co/Comfy-Org/YuE2/blob/main/checkpoints/yue2_3b_bf16.safetensors
+
+ [ sheetsage2_bf16.safetensors ]  => วางไฟล์ที่ /model/audio_encoders
+ https://huggingface.co/Comfy-Org/YuE2/blob/main/audio_encoders/sheetsage2_bf16.safetensors
+
+
+
 --------------------------------------------------------------------------------
 
 [ACESTEP1.5] [BASE]

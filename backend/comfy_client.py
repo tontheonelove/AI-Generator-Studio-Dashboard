@@ -517,9 +517,9 @@ def llm_stream(filename, prompt, config):
         yield {"type": "final_result", "data": final_result}
 
 
-# 🆕 Audio Generator for Streaming (AceStep 1.5)
-def generate_audio_stream(tags, lyrics, duration, bpm, seed, config):
-    """Generator สำหรับ Audio Generation แบบ Streaming (AceStep 1.5)"""
+# 🆕 Audio Generator for Streaming (AceStep 1.5 + YuE2 + YuE2 Cover)
+def generate_audio_stream(tags, lyrics, duration, bpm, seed, config, audio_filename=""):
+    """Generator สำหรับ Audio Generation แบบ Streaming (รองรับหลาย workflow)"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
     workflow_path = os.path.join(base_dir, config["file"])
@@ -527,15 +527,25 @@ def generate_audio_stream(tags, lyrics, duration, bpm, seed, config):
     with open(workflow_path, "r", encoding="utf-8") as f:
         workflow = json.load(f)
 
-    # ✅ Inject Tags (Style)
-    if config.get("tags_id") and config["tags_id"] in workflow:
-        workflow[config["tags_id"]]["inputs"]["tags"] = tags
-        print(f"[Audio] 🎵 Tags injected: {tags}")
+    # ✅ Inject Audio File (สำหรับ Cover mode)
+    if config.get("is_cover_mode") and config.get("audio_id") and config["audio_id"] in workflow:
+        if not audio_filename:
+            yield {"type": "error", "message": "Music Cover requires an audio file"}
+            return
+        workflow[config["audio_id"]]["inputs"]["audio"] = audio_filename
+        print(f"[Audio] 🎵 Reference audio injected: {audio_filename}")
 
-    # ✅ Inject Lyrics
+    # ✅ Inject Tags/Style - รองรับ custom key
+    if config.get("tags_id") and config["tags_id"] in workflow:
+        tags_key = config.get("tags_key", "tags")
+        workflow[config["tags_id"]]["inputs"][tags_key] = tags
+        print(f"[Audio] 🎵 Tags injected into '{tags_key}': {tags[:50]}...")
+
+    # ✅ Inject Lyrics - รองรับ custom key
     if config.get("lyrics_id") and config["lyrics_id"] in workflow:
-        workflow[config["lyrics_id"]]["inputs"]["lyrics"] = lyrics
-        print(f"[Audio] 📝 Lyrics injected: {lyrics[:50]}...")
+        lyrics_key = config.get("lyrics_key", "lyrics")
+        workflow[config["lyrics_id"]]["inputs"][lyrics_key] = lyrics
+        print(f"[Audio] 📝 Lyrics injected into '{lyrics_key}': {lyrics[:50]}...")
 
     # ✅ Inject Seed
     actual_seed = seed if seed != -1 else random.randint(1, 10**14)
@@ -544,17 +554,17 @@ def generate_audio_stream(tags, lyrics, duration, bpm, seed, config):
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
         print(f"[Audio] 🎲 Seed: {actual_seed}")
 
-    # ✅ Inject Duration
+    # ✅ Inject Duration - รองรับ custom key
     if config.get("duration_id") and config["duration_id"] in workflow:
         duration_key = config.get("duration_key", "seconds")
         workflow[config["duration_id"]]["inputs"][duration_key] = duration
-        # บาง workflow มี duration ใน node เดียวกับ tags ด้วย
+        # AceStep: duration อยู่ใน node เดียวกับ tags
         if config.get("tags_id") and config["tags_id"] in workflow:
             if "duration" in workflow[config["tags_id"]]["inputs"]:
                 workflow[config["tags_id"]]["inputs"]["duration"] = duration
         print(f"[Audio] ⏱️ Duration: {duration}s")
 
-    # ✅ Inject BPM
+    # ✅ Inject BPM (เฉพาะ AceStep)
     if config.get("bpm_id") and config["bpm_id"] in workflow:
         bpm_key = config.get("bpm_key", "bpm")
         workflow[config["bpm_id"]]["inputs"][bpm_key] = bpm
