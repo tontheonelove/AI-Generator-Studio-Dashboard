@@ -4,9 +4,10 @@
 
 ---
 
-## 🚀 Version 4.0 (21-8-26)  UI-INTERFACE UPDATE ALL ***  
-  - Release Nextjs UI Frontend
-  - Improve Backend to Fast
+## 🚀 Version 4.1 (17-9-26) MUSIC MODEL UPDATE ***  
+  - YUE 2 Text to Music
+  - YUE 2 Music Cover
+  - Fix Some BUG
   
 ---
 
@@ -58,58 +59,6 @@
 
 ---
 
-## 🚀 Update V3.5 (17-8-26) Update Workflow & Model
-
-- 🚀 LTX 2.5 VIDEO T2V (BASE) (Text To Video)
-- 🚀 LTX 2.5 VIDEO I2V (BASE) (Image To Video)
-- 🔥 KREA2 TURBO LORA  👉 M87 NSFW + Enhance 
-
----
-
-## 🚀 Update V3.4 (10-8-26) Update Workflow & Model
-
-- 🚀 MINIMAX H3 T2V (FP8 & GGUF) (Text To Video)
-- 🚀 MINIMAX H3 I2V (FP8 & GGUF) (Image To Video)
-
----
-
-## 🚀 Update V3.3 (20-7-26) Update Workflow & Model
-
-- 😄 Krea 2 Edit Identity Added (Image Edit)
-- 📢 Krea 2 Controlnet Added (Image Edit)
-- 🖼️ Krea 2 Added 5 Loras (Image Generation)
- 
----
-
-## 🚀 Update V3.2 (26-6-26) Update Workflow & Model
-
-- 🖼️ Krea 2 Turbo Added
-- 📸 Boogu 0.1 Turbo Added
-- 🔥 Ideogram4 Added
-- 💻 LLM Gemma4 Image to Text Added
-
-
-## 🔥🔥 Update V3.1 (9-6-26) Update Feature
-
-- 📸 Z-Image X PID 4K Added (Intergrate Nvidia PID 4K)
-- 🖼️ LLM Image to Text Added (QWEN3.5)
-- 🛣️ Nvidia PID Upscale Added No Need RTX GPU
-
----
-
-## 🚀🚀 Update (2-6-26) BIG UPDATE
-
-📽️ New Feature Video Generation  
-   - LTX2.3 Image2Video (GGUF)
-   - LTX2.3 Lipsync (GGUF)
-
-🎵 New Feature Music Generation
-   - Acestep1.5
-   - StableAudio3
-
-🖼️ New Feature tools
-   - RTX Image Upscale  (RTX GPU ONLY)
-   - RTX Video Upscale  (RTX GPU ONLY)
 
 📢 For ImageEdit / Video Change path on config.json (edit your comfyui path)
 
@@ -119,86 +68,6 @@
     "comfyui_output_dir": "D:/ComfyUI_windows_portable/ComfyUI/output"
 }
 ```
-
-📱 Upgrade Frontend & Backend
-
-✅ Link Model Update!!
-
----
-
-## 🔥🔥 Update (29-5-26) 
-
-💻 New Feature Image & Image Edit Added 
-   - Qwen image edit 2511 (GGUF) (Image Edit)
-   - Flux Klein 9B Face Swap (GGUF) (Image Edit)
-   - Qwen image 2512 (with Loras 4 Step ) (Image)
-   - Meinamix Anime (Image)
-   - Wan2.2 (Image)
-
-📢 For Image Edit Change path on config.json (edit your comfyui path)
-
-📱 Upgrade Frontend & Backend
-
-✅ Link Model Update!!
-
-🌍 Support Windows & Linux Production
-
----
-
-## 🚀🚀 Update (27-5-26)
-
-<img src=lora.png/>
-
-🚀 Support Loras template added 4 loras
-
-🔥 Add more prompt template random
-
-✅ Add more resolution max 4K
-
----
-
-## Update 🔥🔥 (25-5-26)
-
-
-🖼️ Gallery / History (Databases)
-
-✅ Automatic image saving: Generated images will be saved to the backend/outputs/ folder and the data will be saved to the history.db database.
-
-✅ Gallery button: In the upper right corner of the website, there is a button to view the history of all images that have been generated.
-
-✅ One-Click Re-run: Click on an image in the gallery → The system will immediately retrieve the Prompt, Seed, and Model and fill them into the fields → You can regenerate or continue editing without having to type them again.
-
-🔥Support localnetwork & public production use your ip example 192.168.1.1:8000  and share ..
-
----
-
-## Update 🚀🚀 (21-5-26)
-
-✅ Migrate New UI
-
-✅ Support Model  Z-Image Turbo , Flux2. Klein9B
-
-✅ Support N8N API CALL
-
-✅ Queue process
-
-✅ Sound & popup notification when done !
-
-❌ Remove RunPOD  (will comback check security)
-
----
-
-## Update 🚀🚀 (27-4-26)
-
-🚀 Support Multiplatform (You can select between Comfyui locally and Comfyui Runpod)  🔥
-
----
-
-## Update 🚀🚀 (26-4-26)
-
-🚀 Support Model  Z-Image Turbo , Flux2. Klein9B  
-
----
 
 ## ✨ Key Features
 
@@ -218,48 +87,6 @@
 
 ---
 
-## 🛠️ Local Installation (Windows)
-
-```
-git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
-cd AI-Generator-Studio-Dashboard
-start with run_windows_only.bat
-```
-
-## 🛠️ Server Installation (Linux) Recommend Ubuntu
-
-```
-git clone https://github.com/tontheonelove/AI-Generator-Studio-Dashboard.git
-cd AI-Generator-Studio-Dashboard
-chmod +x run_linux_only.sh
-run ./run_linux_only.sh
-```
-
-✅ Prepare ComfyUI:
-
-    - Ensure ComfyUI is running locally (default: 127.0.0.1:8188).
-
-    - Load the provided yourworkflow.json  workflow into your ComfyUI to ensure all custom nodes are present.
-  
-✅ [Important!!] Check Workflow with Your Comfyui Host is Complitable ( there are two options )
-
-✅  Use the workflow from the code. The first thing to do is import the workflow from the /backend/workflow/ folder into your Comfyui and download
- 
-the model that matches that workflow. Once done, test generating it on your Comfyui. If it works, you can 
-
-use it directly through this Studio.
- 
-
-
-### Let s try....   
-
----
-  
-##  🛠️ How to update when available🔥
-
-🚀 just run update_windows_only.bat   for Linux just run update_linux_only.sh
-
----
 
 ### License
 MIT License © 2026 TonLikeIT
