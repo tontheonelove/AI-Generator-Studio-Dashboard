@@ -1,0 +1,120 @@
+{
+  "461": {
+    "inputs": {
+      "filename_prefix": "Qwen_image_2.1",
+      "format": "png",
+      "format.bit_depth": "8-bit",
+      "format.input_color_space": "sRGB",
+      "images": [
+        "459:457",
+        0
+      ]
+    },
+    "class_type": "SaveImageAdvanced",
+    "_meta": {
+      "title": "Save Image (Advanced)"
+    }
+  },
+  "459:452": {
+    "inputs": {
+      "prompt": "主体：\n竖 3:4，初秋午后的安静城市公园，一位成年女性坐在深色木质长椅靠右的位置，刚合上手中的薄册，将它轻放在身侧椅面，短暂停留并望向林荫小径。取景从头顶至膝下，长椅横向线条与她微斜的坐姿形成稳定构图，人物约占画面 68%。\n\n人物・表情：\n绝美23岁东亚美女，气质时尚、自信、温柔；\n身材匀称丰满，胸部明显自然丰满，视觉约 D 至 E 杯，具有自然重量感与柔和圆润轮廓，胸腰差明显，但不夸张、不假体感；纤细腰部，与丰满胸部形成清晰但自然的比例对比；\n象牙白肤色带淡粉血色，保留细腻毛孔、膝部自然肤色过渡与柔和高光。明亮奶茶灰棕中长发掠过肩头，薄空气刘海、脸周层次与内扣发尾清晰，几缕细碎飞发被微风轻轻扬起。妆容为香槟米色与粉棕眼影、淡玫瑰腮红、细长睫毛、自然泪袋和透感粉米色唇；唇角轻收，目光平静落向画面左侧小径，瞳孔保留细小眼神光。\n\n服装・姿势：\n穿炭灰色弹力细罗纹紧身迷你裙，概念裙摆纵向长度仅约 1 厘米，裙体贴合腰髋并配有同色无缝一体式安全底裤，明确完整遮挡私密区域，不走光、不透视；搭配象牙色低方领贴身长袖针织上衣，腰线利落，整体呈克制的时尚编辑感。臀部自然落在椅面，躯干微向后倚，双膝并拢后斜向画面左侧，小腿错开、前脚掌轻点地面。左手掌轻压身侧薄册封面，右手松弛搭在靠近膝上的大腿处；坐姿牵引裙料在髋侧形成细小横向张力褶皱，安全底裤始终平整覆盖。\n\n背景・光：\n前景左下有一小片虚化的浅金色落叶，中景为木质长椅与人物，背景只保留柔化的林荫小径、低矮灌木和稀疏行人色块。右上方偏暖的午后自然光穿过树冠，照亮发顶、右侧脸颊、肩线与腿部外缘，高光柔而清晰；阴影向左下落在长椅与地面，叶隙光斑细碎但不过度斑驳。长椅暗木色仅提供轻微暖色环境反射，使阴影中的肤色保持自然。\n\n构图・相机：\n等效 50mm，机位略低于胸口并保持轻微侧前方视角，不使用窥视式低机位；焦点平面锁在近侧瞳孔与右手，f/2.8 浅景深让小径柔和退后。长椅靠背横线稳定画面，人物头顶保留少量呼吸空间，左侧沿视线方向留白，前景落叶轻遮画面一角以增强抓拍纵深。\n\n质感・风格：\n日系美容杂志与城市生活方式写真，低对比、克制饱和、暖灰绿调与轻微柔和胶片颗粒；重点表现真实皮肤、细罗纹针织、弹力裙料的贴合张力、暗木椅面的磨砂纹理。\n\n负面：\n未成年或成熟中年感、人物面部特征漂移、裙长被自动延长、安全底裤缺失或私密部位暴露、双腿与长椅接触错误、明显手指与关节错误、塑料感皮肤、可读乱码文字或水印",
+      "negative_prompt": "",
+      "resolution": 1024,
+      "clip": [
+        "459:453",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImage21",
+    "_meta": {
+      "title": "Text Encode Qwen Image 2.1"
+    }
+  },
+  "459:453": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_nvfp4_heretic.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "459:454": {
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "459:456": {
+    "inputs": {
+      "width": 1080,
+      "height": 1080,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "459:457": {
+    "inputs": {
+      "samples": [
+        "459:458",
+        0
+      ],
+      "vae": [
+        "459:454",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "459:458": {
+    "inputs": {
+      "seed": 593103825222985,
+      "steps": 25,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "459:451",
+        0
+      ],
+      "positive": [
+        "459:452",
+        0
+      ],
+      "negative": [
+        "459:452",
+        1
+      ],
+      "latent_image": [
+        "459:456",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "459:451": {
+    "inputs": {
+      "unet_name": "qwen_image_2.1_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  }
+}

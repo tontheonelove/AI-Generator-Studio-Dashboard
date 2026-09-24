@@ -4,19 +4,20 @@
 
 ---
 
-## 🚀 Version 4.1 (17-9-26) MUSIC MODEL UPDATE ***  
-  - YUE 2 Text to Music
-  - YUE 2 Music Cover
-  - Fix Some BUG
+## 🚀 Version 4.2 (24-9-26) WORKFLOW MODEL UPDATE ***  
+  - QWEN IMAGE 2.1
+  - QWEN IMAGE 2.1 (NSFW)
+  - QWEN IMAGE 2.1 EDIT
+  - IMPROVE FAST UI
   
 ---
 
 ## New Instalation (First time) แนะนำ ** เพื่อความ Clean
 
 ### Requirements (สิ่งที่ต้องมี)
-- Python 3.10+ (Add to PATH)  | สำหรับ Linux ดูวิธีิตดตั้งได้ตามเน็ตได้เลย
-- Node.js 20+ LTS | สำหรับ Linux ดูวิธีิตดตั้งได้ตามเน็ตได้เลย
-- NVIDIA GPU + Driver  | สำหรับ Linux ดูวิธีิตดตั้งได้ตามเน็ตได้เลย
+- Python 3.10+ (Add to PATH)  | สำหรับ Linux ดูวิธีติดตั้งได้ตามเน็ตได้เลย
+- Node.js 20+ LTS | สำหรับ Linux ดูวิธีติดตั้งได้ตามเน็ตได้เลย
+- NVIDIA GPU + Driver  | สำหรับ Linux ดูวิธีติดตั้งได้ตามเน็ตได้เลย
 - ComfyUI (running on port 8188) ต้องเปิดตลอด เพราะใช้เป็น backend server
 
 ## How to Installation (วิธีติดตั้งใหม่) 👉 Windows

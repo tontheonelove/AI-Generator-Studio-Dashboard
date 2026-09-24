@@ -129,8 +129,23 @@ WORKFLOW_SETTINGS = {
         "file": "workflow/MeinaMix_Anime.json",
         "prompt_id": "6", "seed_id": "3", "latent_id": "5", "seed_key": "seed"
     },
+    "Qwen Image 2.1": {
+        "file": "workflow/image_qwen_image_2_1_t2i.json","prompt_id": "459:452","prompt_key": "prompt",
+        "seed_id": "459:458","seed_key": "seed","width_id": "459:456","height_id": "459:456",
+        "output_node_id": "461","no_lora": True,  # ✅ ซ่อน LoRA ใน frontend
+    },
+    "Qwen Image 2.1 (NSFW)": {
+        "file": "workflow/image_qwen_image_2_1_t2i_nsfw.json","prompt_id": "459:452","prompt_key": "prompt",
+        "seed_id": "459:458","seed_key": "seed","width_id": "459:456","height_id": "459:456","output_node_id": "461",
+        "no_lora": True,  # ไม่รองรับ LoRA
+    },
     
     # === Edit Models ===
+    "Qwen Image 2.1 Edit": {
+        "file": "workflow/image_qwen_image_2_1_image_edit.json","prompt_id": "459:474","prompt_key": "prompt",
+        "seed_id": "459:458","seed_key": "seed","image1_id": "470","image2_id": "475",
+        "require_both_images": True,"output_node_id": "461","no_lora": True,
+    },
     "Krea2 Identity Edit": {
         "file": "workflow/krea2_edit_single_ref.json","prompt_id": "84","prompt_key": "prompt",
         "seed_id": "53","seed_key": "seed","image1_id": "72","lora_id": "71","single_image_only": True 

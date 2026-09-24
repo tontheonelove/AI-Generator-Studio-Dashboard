@@ -1,9 +1,11 @@
 {
-  "version": "4.1",
-  "release_date": "2026-09-17",
+  "version": "4.2",
+  "release_date": "2026-09-24",
   "features": [
-    "🚀 Yue2 Text to Music",
-    "🔥 Yue2 Music Cover",
+    "🖼️ Qwen Image 2.1",
+    "🔥 Qwen Image 2.1 - NSFW",
+    "📲 Qwen Image 2.1 - EDIT",
+    "🚀 Change RUN DEV to Run Production",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"
 
