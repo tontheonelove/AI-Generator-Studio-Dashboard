@@ -137,7 +137,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
       {/* Video Model */}
       <div className="space-y-2">
         <Label>Video Model</Label>
-        <Select value={model} onValueChange={setModel}>
+        <Select value={model} onValueChange={(v) => v && setModel(v)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -187,7 +187,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         <>
           <div className="space-y-2">
             <Label>📐 Aspect Ratio</Label>
-            <Select value={aspectRatio} onValueChange={setAspectRatio}>
+            <Select value={aspectRatio} onValueChange={(v) => v && setAspectRatio(v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ASPECT_RATIOS.map((ar) => (
@@ -199,7 +199,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
 
           <div className="space-y-2">
             <Label>📊 Resolution</Label>
-            <Select value={megapixels} onValueChange={setMegapixels}>
+            <Select value={megapixels} onValueChange={(v) => v && setMegapixels(v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(MINIMAX_RESOLUTIONS).map(([mp, size]) => (

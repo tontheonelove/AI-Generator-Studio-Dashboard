@@ -125,7 +125,7 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
       {/* Model Selector */}
       <div className="space-y-2">
         <Label>Tool Model</Label>
-        <Select value={model} onValueChange={handleModelChange}>
+        <Select value={model} onValueChange={(v) => v && handleModelChange(v)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -164,7 +164,7 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>Scale Factor</Label>
-            <Select value={scale} onValueChange={setScale}>
+            <Select value={scale} onValueChange={(v) => v && setScale(v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {SCALE_OPTIONS.map((s) => (
@@ -175,7 +175,7 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
           </div>
           <div className="space-y-2">
             <Label>Quality</Label>
-            <Select value={quality} onValueChange={setQuality}>
+            <Select value={quality} onValueChange={(v) => v && setQuality(v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {QUALITY_OPTIONS.map((q) => (

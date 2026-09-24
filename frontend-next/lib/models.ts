@@ -1,5 +1,5 @@
 export const IMAGE_MODELS = [
-  'Krea2 Turbo', 'Ideogram 4', 'Boogu Image Turbo', 'Z-image x PID4K',
+  'Qwen Image 2.1','Qwen Image 2.1 (NSFW)','Krea2 Turbo', 'Ideogram 4', 'Boogu Image Turbo', 'Z-image x PID4K',
   'Z-Image Turbo', 'Z-Image Turbo-GGUF', 'Flux 2 Klein-GGUF',
   'Qwen Image 2512', 'Wan2.2 Image', 'MeinaMix Anime',
 ];
@@ -61,6 +61,17 @@ export const TOOLS_MODELS = [
 ];
 
 export const EDIT_MODELS = [
+  {
+    value: 'Qwen Image 2.1 Edit',
+    label: '🎨 Qwen Image 2.1 Edit (2 Images + Reference)',
+    needsImage1: true,
+    needsImage2: true,
+    image2Required: true,
+    promptLabel: '📝 Edit Instruction (Use <image1> and <image2>)',
+    promptPlaceholder: 'e.g., "Keep the character in <image1> unchanged, put this shirt from <image2> on them"',
+    promptRows: 5,
+    hasTemplate: true,
+  },
   {
     value: 'Krea2 Identity Edit',
     label: '🎭 Krea2 Identity Edit (1 Ref Image)',

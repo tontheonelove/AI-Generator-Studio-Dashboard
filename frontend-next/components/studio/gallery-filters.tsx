@@ -70,7 +70,7 @@ export function GalleryFilters({
         </div>
 
         {/* Sort */}
-        <Select value={sortBy} onValueChange={onSortChange}>
+        <Select value={sortBy} onValueChange={(v) => v && onSortChange(v)}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue />
           </SelectTrigger>

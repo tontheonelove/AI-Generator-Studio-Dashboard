@@ -1,17 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ResultPanel } from '@/components/studio/result-panel';
 import { ImageControls } from '@/components/studio/image-controls';
 import { PageTransition } from '@/components/studio/page-transition';
 import type { LoadingState, ResultState } from '@/lib/types';
 
-export default function ImagePage() {
+// ✅ แยก component ที่ใช้ useSearchParams() ออกมา
+// เพื่อให้สามารถ wrap ด้วย Suspense ได้
+function ReuseHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState<LoadingState | null>(null);
-  const [result, setResult] = useState<ResultState | null>(null);
 
   // 🎯 Reuse logic: dispatch custom event เมื่อมี reuse param
   useEffect(() => {
@@ -36,8 +36,21 @@ export default function ImagePage() {
     }
   }, [searchParams, router]);
 
+  // ไม่ render อะไร
+  return null;
+}
+
+export default function ImagePage() {
+  const [loading, setLoading] = useState<LoadingState | null>(null);
+  const [result, setResult] = useState<ResultState | null>(null);
+
   return (
     <PageTransition>
+      {/* ✅ Wrap ReuseHandler ด้วย Suspense เพื่อรองรับ useSearchParams() */}
+      <Suspense fallback={null}>
+        <ReuseHandler />
+      </Suspense>
+
       <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row">
         <div className="w-full rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/40 lg:w-1/3">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">

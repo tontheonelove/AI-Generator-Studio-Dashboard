@@ -93,7 +93,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       {/* Model Selector */}
       <div className="space-y-2">
         <Label>Edit Model</Label>
-        <Select value={model} onValueChange={handleModelChange}>
+        <Select value={model} onValueChange={(v) => v && setModel(v)}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>

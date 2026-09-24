@@ -13,6 +13,34 @@ import { readSSE } from '@/lib/stream';
 import { IMAGE_MODELS, SIZE_OPTIONS } from '@/lib/models';
 import type { Lora, TabProps } from '@/lib/types';
 
+// ✅ รายชื่อโมเดลที่ไม่รองรับ LoRA
+const NO_LORA_MODELS = ['Qwen Image 2.1', 'Qwen Image 2.1 (NSFW)', 'Ideogram 4'];
+
+// ✅ Prompt template สำหรับ Qwen 2.1 (structured format)
+const QWEN_21_PROMPT_TEMPLATE = `主題：
+[Main subject/theme]
+
+主体：
+[Main subject description, position in frame]
+
+人物・表情：
+[Character details: face, eyes, expression, hair]
+
+服装・ポーズ：
+[Clothing, pose, gestures]
+
+背景・光：
+[Background, lighting, atmosphere]
+
+構図・カメラ：
+[Aspect ratio, camera angle, focus]
+
+質感・スタイル：
+[Style: photorealistic, anime, etc.]
+
+ネガティブ：
+[Things to avoid]`;
+
 export function ImageControls({ onLoading, onResult }: TabProps) {
   const [model, setModel] = useState(IMAGE_MODELS[0]);
   const [loras, setLoras] = useState<Lora[]>([]);
@@ -22,15 +50,24 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
   const [height, setHeight] = useState(1024);
   const [seed, setSeed] = useState(-1);
 
+  // ✅ เช็คว่าโมเดลปัจจุบันรองรับ LoRA หรือไม่
+  const supportsLora = !NO_LORA_MODELS.includes(model);
+  const isQwen21 = model === 'Qwen Image 2.1' || model === 'Qwen Image 2.1 (NSFW)';
+  const isNSFW = model === 'Qwen Image 2.1 (NSFW)';
+
   useEffect(() => {
-    loadLoras(model).then((list) => { setLoras(list); setLoraIndex(-1); });
-  }, [model]);
+    if (supportsLora) {
+      loadLoras(model).then((list) => { setLoras(list); setLoraIndex(-1); });
+    } else {
+      setLoras([]);
+      setLoraIndex(-1);
+    }
+  }, [model, supportsLora]);
 
   useEffect(() => {
     const handleReuse = (e: Event) => {
       const { model: m, prompt: p, seed: s } = (e as CustomEvent).detail;
       if (m) {
-        // เช็คก่อนว่ามีโมเดลอยู่ใน IMAGE_MODELS
         if (IMAGE_MODELS.includes(m)) {
           setModel(m);
         }
@@ -43,117 +80,193 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
     return () => window.removeEventListener('reuse-image', handleReuse);
   }, []);
 
-async function generate() {
-  if (!prompt.trim()) { alert('Please enter a prompt!'); return; }
-  const lora = loraIndex >= 0 ? loras[loraIndex] : undefined;
-
-  onResult(null);
-  onLoading({ title: 'Generating...', detail: 'Please wait' });
-
-  try {
-    // 🆕 ใช้ readSSE แบบใหม่ (เรียกตรง Backend)
-    for await (const ev of readSSE('/api/generate-stream', {
-      prompt,
-      model,
-      seed,
-      width,
-      height,
-      lora_filename: lora?.filename ?? '',
-      lora_strength: lora?.strength ?? 0,
-      mode: 'generate',
-    })) {
-      if (ev.type === 'progress') {
-        const pct = Math.round((ev.value / ev.max) * 100);
-        onLoading({ title: `${pct}%`, detail: 'Processing...', progress: pct });
-      } else if (ev.type === 'executing' && ev.node) {
-        onLoading({ title: 'Generating...', detail: `Processing node ${ev.node}...` });
-      } else if (ev.type === 'saved') {
-        onResult({ 
-          kind: 'image', 
-          url: ev.base64 || ev.url,  // ใช้ base64 ถ้ามี
-          seed: ev.seed, 
-          filename: ev.filename 
-        });
-      } else if (ev.type === 'error') {
-        throw new Error(ev.message);
-      }
+  // ✅ ฟังก์ชันโหลด template
+  function loadQwenTemplate() {
+    if (!prompt.trim() || confirm('Replace current prompt with Qwen 2.1 template?')) {
+      setPrompt(QWEN_21_PROMPT_TEMPLATE);
     }
-  } catch (e: any) {
-    alert('Error: ' + e.message);
-  } finally {
-    onLoading(null);
   }
-}
+
+  async function generate() {
+    if (!prompt.trim()) { alert('Please enter a prompt!'); return; }
+    const lora = supportsLora && loraIndex >= 0 ? loras[loraIndex] : undefined;
+
+    onResult(null);
+    onLoading({ title: 'Generating...', detail: 'Please wait' });
+
+    try {
+      for await (const ev of readSSE('/api/generate-stream', {
+        prompt,
+        model,
+        seed,
+        width,
+        height,
+        lora_filename: lora?.filename ?? '',
+        lora_strength: lora?.strength ?? 0,
+        mode: 'generate',
+      })) {
+        if (ev.type === 'progress') {
+          const pct = Math.round((ev.value / ev.max) * 100);
+          onLoading({ title: `${pct}%`, detail: 'Processing...', progress: pct });
+        } else if (ev.type === 'executing' && ev.node) {
+          onLoading({ title: 'Generating...', detail: `Processing node ${ev.node}...` });
+        } else if (ev.type === 'saved') {
+          onResult({ 
+            kind: 'image', 
+            url: ev.base64 || ev.url,
+            seed: ev.seed, 
+            filename: ev.filename 
+          });
+        } else if (ev.type === 'error') {
+          throw new Error(ev.message);
+        }
+      }
+    } catch (e: any) {
+      alert('Error: ' + e.message);
+    } finally {
+      onLoading(null);
+    }
+  }
 
   return (
     <div className="space-y-4">
+      {/* ✅ Model Selection - กว้างขึ้นเพื่อรองรับชื่อยาว */}
       <div className="space-y-2">
         <Label>AI Model</Label>
-        <Select value={model} onValueChange={setModel}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {IMAGE_MODELS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>🎨 LoRA Style</Label>
-        <Select 
-          value={loraIndex >= 0 ? loras[loraIndex].filename : "-1"}
-          onValueChange={(v) => {
-            if (v === "-1") {
-              setLoraIndex(-1);
-            } else {
-              const index = loras.findIndex(l => l.filename === v);
-              setLoraIndex(index);
-            }
-          }}
-        >
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="-1">No LoRA</SelectItem>
-            {loras.map((l) => (
-              <SelectItem key={l.filename} value={l.filename}>{l.label}</SelectItem>
+        <Select value={model} onValueChange={(v) => v && setModel(v)}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[320px] max-w-[90vw]">
+            {IMAGE_MODELS.map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
+      {/* ✅ NSFW Warning Banner */}
+      {isNSFW && (
+        <div className="rounded-lg border border-red-700/30 bg-red-900/20 p-2.5 text-xs text-red-300">
+          <span className="mr-1">⚠️</span>
+          <strong>NSFW Mode:</strong> Unlocked content filter. สำหรับผู้ใหญ่เท่านั้น
+        </div>
+      )}
+
+      {/* ✅ Qwen 2.1 Info Banner */}
+      {isQwen21 && (
+        <div className="rounded-lg border border-emerald-700/30 bg-emerald-900/20 p-2.5 text-xs text-emerald-300">
+          <span className="mr-1">💡</span>
+          <strong>Qwen 2.1:</strong> แนะนำให้ใช้ structured prompt (主題, 主体, 人物...) เพื่อผลลัพธ์ที่ดีที่สุด
+        </div>
+      )}
+
+      {/* ✅ LoRA Style - แสดงเฉพาะโมเดลที่รองรับ */}
+      {supportsLora && (
+        <div className="space-y-2">
+          <Label>🎨 LoRA Style</Label>
+          <Select 
+            value={loraIndex >= 0 ? loras[loraIndex].filename : "-1"}
+            onValueChange={(v) => {
+              if (v === "-1") {
+                setLoraIndex(-1);
+              } else {
+                const index = loras.findIndex(l => l.filename === v);
+                setLoraIndex(index);
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="min-w-[280px] max-w-[90vw]">
+              <SelectItem value="-1">No LoRA</SelectItem>
+              {loras.map((l) => (
+                <SelectItem key={l.filename} value={l.filename}>{l.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* ✅ Prompt - ปรับตามโมเดล */}
       <div className="space-y-2">
-        <Label>Prompt</Label>
-        <Textarea rows={4} value={prompt}
-          onChange={(e) => setPrompt(e.target.value)} placeholder="Describe..." />
+        <div className="flex items-center justify-between">
+          <Label>Prompt</Label>
+          {isQwen21 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadQwenTemplate}
+              className="h-7 px-2 text-xs"
+            >
+              📝 Load Template
+            </Button>
+          )}
+        </div>
+        <Textarea 
+          rows={isQwen21 ? 12 : 4}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)} 
+          placeholder={
+            isQwen21 
+              ? "Use structured format or click 'Load Template'..."
+              : "Describe..." 
+          }
+          className={isQwen21 ? "font-mono text-xs" : ""}
+        />
+        {isQwen21 && (
+          <p className="text-[10px] text-slate-500">
+            💡 Qwen 2.1 works best with structured prompts (主題, 主体, 人物, etc.)
+          </p>
+        )}
       </div>
 
+      {/* Width / Height */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Width</Label>
           <Select value={String(width)} onValueChange={(v) => setWidth(Number(v))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SIZE_OPTIONS.map((s) => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="min-w-[140px]">
+              {SIZE_OPTIONS.map((s) => (
+                <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label>Height</Label>
           <Select value={String(height)} onValueChange={(v) => setHeight(Number(v))}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SIZE_OPTIONS.map((s) => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="min-w-[140px]">
+              {SIZE_OPTIONS.map((s) => (
+                <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
+      {/* Seed */}
       <div className="space-y-2">
         <Label>Seed (-1 for random)</Label>
         <Input type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value))} />
       </div>
 
+      {/* Generate Button */}
       <Button onClick={generate}
-        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500">
+        className={`w-full bg-gradient-to-r ${
+          isNSFW
+            ? 'from-red-500 to-pink-600 hover:from-red-400 hover:to-pink-500'
+            : 'from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500'
+        }`}>
         ✨ Generate Masterpiece
       </Button>
     </div>
