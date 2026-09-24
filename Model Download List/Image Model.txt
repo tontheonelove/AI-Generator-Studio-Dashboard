@@ -2,7 +2,6 @@
 
 [ Qwen Image 2.1 ] +  EDIT  ใช้ลิงค์ด้านล่างร่วมกัน
 
-เลือกโหลดในลิงค์นี้
 [qwen_image_2.1_bf16.safetensors] =>วางไฟล์ที่ /model/diffusion_models
 https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/diffusion_models/qwen_image_2.1_bf16.safetensors
 
