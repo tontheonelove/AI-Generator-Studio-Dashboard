@@ -1,5 +1,14 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+[ Qwen Image 2.1 ] +  EDIT  ใช้ลิงค์ด้านล่างร่วมกันได้ 
+
+เลือกโหลดในลิงค์นี้
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/main
+
+[  เฉพาะ NSFW Text Encoder  ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/pottokao/Qwen-Image-2.1-Text-Encoder-Heretic-NVFP4
+
+
 ***[ Krea2 Turbo]***
 
 [krea2_turbo_fp8]   =>วางไฟล์ที่ /model/diffusion_models
