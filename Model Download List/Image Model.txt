@@ -3,7 +3,15 @@
 [ Qwen Image 2.1 ] +  EDIT  ใช้ลิงค์ด้านล่างร่วมกันได้ 
 
 เลือกโหลดในลิงค์นี้
-https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/main
+[qwen_image_2.1_bf16.safetensors] =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/diffusion_models/qwen_image_2.1_bf16.safetensors
+
+[ qwen3vl_8b_int8_convrot.safetensors ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/text_encoders/qwen3vl_8b_int8_convrot.safetensors
+
+[ qwen_image_2.1_vae_bf16.safetensors  ]  => วางไฟล์ที่ /model/vae
+
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/vae/qwen_image_2.1_vae_bf16.safetensors
 
 [  เฉพาะ NSFW Text Encoder  ]  =>วางไฟล์ที่ /model/textencoders
 https://huggingface.co/pottokao/Qwen-Image-2.1-Text-Encoder-Heretic-NVFP4
