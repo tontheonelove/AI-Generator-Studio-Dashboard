@@ -12,6 +12,14 @@
   
 ---
 
+# Feature
+- Next Frontend +  Python FASAPI (Comfyui)
+- Image Generation & Edit
+- Video Generation
+- Audio Generation
+- Ai Tools
+
+
 ## New Instalation (First time) แนะนำ ** เพื่อความ Clean
 
 ### Requirements (สิ่งที่ต้องมี)
