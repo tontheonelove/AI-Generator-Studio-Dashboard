@@ -1,4 +1,11 @@
-{ 
+{
+ "Qwen Image 2.1 Union Control": [
+    {
+      "filename": "p_qwen_image_2.1_8step_v0.1-comfyui-T8.safetensors",
+      "label": "⚡ Qwen 2.1 8-Step Turbo (Required)",
+      "strength": 0.8
+    }
+  ],
   "Z-image x PID4K": [
     {
       "label": "🚫 No LoRA",

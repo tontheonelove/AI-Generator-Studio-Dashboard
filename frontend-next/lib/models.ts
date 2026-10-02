@@ -7,6 +7,8 @@ export const IMAGE_MODELS = [
 export const SIZE_OPTIONS = [720, 864, 1024, 1080, 1280, 1440, 1536, 1920, 2160, 2560, 3840];
 
 export const VIDEO_MODELS = [
+  { value: 'Fast Video H3 I2V', label: '⚡ Fast Video H3 I2V (8-Step Turbo)', needsImage: true },
+  { value: 'Fast Video H3 T2V', label: '⚡ Fast Video H3 T2V (8-Step Turbo)', needsImage: false },
   { value: 'MiniMax H3 I2V', label: '🎬 MiniMax H3 I2V (Image to Video)', needsImage: true },
   { value: 'MiniMax H3 I2V (GGUF)', label: '🎬 MiniMax H3 I2V GGUF (Low VRAM)', needsImage: true },
   { value: 'MiniMax H3 T2V', label: '🎬 MiniMax H3 T2V (Text to Video)', needsImage: false },
@@ -61,6 +63,42 @@ export const TOOLS_MODELS = [
 ];
 
 export const EDIT_MODELS = [
+  {
+    value: 'Qwen Image 2.1 Union Control',
+    label: '🎛️ Qwen 2.1 Union Control (Canny + LoRA)',
+    needsImage1: true,
+    needsImage2: false,
+    image2Required: false,
+    needsLora: true, 
+    promptLabel: '📝 Describe the whole target image',
+    promptPlaceholder: 'Describe the final image you want, following the pose/structure of the control image...',
+    promptRows: 5,
+  },
+
+  {
+    value: 'Qwen Image 2.1 FaceSwap',
+    label: '🔄 Qwen 2.1 FaceSwap ',
+    needsImage1: true,
+    needsImage2: true,
+    image2Required: true,
+    fixedPrompt: true,  
+    fixedPromptText: 'head_swap: start with <image1> as the base image, keeping its lighting, environment, and background. remove the head from <image1> completely and replace it with the head from <image2>, strictly preserving the hair, eye color, nose structure from <image2>. copy the direction of the eye, head rotation, micro expressions from <image1>, high quality, sharp details, 4k',
+    promptLabel: '',
+    promptPlaceholder: '',
+    promptRows: 0,
+  },
+  {
+    value: 'Qwen Image 2.1 Body Swap',
+    label: '🔄 Qwen 2.1 Body Swap (Scene + Body)',
+    needsImage1: true,
+    needsImage2: true,
+    image2Required: true,
+    fixedPrompt: true,
+    fixedPromptText: 'body_swap: start with <image1> as the base image, keeping its lighting, environment, and background. replace the body from <image1> with the body from <image2>, strictly preserving the clothing, body shape and proportions from <image2>. strictly replicate the exact pose, arm positions, leg positions, hand gestures, head rotation, eye direction and micro expressions from <image1>',
+    promptLabel: '',
+    promptPlaceholder: '',
+    promptRows: 0,
+  },
   {
     value: 'Qwen Image 2.1 Edit',
     label: '🎨 Qwen Image 2.1 Edit (2 Images + Reference)',

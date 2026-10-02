@@ -1,0 +1,273 @@
+{
+  "13": {
+    "inputs": {
+      "aspect_ratio": "1:1 (Square)",
+      "megapixels": 2,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "461": {
+    "inputs": {
+      "filename_prefix": "Qwen_image_2.1",
+      "format": "png",
+      "format.bit_depth": "8-bit",
+      "format.input_color_space": "sRGB",
+      "images": [
+        "487",
+        0
+      ]
+    },
+    "class_type": "SaveImageAdvanced",
+    "_meta": {
+      "title": "Save Image (Advanced)"
+    }
+  },
+  "470": {
+    "inputs": {
+      "image": "HS55hUVbQAAkBi9.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Body Reference"
+    }
+  },
+  "472": {
+    "inputs": {
+      "compare_view": {
+        "beforeImages": [],
+        "afterImages": []
+      }
+    },
+    "class_type": "ImageCompare",
+    "_meta": {
+      "title": "Compare Images"
+    }
+  },
+  "475": {
+    "inputs": {
+      "image": "f726550316fc08f59eccb70680d3d544.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Head Reference"
+    }
+  },
+  "477": {
+    "inputs": {
+      "width": [
+        "13",
+        0
+      ],
+      "height": [
+        "13",
+        1
+      ],
+      "upscale_method": "lanczos",
+      "keep_proportion": "resize",
+      "pad_color": "0, 0, 0",
+      "crop_position": "center",
+      "divisible_by": 32,
+      "device": "cpu",
+      "image": [
+        "470",
+        0
+      ]
+    },
+    "class_type": "ImageResizeKJv2",
+    "_meta": {
+      "title": "Resize Image v2"
+    }
+  },
+  "478": {
+    "inputs": {
+      "width": [
+        "13",
+        0
+      ],
+      "height": [
+        "13",
+        1
+      ],
+      "upscale_method": "lanczos",
+      "keep_proportion": "resize",
+      "pad_color": "0, 0, 0",
+      "crop_position": "center",
+      "divisible_by": 32,
+      "device": "cpu",
+      "image": [
+        "475",
+        0
+      ]
+    },
+    "class_type": "ImageResizeKJv2",
+    "_meta": {
+      "title": "Resize Image v2"
+    }
+  },
+  "484": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "485": {
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "486": {
+    "inputs": {
+      "width": [
+        "477",
+        1
+      ],
+      "height": [
+        "477",
+        2
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "487": {
+    "inputs": {
+      "samples": [
+        "490",
+        0
+      ],
+      "vae": [
+        "485",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "490": {
+    "inputs": {
+      "seed": 42,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "deis_2m",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "495",
+        0
+      ],
+      "positive": [
+        "496",
+        0
+      ],
+      "negative": [
+        "496",
+        1
+      ],
+      "latent_image": [
+        "486",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "491": {
+    "inputs": {
+      "unet_name": "qwen_image_2.1_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "492": {
+    "inputs": {
+      "lora_name": "p_qwen_image_2.1_8step_v0.1-comfyui-T8.safetensors",
+      "strength_model": 1,
+      "model": [
+        "491",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "493": {
+    "inputs": {
+      "lora_name": "bfs_head_v1.1_qwen_2.1.safetensors",
+      "strength_model": 1,
+      "model": [
+        "492",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "495": {
+    "inputs": {
+      "device": "auto",
+      "dtype": "default",
+      "model": [
+        "493",
+        0
+      ]
+    },
+    "class_type": "QwenImage21Cache",
+    "_meta": {
+      "title": "Qwen Image 2.1 Cache"
+    }
+  },
+  "496": {
+    "inputs": {
+      "prompt": "head_swap: start with <image1> as the base image, keeping its lighting, environment, and background. remove the head from <image1> completely and replace it with the head from <image2>, strictly preserving the hair, eye color, nose structure from <image2>. copy the direction of the eye, head rotation, micro expressions from <image1>, high quality, sharp details, 4k",
+      "negative_prompt": "",
+      "resolution": 0,
+      "clip": [
+        "484",
+        0
+      ],
+      "images.image_1": [
+        "477",
+        0
+      ],
+      "images.image_2": [
+        "478",
+        0
+      ],
+      "vae": [
+        "485",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImage21",
+    "_meta": {
+      "title": "Text Encode Qwen Image 2.1"
+    }
+  }
+}

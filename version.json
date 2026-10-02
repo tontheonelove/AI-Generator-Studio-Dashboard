@@ -1,13 +1,12 @@
 {
-  "version": "4.2",
-  "release_date": "2026-09-24",
+  "version": "4.3",
+  "release_date": "02-10-2026",
   "features": [
-    "🖼️ Qwen Image 2.1",
-    "🔥 Qwen Image 2.1 - NSFW",
-    "📲 Qwen Image 2.1 - EDIT",
-    "🚀 Change RUN DEV to Run Production",
+    "🚀 Fast Video H3 I2V",
+    "🔥 Fast Video H3 T2V",
+    "📲 Qwen Image 2.1 Union Controlnet",
+    "🚀 Qwen Image 2.1 Face Swap & Body Swap",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"
-
   ]
 }

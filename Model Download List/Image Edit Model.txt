@@ -1,5 +1,57 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+----------------------------------------------------------------
+
+***Qwen Image 2.1 Union Control ****
+
+[qwen_image_2.1_bf16.safetensors] =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/diffusion_models/qwen_image_2.1_bf16.safetensors
+
+[ Qwen-Image-2.1-Fun-Controlnet-Union ] =>วางไฟล์ที่ /model/controlnet
+https://huggingface.co/alibaba-pai/Qwen-Image-2.1-Fun-Controlnet-Union/blob/main/Qwen-Image-2.1-Fun-Controlnet-Union.safetensors
+
+[ Lora 8 Step ]   วางไฟล์ที่ /model/loras
+https://huggingface.co/RunningHubAI/rh-p-qwen-image-2.1-8step-v0.1-comfyui-t8-lora/blob/main/p_qwen_image_2.1_8step_v0.1-comfyui-T8.safetensors
+
+[ qwen3vl_8b_int8_convrot.safetensors ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/text_encoders/qwen3vl_8b_int8_convrot.safetensors
+
+[ qwen_image_2.1_vae_bf16.safetensors  ]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/vae/qwen_image_2.1_vae_bf16.safetensors
+
+
+----------------------------------------------------------------
+
+***Qwen Image 2.1 FaceSwap ****
+
+*** ต้องติดตั้ง Custom Node นี้ด้วย  https://github.com/ClownsharkBatwing/RES4LYF  
+
+****Model หลักใช้เหมือน Qwen Image 2.1 ได้เลย  โหลดแค่ Loras ด้านล่าง 
+
+[ bfs_head_v1.1_qwen_2.1 ]  วางไฟล์ที่ /model/loras
+https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap/blob/main/bfs_head_v1.1_qwen_2.1.safetensors
+
+[ Lora 8 Step ]   วางไฟล์ที่ /model/loras
+https://huggingface.co/RunningHubAI/rh-p-qwen-image-2.1-8step-v0.1-comfyui-t8-lora/blob/main/p_qwen_image_2.1_8step_v0.1-comfyui-T8.safetensors
+
+
+----------------------------------------------------------------
+
+***Qwen Image 2.1 BodySwap ****
+
+*** ต้องติดตั้ง Custom Node นี้ด้วย  https://github.com/ClownsharkBatwing/RES4LYF  
+
+****Model หลักใช้เหมือน Qwen Image 2.1 ได้เลย  โหลดแค่ Loras ด้านล่าง 
+
+[ bfs_body_swap_v1.0_qwen_2.1 ]  วางไฟล์ที่ /model/loras
+https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap/blob/main/bfs_body_swap_v1.0_qwen_2.1.safetensors
+
+[ Lora 8 Step ]   วางไฟล์ที่ /model/loras
+https://huggingface.co/RunningHubAI/rh-p-qwen-image-2.1-8step-v0.1-comfyui-t8-lora/blob/main/p_qwen_image_2.1_8step_v0.1-comfyui-T8.safetensors
+
+
+----------------------------------------------------------------
+
 Krea2 Identity Edit  (ทั้ง 1Ref และ 2Ref)
 
 [ krea2edit Custom Node ] ต้องติดตั้งค้นหาที่ install missing node บน Comfyui ก่อน หรือ git clone ใน Folder Custom-node

@@ -4,11 +4,11 @@
 
 ---
 
-## 🚀 Version 4.2 (24-9-26) WORKFLOW MODEL UPDATE ***  
-  - QWEN IMAGE 2.1
-  - QWEN IMAGE 2.1 (NSFW)
-  - QWEN IMAGE 2.1 EDIT
-  - IMPROVE FAST UI
+## 🚀 Version 4.3 (2-10-26) WORKFLOW MODEL UPDATE ***  
+  - 🚀 Fast Video H3 I2V
+  - 🔥 Fast Video H3 T2V
+  - 📲 Qwen Image 2.1 Union Controlnet
+  - 🚀 Qwen Image 2.1 Face Swap & Body Swap
   
 ---
 

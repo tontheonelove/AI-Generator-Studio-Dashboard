@@ -141,6 +141,22 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Edit Models ===
+    "Qwen Image 2.1 Body Swap": {
+        "file": "workflow/Qwen-image2.1-bodyswap.json","prompt_id": "496","prompt_key": "prompt",
+        "seed_id": "490","seed_key": "seed","image1_id": "470",  
+        "image2_id": "475", "require_both_images": True,"output_node_id": "461","fixed_prompt": True, 
+    },
+    "Qwen Image 2.1 FaceSwap": {
+        "file": "workflow/Qwen-image2.1-headswap.json","prompt_id": "496","prompt_key": "prompt",
+        "seed_id": "490","seed_key": "seed","image1_id": "470",
+        "image2_id": "475","require_both_images": True,
+        "output_node_id": "461","fixed_prompt": True,
+    },
+    "Qwen Image 2.1 Union Control": {
+        "file": "workflow/qwen21_union_canny.json","prompt_id": "6","prompt_key": "prompt",
+        "seed_id": "8","seed_key": "seed","image1_id": "5","lora_id": "92",
+        "require_lora": True,"output_node_id": "10",
+    },
     "Qwen Image 2.1 Edit": {
         "file": "workflow/image_qwen_image_2_1_image_edit.json","prompt_id": "459:474","prompt_key": "prompt",
         "seed_id": "459:458","seed_key": "seed","image1_id": "470","image2_id": "475",
@@ -177,6 +193,18 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Video Models ===
+    "Fast Video H3 I2V": {
+        "file": "workflow/video_fastvideo_fasth3_i2v.json","prompt_id": "105:104","prompt_key": "prompt",
+        "seed_id": "105:15","seed_key": "noise_seed","image1_id": "136","duration_id": "105:111",
+        "duration_key": "value","output_node_id": "92","has_audio": True, "fixed_fps": 24,     
+    },
+    "Fast Video H3 T2V": {
+        "file": "workflow/video_fastvideo_fasth3_t2v.json","prompt_id": "105:104","prompt_key": "prompt",
+        "seed_id": "105:15","seed_key": "noise_seed","width_id": "105:104","width_key": "width",
+        "height_id": "105:104","height_key": "height","duration_id": "105:111","duration_key": "value",
+        "aspect_ratio_id": "143","aspect_ratio_key": "aspect_ratio","megapixels_id": "143",
+        "megapixels_key": "megapixels","output_node_id": "92","has_audio": True,"fixed_fps": 24,
+    },
     "LTX Video 2.3": {
         "file": "workflow/LTX-2.3_I2V_gguf.json",
         "prompt_id": "121", "seed_id": "115", "seed_key": "noise_seed", "image1_id": "167",
@@ -486,6 +514,11 @@ async def generate_stream_endpoint(req: GenerationRequest):
             async def error_stream(): 
                 yield f"data: {json.dumps({'type': 'error', 'message': f'{req.model} requires both images'}, ensure_ascii=False)}\n\n"
             return StreamingResponse(error_stream(), media_type="text/event-stream")
+            # ✅ เพิ่ม: บังคับ LoRA สำหรับโมเดลที่ต้องการ
+        if config.get("require_lora", False) and not req.lora_filename:
+            async def error_stream(): 
+                yield f"data: {json.dumps({'type': 'error', 'message': f'{req.model} requires a LoRA'}, ensure_ascii=False)}\n\n"
+            return StreamingResponse(error_stream(), media_type="text/event-stream")
 
     is_processing = True
     print(f"[Queue-SSE] 🔒 Locked - {req.model} ({req.mode})")
@@ -494,7 +527,11 @@ async def generate_stream_endpoint(req: GenerationRequest):
         global is_processing
         try:
             if is_edit_mode:
-                stream_fn = generate_edit_stream(req.prompt, req.image1_filename, req.image2_filename, config)
+                stream_fn = generate_edit_stream(
+                    req.prompt, req.image1_filename, req.image2_filename, config,
+                    lora_filename=req.lora_filename,
+                    lora_strength=req.lora_strength 
+                )
             else:
                 stream_fn = generate_image_stream(req.prompt, req.seed, req.width, req.height, req.lora_filename, req.lora_strength, config)
 

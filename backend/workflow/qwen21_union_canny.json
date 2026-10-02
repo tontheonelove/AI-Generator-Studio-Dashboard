@@ -1,0 +1,193 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "qwen_image_2.1_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Qwen Image 2.1 DiT"
+    }
+  },
+  "2": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Qwen3-VL 8B"
+    }
+  },
+  "3": {
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Qwen Image 2.1 VAE"
+    }
+  },
+  "4": {
+    "inputs": {
+      "union_model": "Qwen-Image-2.1-Fun-Controlnet-Union.safetensors"
+    },
+    "class_type": "QwenImage21UnionLoader",
+    "_meta": {
+      "title": "Qwen Image 2.1 UNION loader"
+    }
+  },
+  "5": {
+    "inputs": {
+      "image": "HTbpcCbboAAOUUZ.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Canny control map"
+    }
+  },
+  "6": {
+    "inputs": {
+      "prompt": "Ultra-realistic photo of A front-facing portrait selfie, Korean model, 20s, with shoulder-length straight black hair with a center part, sitting on a plain off-white sofa. She is wearing a light blue and white horizontal-striped halter crop top with a V-neckline and a small blue bow accent at the center, paired with fitted white cotton shorts. Natural soft indoor lighting against a plain, minimalist white wall background.\nCasual selfie perspective, realistic photo quality, soft depth of field, bright and clean aesthetic.",
+      "negative_prompt": "",
+      "resolution": 1024,
+      "clip": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImage21",
+    "_meta": {
+      "title": "Describe the whole target image"
+    }
+  },
+  "7": {
+    "inputs": {
+      "control_mode": "Canny",
+      "strength": 1,
+      "start_percent": 0,
+      "end_percent": 1,
+      "model": [
+        "92",
+        0
+      ],
+      "union_patch": [
+        "4",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ],
+      "control_image": [
+        "87",
+        0
+      ]
+    },
+    "class_type": "QwenImage21UnionApply",
+    "_meta": {
+      "title": "Canny UNION control"
+    }
+  },
+  "8": {
+    "inputs": {
+      "seed": 43,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "7",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "6",
+        1
+      ],
+      "latent_image": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "Qwen Image 2.1 sample"
+    }
+  },
+  "9": {
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "Decode RGBA"
+    }
+  },
+  "10": {
+    "inputs": {
+      "filename_prefix": "Qwen21_Union_Canny",
+      "images": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save PNG"
+    }
+  },
+  "13": {
+    "inputs": {
+      "resolution": 2048,
+      "image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "QwenImage21UnionLatentFromImage",
+    "_meta": {
+      "title": "Keep control image aspect ratio"
+    }
+  },
+  "87": {
+    "inputs": {
+      "low_threshold": 0.2,
+      "high_threshold": 0.5,
+      "image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "Canny",
+    "_meta": {
+      "title": "Detect Edges (Canny)"
+    }
+  },
+  "92": {
+    "inputs": {
+      "lora_name": "p_qwen_image_2.1_8step_v0.1-comfyui-T8.safetensors",
+      "strength_model": 0.8,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  }
+}

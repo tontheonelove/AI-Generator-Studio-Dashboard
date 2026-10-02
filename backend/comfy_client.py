@@ -239,8 +239,8 @@ def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_
         yield {"type": "final_result", "data": final_result}
 
 
-def generate_edit_stream(prompt_text, image1_filename, image2_filename, config):
-    """Generator สำหรับ Edit Mode แบบ Streaming"""
+def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, lora_filename="", lora_strength=0.0):
+    """Generator สำหรับ Edit Mode แบบ Streaming (รองรับ LoRA)"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
     workflow_path = os.path.join(base_dir, config["file"])
@@ -248,19 +248,35 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config):
     with open(workflow_path, "r", encoding="utf-8") as f:
         workflow = json.load(f)
 
-    # Inject Prompt
-    if config.get("prompt_id") and config["prompt_id"] in workflow:
-        node_inputs = workflow[config["prompt_id"]]["inputs"]
-        if "prompt" in node_inputs:
-            node_inputs["prompt"] = prompt_text
-        elif "text" in node_inputs:
-            node_inputs["text"] = prompt_text
+    # Inject Prompt (skip ถ้า fixed_prompt = True)
+    if not config.get("fixed_prompt", False):
+        if config.get("prompt_id") and config["prompt_id"] in workflow:
+            node_inputs = workflow[config["prompt_id"]]["inputs"]
+            if "prompt" in node_inputs:
+                node_inputs["prompt"] = prompt_text
+            elif "text" in node_inputs:
+                node_inputs["text"] = prompt_text
+    else:
+        print(f"[Edit] 🔒 Using fixed prompt for {config.get('file')}")
 
     # Inject Seed
     actual_seed = random.randint(1, 10**14)
     seed_key = config.get("seed_key", "seed")
     if config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
+
+    # ✅ Inject LoRA (รองรับ require_lora)
+    lora_node_id = config.get("lora_id")
+    if lora_node_id and lora_node_id in workflow:
+        if lora_filename:
+            workflow[lora_node_id]["inputs"]["lora_name"] = lora_filename
+            workflow[lora_node_id]["inputs"]["strength_model"] = lora_strength
+            print(f"[Edit] 🎨 LoRA injected: {lora_filename} (strength: {lora_strength})")
+        elif config.get("require_lora"):
+            yield {"type": "error", "message": "This model requires a LoRA"}
+            return
+        else:
+            workflow[lora_node_id]["inputs"]["strength_model"] = 0.0
 
     # Inject Image 1
     if config.get("image1_id") and config["image1_id"] in workflow:
@@ -299,7 +315,15 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config):
     final_result = None
     for event in _stream_comfy_execution(workflow, client_id):
         if event["type"] == "complete":
-            final_result = {"images": event["images"], "seed": actual_seed}
+            images = event.get("images", [])
+            # 🎯 Filter เฉพาะ Node ที่ต้องการ (ถ้าระบุ output_node_id)
+            if "output_node_id" in config and images:
+                target_node = str(config["output_node_id"])
+                filtered = [img for img in images if str(img.get("node_id")) == target_node]
+                if filtered:
+                    print(f"[Edit] 🎯 Filtered to Node {target_node}: {len(filtered)} image(s)")
+                    images = filtered
+            final_result = {"images": images, "seed": actual_seed}
         yield event
 
     if final_result:
@@ -340,6 +364,14 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
         workflow[config["image1_id"]]["inputs"]["image"] = image1_filename
         workflow[config["image1_id"]]["inputs"]["subfolder"] = ""
         workflow[config["image1_id"]]["inputs"]["type"] = "input"
+    
+    # ✅ Inject FPS (support fixed_fps)
+    if config.get("fps_id") and config["fps_id"] in workflow:
+        fps_key = config.get("fps_key", "value")
+        workflow[config["fps_id"]]["inputs"][fps_key] = fps
+    elif config.get("fixed_fps"):
+        # FPS fixed ใน workflow - ไม่ต้อง inject
+        print(f"[Video] 🎞️ FPS fixed at {config['fixed_fps']}")
 
     # ✅ Inject Audio (สำหรับ Lipsync)
     if config.get("is_lipsync") and config.get("audio_id") and config["audio_id"] in workflow:
