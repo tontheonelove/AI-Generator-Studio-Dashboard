@@ -5,7 +5,7 @@
 ---
 
 ## 🚀 Version 4.4 (16-10-26) BIG UPDATE UPDATE ***  
-  - 🚀 Flux3 Klein Image Base & Distilled
+  - 🚀 Flux3 Klein Image+Edit Base & Distilled
   - 🔥 Minimax H3 4 Step I2V เร็วที่สุด
   - 🎥 Minimax H3 4 Step Simgle & Multiple Lipsync เร็วที่สุด
   - 🚀 Qwen Image 2.1 Turbo Fast 8 Step
