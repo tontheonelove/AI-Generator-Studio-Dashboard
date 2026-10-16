@@ -2,6 +2,23 @@
 
 ----------------------------------------------------------------
 
+FLUX3 Klein Edit Distilled
+
+[ flux3_image_klein_distilld ]  =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/diffusion_models/flux3_image_klein_sd_int8_convrot.safetensors
+
+[ qwen3vl_4b_int8 ]   =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors
+
+[ qwen3.5_9b_flux3_prompt_upsampler ] =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_int8_convrot.safetensors
+
+[ flux2-vae ] => วางไฟล์ที่ /model/vae
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/vae/flux2-vae.safetensors
+
+
+----------------------------------------------------------------
+
 ***Qwen Image 2.1 Union Control ****
 
 [qwen_image_2.1_bf16.safetensors] =>วางไฟล์ที่ /model/diffusion_models

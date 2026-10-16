@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { UploadBox } from '@/components/studio/upload-box';
-import { readSSE } from '@/lib/stream';
+import { readSSE, cancelBackendJob, SSECancelledError } from '@/lib/stream';
 import { loadLoras } from '@/lib/api';
 import { EDIT_MODELS } from '@/lib/models';
 import type { TabProps, Lora } from '@/lib/types';
@@ -35,14 +35,23 @@ export function EditControls({ onLoading, onResult }: TabProps) {
   const [image2Filename, setImage2Filename] = useState('');
   const [loras, setLoras] = useState<Lora[]>([]);
   const [loraIndex, setLoraIndex] = useState(0);
-  
+
   const [aspectRatio, setAspectRatio] = useState('1:1 (Square)');
   const [megapixels, setMegapixels] = useState('2');
+
+  // ✅ Cancel feature
+  const abortRef = useRef<AbortController | null>(null);
+  const cancelledByUserRef = useRef(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const currentModel = useMemo(
     () => EDIT_MODELS.find((m) => m.value === model),
     [model]
   );
+
+  const isFaceSwap = model === 'Qwen Image 2.1 FaceSwap';
+  const isBodySwap = model === 'Qwen Image 2.1 Body Swap';
+  const isSwapModel = isFaceSwap || isBodySwap;
 
   useEffect(() => {
     if (currentModel?.needsLora) {
@@ -64,40 +73,64 @@ export function EditControls({ onLoading, onResult }: TabProps) {
     setMegapixels('2');
   }
 
+  // ✅ ฟังก์ชันยกเลิกรวม
+  async function handleCancel() {
+    if (!abortRef.current) return;
+
+    cancelledByUserRef.current = true;
+
+    // 1) บอก backend ให้ interrupt ComfyUI
+    await cancelBackendJob();
+
+    // 2) abort stream ฝั่ง frontend
+    abortRef.current.abort();
+  }
+
   async function generate() {
     if (!currentModel) return;
-    
+    if (isGenerating) return; // กันกดซ้ำ
+
     if (!image1Filename) {
       alert('⚠️ Please upload Image 1!');
       return;
     }
+
     if (currentModel.image2Required && !image2Filename) {
       alert(`⚠️ ${currentModel.value} requires Image 2!`);
       return;
     }
-    
+
     const skipPromptCheck = currentModel.fixedPrompt || currentModel.value === 'Flux Face Swap';
     if (!skipPromptCheck && !prompt.trim()) {
       alert('⚠️ Please enter an instruction!');
       return;
     }
-    
+
     if (currentModel.needsLora && loraIndex < 0) {
       alert('⚠️ This model requires a LoRA! Please check lora_config.json');
       return;
     }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+    cancelledByUserRef.current = false;
+    setIsGenerating(true);
+
+    let wasCancelled = false;
+
     onResult(null);
-    onLoading({ 
-      title: model === 'Qwen Image 2.1 FaceSwap' ? 'Face Swapping...' : 
-             model === 'Qwen Image 2.1 Body Swap' ? 'Body Swapping...' :
-             'Editing Image...', 
-      detail: 'Please wait...' 
+    onLoading({
+      title: isFaceSwap
+        ? 'Face Swapping...'
+        : isBodySwap
+          ? 'Body Swapping...'
+          : 'Editing Image...',
+      detail: 'Please wait...',
     });
 
     try {
       const selectedLora = currentModel?.needsLora && loraIndex >= 0 ? loras[loraIndex] : undefined;
-      
+
       const payload = {
         prompt: currentModel.fixedPrompt ? '' : (prompt || 'default'),
         model,
@@ -111,12 +144,19 @@ export function EditControls({ onLoading, onResult }: TabProps) {
         image2_filename: image2Filename,
       };
 
-      for await (const ev of readSSE('/api/generate-stream', payload)) {
+      for await (const ev of readSSE('/api/generate-stream', payload, controller.signal)) {
         if (ev.type === 'progress') {
           const pct = Math.round((ev.value / ev.max) * 100);
-          onLoading({ title: `${pct}%`, detail: 'Processing...', progress: pct });
+          onLoading({
+            title: `${pct}%`,
+            detail: `Step ${ev.value}/${ev.max}`,
+            progress: pct,
+          });
         } else if (ev.type === 'executing' && ev.node) {
-          onLoading({ title: 'Processing...', detail: `Node ${ev.node}...` });
+          onLoading({
+            title: 'Processing...',
+            detail: `Node ${ev.node}...`,
+          });
         } else if (ev.type === 'saved') {
           onResult({
             kind: 'image',
@@ -129,9 +169,35 @@ export function EditControls({ onLoading, onResult }: TabProps) {
         }
       }
     } catch (e: any) {
-      alert('Error: ' + e.message);
+      const message = String(e?.message || '');
+
+      const isUserCancelled =
+        cancelledByUserRef.current ||
+        e instanceof SSECancelledError ||
+        /No images generated/i.test(message);
+
+      wasCancelled = isUserCancelled;
+
+      if (isUserCancelled) {
+        console.log('[Cancel] Edit generation cancelled by user');
+        onLoading({
+          title: '⏹ Cancelled',
+          detail: 'Generation was cancelled',
+        });
+        setTimeout(() => onLoading(null), 1500);
+      } else {
+        alert('Error: ' + message);
+        onLoading(null);
+      }
     } finally {
-      onLoading(null);
+      abortRef.current = null;
+      setIsGenerating(false);
+      cancelledByUserRef.current = false;
+
+      // ถ้าไม่ใช่การ cancel ให้เคลียร์ loading
+      if (!wasCancelled) {
+        onLoading(null);
+      }
     }
   }
 
@@ -157,9 +223,11 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       {/* Image 1 */}
       <UploadBox
         label={
-          model === 'Qwen Image 2.1 FaceSwap' ? '📷 Image 1 (Body Reference)' :
-          model === 'Qwen Image 2.1 Body Swap' ? '📷 Image 1 (Scene Reference)' :
-          '📷 Image 1'
+          isFaceSwap
+            ? '📷 Image 1 (Body Reference)'
+            : isBodySwap
+              ? '📷 Image 1 (Scene Reference)'
+              : '📷 Image 1'
         }
         kind="image"
         onUploaded={setImage1Filename}
@@ -170,9 +238,11 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       {currentModel?.needsImage2 && (
         <UploadBox
           label={
-            model === 'Qwen Image 2.1 FaceSwap' ? '📷 Image 2 (Head Reference)' :
-            model === 'Qwen Image 2.1 Body Swap' ? '📷 Image 2 (Body Reference)' :
-            '📷 Image 2'
+            isFaceSwap
+              ? '📷 Image 2 (Head Reference)'
+              : isBodySwap
+                ? '📷 Image 2 (Body Reference)'
+                : '📷 Image 2'
           }
           kind="image"
           onUploaded={setImage2Filename}
@@ -181,7 +251,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       )}
 
       {/* FaceSwap / BodySwap Options */}
-      {(model === 'Qwen Image 2.1 FaceSwap' || model === 'Qwen Image 2.1 Body Swap') && (
+      {isSwapModel && (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label>📐 Aspect Ratio</Label>
@@ -221,8 +291,8 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       {currentModel?.needsLora && (
         <div className="space-y-2">
           <Label>🎨 LoRA (Required)</Label>
-          <Select 
-            value={loraIndex >= 0 ? String(loraIndex) : "-1"}
+          <Select
+            value={loraIndex >= 0 ? String(loraIndex) : '-1'}
             onValueChange={(v) => v && setLoraIndex(Number(v))}
           >
             <SelectTrigger className="w-full">
@@ -277,7 +347,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
         </div>
       )}
 
-      {/* ✅ Tips - แก้ไขแล้ว เรียงให้ถูกต้อง */}
+      {/* Tips */}
       <div className="rounded-lg border border-slate-700/50 bg-slate-800/50 p-3 text-xs text-slate-400">
         {model === 'KREA-2-CONTROLNET' ? (
           <p>
@@ -300,11 +370,11 @@ export function EditControls({ onLoading, onResult }: TabProps) {
           <p>
             💡 <strong>Tip:</strong> ใช้ Canny ControlNet รักษาโครงร่างรูปต้นแบบ + LoRA 8-step turbo สำหรับความเร็วสูง
           </p>
-        ) : model === 'Qwen Image 2.1 FaceSwap' ? (
+        ) : isFaceSwap ? (
           <p>
             💡 <strong>Tip:</strong> Image 1 = ร่างกาย/ฉากต้นแบบ, Image 2 = ใบหน้าที่จะสลับมา. Prompt ถูก fix ไว้แล้วเพื่อผลลัพธ์ที่ดีที่สุด
           </p>
-        ) : model === 'Qwen Image 2.1 Body Swap' ? (
+        ) : isBodySwap ? (
           <p>
             💡 <strong>Tip:</strong> Image 1 = ฉาก/pose ต้นแบบ, Image 2 = ร่างกายที่จะสลับมา (แนะนำรูป pose neutral). Prompt ถูก fix ไว้แล้วเพื่อผลลัพธ์ที่ดีที่สุด
           </p>
@@ -318,14 +388,30 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       {/* Generate Button */}
       <Button
         onClick={generate}
-        className="w-full bg-gradient-to-r from-pink-500 to-orange-600 hover:from-pink-400 hover:to-orange-500"
+        disabled={isGenerating}
+        className={`w-full bg-gradient-to-r from-pink-500 to-orange-600 hover:from-pink-400 hover:to-orange-500 ${
+          isGenerating ? 'opacity-60 cursor-not-allowed' : ''
+        }`}
       >
-        ✨ {
-          model === 'Qwen Image 2.1 FaceSwap' ? 'Face Swap' :
-          model === 'Qwen Image 2.1 Body Swap' ? 'Body Swap' :
-          'Edit Image'
-        }
+        {isGenerating
+          ? '⏳ Processing...'
+          : isFaceSwap
+            ? '✨ Face Swap'
+            : isBodySwap
+              ? '✨ Body Swap'
+              : '✨ Edit Image'}
       </Button>
+
+      {/* ✅ Cancel Button - แสดงเฉพาะตอนกำลังรัน */}
+      {isGenerating && (
+        <Button
+          onClick={handleCancel}
+          variant="outline"
+          className="w-full border-red-500/50 text-red-400 hover:bg-red-900/20 hover:text-red-300"
+        >
+          ⏹ Cancel Edit
+        </Button>
+      )}
     </div>
   );
 }

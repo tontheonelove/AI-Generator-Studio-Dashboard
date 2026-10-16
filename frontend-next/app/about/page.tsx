@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image'; // ✅ เพิ่มบรรทัดนี้
 import { Sparkles, Heart, Code2, ExternalLink, Globe, Tv, GitBranch } from 'lucide-react';
 import { PageTransition } from '@/components/studio/page-transition';
 
@@ -66,11 +67,18 @@ export default function AboutPage() {
           className="rounded-2xl border border-slate-200 bg-white/80 p-8 shadow-xl backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/40"
         >
           <div className="flex flex-col items-center text-center space-y-4">
-            {/* Avatar Placeholder - เปลี่ยนเป็นรูปจริงได้ */}
+            {/* ✅ Avatar - เปลี่ยนจากตัว T เป็น logo.png */}
             <div className="relative">
-              <div className="h-28 w-28 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 p-1">
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-4xl font-bold text-emerald-600 dark:bg-slate-900 dark:text-emerald-400">
-                  T
+              <div className="h-28 w-28 overflow-hidden rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 p-1">
+                <div className="h-full w-full overflow-hidden rounded-full bg-white dark:bg-slate-900">
+                  <Image
+                    src="/logo.png"
+                    alt="TonLikeIT Logo"
+                    width={112}
+                    height={112}
+                    className="h-full w-full object-cover"
+                    priority
+                  />
                 </div>
               </div>
               <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white shadow-lg ring-4 ring-white dark:ring-slate-900">

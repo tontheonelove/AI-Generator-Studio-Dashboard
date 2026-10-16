@@ -1,0 +1,324 @@
+{
+  "1": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Video VAE"
+    }
+  },
+  "2": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Audio VAE"
+    }
+  },
+  "3": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Text Encoder"
+    }
+  },
+  "4": {
+    "inputs": {
+      "unet_name": "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "MATLOW Fused Turbo INT8 ConvRot"
+    }
+  },
+  "5": {
+    "inputs": {
+      "chunks": 0,
+      "seq_threshold": 4096,
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "H3X2ChunkFeedForward",
+    "_meta": {
+      "title": "MiniMax H3 FFN 2048 tokens / threshold4096"
+    }
+  },
+  "6": {
+    "inputs": {
+      "selection": "sla",
+      "selection.keep_percent": 5,
+      "start_percent": 0,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": true,
+      "model": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "BlockSparseAttention",
+    "_meta": {
+      "title": "Model Sparse Attention (SLA 5%)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "shift_video": 12,
+      "shift_audio": 3,
+      "model": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "Sigma Shift 12/3"
+    }
+  },
+  "8": {
+    "inputs": {
+      "image": "62b76b7666d89fc6c287e8ec51ee2975.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "First Frame"
+    }
+  },
+  "10": {
+    "inputs": {
+      "noise_seed": 43
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "Seed 43"
+    }
+  },
+  "11": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "res_multistep"
+    }
+  },
+  "12": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 4,
+      "denoise": 1,
+      "model": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "simple / 4 steps"
+    }
+  },
+  "13": {
+    "inputs": {
+      "model": [
+        "7",
+        0
+      ],
+      "conditioning": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "BasicGuider"
+    }
+  },
+  "14": {
+    "inputs": {
+      "noise": [
+        "10",
+        0
+      ],
+      "guider": [
+        "13",
+        0
+      ],
+      "sampler": [
+        "11",
+        0
+      ],
+      "sigmas": [
+        "12",
+        0
+      ],
+      "latent_image": [
+        "23",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Sampler"
+    }
+  },
+  "15": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "Audio Decode"
+    }
+  },
+  "16": {
+    "inputs": {
+      "filename_prefix": "H3_X2_Stream/case01",
+      "fps": 24,
+      "nvenc_gpu": 0,
+      "cq": 18,
+      "fp16_accumulation": true,
+      "video-preview": "",
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "17",
+        0
+      ],
+      "audio": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "H3X2StreamSave",
+    "_meta": {
+      "title": "X2 decode and asynchronous NVENC save"
+    }
+  },
+  "17": {
+    "inputs": {
+      "source_vae": "MiniMax-H3-X2-Detail-v1.safetensors",
+      "output_name": "MiniMax-H3-X2-Detail-v1-decoder-int8-convrot.safetensors"
+    },
+    "class_type": "H3X2PrepareINT8VAE",
+    "_meta": {
+      "title": "Prepare once / reuse INT8 X2 VAE"
+    }
+  },
+  "18": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": 960,
+      "height": 554,
+      "crop": "disabled",
+      "image": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "ImageScale",
+    "_meta": {
+      "title": "Upscale Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "width": 960,
+      "height": 554,
+      "x": 0,
+      "y": 0,
+      "image": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "ImageCrop",
+    "_meta": {
+      "title": "Crop Image (DEPRECATED)"
+    }
+  },
+  "23": {
+    "inputs": {
+      "prompt": "subject_definitions:\n<Subject 1> is the woman on the LEFT in <Picture 1>: She has long, straight, dark brown hair parted down the middle. She is wearing a white, sleeveless top with a gathered or tied detail at the chest. A dark brown strap, likely from a shoulder bag, is visible over her left shoulder. She is looking directly at the camera with a neutral, slightly pouty expression.\n<Subject 2> is the woman on the RIGHT in <Picture 1>: She has long, wavy dark brown hair styled with wispy bangs. She is wearing a light-colored, patterned top (appearing to be a floral or abstract print with blue and pink tones) featuring ruffled, tie-up spaghetti straps. She is wearing a thin necklace with a small pendant. She holds up her right hand in a \"peace\" (V) sign near her cheek and is also pouting slightly at the camera.\n<Picture 1> is the opening frame of the target video; keep both faces, outfits, lighting and background exactly as in <Picture 1>.\n<Audio 1> is the exact Thai voice track of <Subject 1> (S1): copy its signal 1:1, word for word.\n<Audio 2> is the exact Thai voice track of <Subject 2> (S2): copy its signal 1:1, word for word.\n\nsummary:\n[image reference + 2 audio references] One continuous 6-second static shot, no cuts. Timeline: 00:00.000-00:03.000 <Subject 1> (S1) speaks in Thai exactly as <Audio 1>; 00:03.000-00:06.000 <Subject 2> (S2) speaks in Thai exactly as <Audio 2>. Only one mouth moves at a time; the listening woman keeps her lips closed and smiles warmly.\n\ndetailed_description:\n[Shot 1] The video opens exactly on <Picture 1>: two young women posing together outdoors on a narrow city street during the daytime. Camera fully static, framing and background unchanged from 00:00.000 to 00:06.000.\n00:00.000-00:03.000: <Subject 1> (S1) faces the camera with a warm genuine smile and speaks in Thai, lips perfectly synced word-for-word to <Audio 1>: <d>[Thai] เหนื่อยไหม เวลาวิ่งตามคนที่เขาไม่มีใจ </d> During this segment <Subject 2> stays silent: lips gently closed, listening, blinking naturally, warm genuine smile, only subtle idle motion.\n00:03.000: <Subject 1>'s line ends; her lips settle closed, she keeps smiling warmly and listens silently with natural blinks.\n00:03.000-00:06.000: <Subject 2> (S2) speaks in Thai, lips perfectly synced word-for-word to <Audio 2>: <d>[Thai] ต่อให้คุณวิ่งตามเท่าไร ก็ไม่ได้ใจเขาอยู่ดีค่ะ</d> During this segment <Subject 1> stays silent: lips closed, smiling, blinking naturally.\nBoth women keep warm genuine smiles throughout; each mouth moves only inside its own time segment; no other speech, no music, background unchanged.\n\noverall_soundscape:\nThe final audio track is exactly <Audio 1> occupying 00:00.000-00:03.000, followed immediately by <Audio 2> occupying 00:03.000-00:06.000, both copied 1:1 with no overlap. Under it, only the soft outdoor garden ambience of the scene. No music, no extra voices.",
+      "width": 544,
+      "height": 960,
+      "length": 141,
+      "ref_image_size": "match",
+      "clip": [
+        "3",
+        0
+      ],
+      "vae": [
+        "1",
+        0
+      ],
+      "audio_vae": [
+        "24",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "19",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_0": [
+        "25",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_1": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Reference to Video"
+    }
+  },
+  "24": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "25": {
+    "inputs": {
+      "audio": "audio.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio"
+    }
+  },
+  "26": {
+    "inputs": {
+      "audio": "audio (1).wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio"
+    }
+  }
+}

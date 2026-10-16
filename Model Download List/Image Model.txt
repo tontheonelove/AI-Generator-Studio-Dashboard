@@ -1,5 +1,42 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+--------------------------------------------------------------------------------------
+
+FLUX3 Klein Base & Distill diffusion_models เลือกโหลดที่จะใช้ได้ ทีเหลือใช้ร่วมกัน
+
+[ flux3_image_klein_base ]  =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/diffusion_models/flux3_image_klein_base_int8_convrot.safetensors
+
+[ flux3_image_klein_distilld ]  =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/diffusion_models/flux3_image_klein_sd_int8_convrot.safetensors
+
+[ qwen3vl_4b_int8 ]   =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors
+
+[ qwen3.5_9b_flux3_prompt_upsampler ] =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_int8_convrot.safetensors
+
+[ flux2-vae ] => วางไฟล์ที่ /model/vae
+https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/vae/flux2-vae.safetensors
+
+
+--------------------------------------------------------------------------------------
+
+*** [ Qwen Image 2.1 Turbo 8step ]
+
+[qwen_image_2.1_bf16.safetensors] =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/diffusion_models/qwen_image_2.1_turbo_int8_convrot.safetensors
+
+[ qwen3vl_8b_int8_convrot.safetensors ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/text_encoders/qwen3vl_8b_int8_convrot.safetensors
+
+[ qwen_image_2.1_vae_bf16.safetensors  ]  => วางไฟล์ที่ /model/vae
+
+https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/vae/qwen_image_2.1_vae_bf16.safetensors
+
+
+--------------------------------------------------------------------------------------
+
 *** [ Qwen Image 2.1 ] +  EDIT  ใช้ลิงค์ด้านล่างร่วมกัน ***
 
 [qwen_image_2.1_bf16.safetensors] =>วางไฟล์ที่ /model/diffusion_models
@@ -15,6 +52,7 @@ https://huggingface.co/Comfy-Org/Qwen-Image-2.1/blob/main/vae/qwen_image_2.1_vae
 [  เฉพาะ NSFW Text Encoder  ]  =>วางไฟล์ที่ /model/textencoders
 https://huggingface.co/pottokao/Qwen-Image-2.1-Text-Encoder-Heretic-NVFP4
 
+--------------------------------------------------------------------------------------
 
 ***[ Krea2 Turbo]***
 

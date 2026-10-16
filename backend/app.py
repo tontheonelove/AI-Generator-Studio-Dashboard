@@ -9,6 +9,8 @@ import time
 import json
 import re
 import requests
+import threading
+import asyncio
 
 
 # ✅ Import ฟังก์ชันทั้งหมดจาก comfy_client
@@ -83,8 +85,64 @@ def load_lora_config():
 init_db()
 
 
+# ==========================================
+# 🛑 Cancel / Interrupt State (✅ เพิ่มใหม่)
+# ==========================================
+COMFYUI_SERVER = os.environ.get("COMFYUI_SERVER", "127.0.0.1:8188")
+
+_current_prompt_id = None
+_prompt_id_lock = threading.Lock()
+
+async def aiter_sync(sync_iterable):
+    """
+    แปลง sync generator ให้ใช้ได้กับ async for
+    เพื่อไม่ให้บล็อก FastAPI event loop
+    """
+    it = iter(sync_iterable)
+    while True:
+        item = await asyncio.to_thread(next, it, None)
+        if item is None:
+            return
+        yield item
+
+
+def set_current_prompt_id(pid):
+    """บันทึก prompt_id ของ job ที่กำลังรัน"""
+    global _current_prompt_id
+    with _prompt_id_lock:
+        _current_prompt_id = pid
+
+
+def get_current_prompt_id():
+    """อ่าน prompt_id ปัจจุบันแบบปลอดภัย"""
+    with _prompt_id_lock:
+        return _current_prompt_id
+
+
 WORKFLOW_SETTINGS = {
     # === Images Models ===
+    "Flux3 Klein Image Distilled (16Step)": {
+        "file": "workflow/image_flux3_klein_distilled_t2i.json","prompt_id": "18:17","prompt_key": "value","seed_id": "18:7","seed_key": "seed",
+        "seed_injections": [
+            {"id": "18:7", "key": "seed"},
+            {"id": "18:11", "key": "sampling_mode.seed"},
+        ],
+        "latent_id": "18:6","upsampler_switch_id": "18:16","upsampler_switch_key": "switch","output_node_id": "9","no_lora": True,
+    },
+    "Flux3 Image Base (50Step)": {
+        "file": "workflow/image_flux3_klein_t2i_base.json","prompt_id": "18:17","prompt_key": "value",
+        "seed_id": "18:7","seed_key": "seed",
+        "seed_injections": [
+            {"id": "18:7", "key": "seed"},
+            {"id": "18:11", "key": "sampling_mode.seed"},
+        ],
+        "latent_id": "18:6","upsampler_switch_id": "18:16","upsampler_switch_key": "switch","output_node_id": "9","no_lora": True,
+    },
+    "Qwen Image 2.1 Turbo 8 Step": {
+        "file": "workflow/image_qwen_image_2_1_t2i_turbo_8step.json",
+        "prompt_id": "459:485","prompt_key": "text","seed_id": "459:458","seed_key": "seed",
+        "latent_id": "459:456","output_node_id": "461","no_lora": True,
+    },
     "Z-image x PID4K": {
         "file": "workflow/z_image_turbo_to_pid_4K.json",
         "prompt_id": "92", "prompt_key": "value", "seed_id": "70", "latent_id": "68",
@@ -141,6 +199,16 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Edit Models ===
+    "Flux3 Klein Distilled Edit Fast": {
+        "file": "workflow/image_flux3_klein_distilled_image_edit.json","prompt_id": "4","prompt_key": "text",
+        "seed_id": "7","seed_key": "seed","image1_id": "11","image2_id": "45",
+        "disable_nodes_if_no_img2": ["45"],
+        "image2_link_targets": [
+            {"node_id": "17", "key": "images.image1"}
+        ],
+        "output_node_id": "9",
+        "no_lora": True,
+    },
     "Qwen Image 2.1 Body Swap": {
         "file": "workflow/Qwen-image2.1-bodyswap.json","prompt_id": "496","prompt_key": "prompt",
         "seed_id": "490","seed_key": "seed","image1_id": "470",  
@@ -193,6 +261,25 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Video Models ===
+    "Minimax H3 I2V Fast 4 Step": {
+        "file": "workflow/Minimax_h3_image_to_video_4step_fast.json","prompt_id": "9","prompt_key": "prompt","seed_id": "10",
+        "seed_key": "noise_seed","image1_id": "8","length_id": "9","length_key": "length","length_multiplier": 24,
+        "width_ids": ["18", "19", "9"],"height_ids": ["18", "19", "9"],"width_key": "width",
+        "height_key": "height","output_node_id": "16","has_audio": True,"fixed_fps": 24,
+    },
+    "Minimax H3 Single Lipsync": {
+        "file": "workflow/Minimax_h3_fl2va_4step_fast_lipsync.json","prompt_id": "23","prompt_key": "prompt",
+        "seed_id": "10","seed_key": "noise_seed","image1_id": "8","audio_id": "25","is_lipsync": True,
+        "length_id": "23","length_key": "length","length_multiplier": 24,"width_ids": ["18", "19", "23"], "height_ids": ["18", "19", "23"], 
+        "width_key": "width","height_key": "height","output_node_id": "16","has_audio": True,"fixed_fps": 24,
+    },
+    "Minimax H3 Multiple Lipsync": {
+        "file": "workflow/Minimax_h3_fl2va_4step_fast_multi_lipsync.json","prompt_id": "23","prompt_key": "prompt",
+        "seed_id": "10","seed_key": "noise_seed","image1_id": "8","audio_id": "25","audio2_id": "26",
+        "is_lipsync": True,"is_multi_lipsync": True,"length_id": "23","length_key": "length","length_multiplier": 24,
+        "width_ids": ["18", "19", "23"],"height_ids": ["18", "19", "23"],"width_key": "width","height_key": "height",
+        "output_node_id": "16","has_audio": True,"fixed_fps": 24,
+    },
     "Fast Video H3 I2V": {
         "file": "workflow/video_fastvideo_fasth3_i2v.json","prompt_id": "105:104","prompt_key": "prompt",
         "seed_id": "105:15","seed_key": "noise_seed","image1_id": "136","duration_id": "105:111",
@@ -350,6 +437,7 @@ class GenerationRequest(BaseModel):
     lora_filename: str = ""
     lora_strength: float = 0.0
     mode: str = "generate"
+    use_upsampler: bool = False
     image1_filename: str = ""
     image2_filename: str = ""
 
@@ -358,6 +446,7 @@ class VideoGenerationRequest(BaseModel):
     model: str
     image1_filename: str = ""  
     audio_filename: str = ""
+    audio2_filename: str = "" 
     width: int = 480
     height: int = 860
     length: int = 5
@@ -533,10 +622,13 @@ async def generate_stream_endpoint(req: GenerationRequest):
                     lora_strength=req.lora_strength 
                 )
             else:
-                stream_fn = generate_image_stream(req.prompt, req.seed, req.width, req.height, req.lora_filename, req.lora_strength, config)
+                stream_fn = generate_image_stream(req.prompt, req.seed, req.width, req.height, req.lora_filename, req.lora_strength, config, use_upsampler=req.use_upsampler,)
 
             final_result = None
-            for event in stream_fn:
+            async for event in aiter_sync(stream_fn):
+                # ✅ track prompt_id สำหรับ cancel
+                if event.get("type") == "status" and event.get("prompt_id"):
+                    set_current_prompt_id(event["prompt_id"])
                 if event["type"] == "final_result": 
                     final_result = event["data"]
                 elif event["type"] == "complete": 
@@ -561,6 +653,7 @@ async def generate_stream_endpoint(req: GenerationRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
+            set_current_prompt_id(None)  # ✅ เคลียร์ state เมื่อจบ job
             print("[Queue-SSE] 🔓 Unlocked")
 
     # ✅ เพิ่ม headers สำหรับ SSE
@@ -604,9 +697,12 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
     async def event_generator():
         global is_processing
         try:
-            stream_fn = generate_video_stream(req.prompt, req.image1_filename, req.audio_filename, req.width, req.height, req.length, req.fps, req.aspect_ratio, req.megapixels, config)
+            stream_fn = generate_video_stream(req.prompt, req.image1_filename, req.audio_filename, req.width, req.height, req.length, req.fps, req.aspect_ratio, req.megapixels, config, audio2_filename=req.audio2_filename,)
             final_result = None
-            for event in stream_fn:
+            async for event in aiter_sync(stream_fn):
+                # ✅ track prompt_id สำหรับ cancel
+                if event.get("type") == "status" and event.get("prompt_id"):
+                    set_current_prompt_id(event["prompt_id"])
                 if event["type"] == "final_result": 
                     final_result = event["data"]
                 elif event["type"] == "complete": 
@@ -628,6 +724,7 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
+            set_current_prompt_id(None)  # ✅ เคลียร์ state เมื่อจบ job
             print("[Queue-Video-SSE] 🔓 Unlocked")
 
     return StreamingResponse(
@@ -666,7 +763,10 @@ async def tools_stream_endpoint(req: ToolsRequest):
         try:
             stream_fn = tools_stream(req.filename, req.scale, req.quality, config)
             final_result = None
-            for event in stream_fn:
+            async for event in aiter_sync(stream_fn):
+                # ✅ track prompt_id สำหรับ cancel
+                if event.get("type") == "status" and event.get("prompt_id"):
+                    set_current_prompt_id(event["prompt_id"])
                 if event["type"] == "final_result": 
                     final_result = event["data"]
                 elif event["type"] == "complete": 
@@ -696,6 +796,7 @@ async def tools_stream_endpoint(req: ToolsRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
+            set_current_prompt_id(None)  # ✅ เคลียร์ state เมื่อจบ job
             print("[Queue-Tools-SSE] 🔓 Unlocked")
 
     return StreamingResponse(
@@ -741,7 +842,10 @@ async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
                 audio_filename=req.audio_filename  # ✅ เพิ่ม parameter
             )
             final_result = None
-            for event in stream_fn:
+            async for event in aiter_sync(stream_fn):
+                # ✅ track prompt_id สำหรับ cancel
+                if event.get("type") == "status" and event.get("prompt_id"):
+                    set_current_prompt_id(event["prompt_id"])
                 if event["type"] == "final_result": 
                     final_result = event["data"]
                 elif event["type"] == "complete": 
@@ -762,6 +866,7 @@ async def generate_audio_stream_endpoint(req: AudioGenerationRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
+            set_current_prompt_id(None)  # ✅ เคลียร์ state เมื่อจบ job
             print("[Queue-Audio-SSE] 🔓 Unlocked")
 
     return StreamingResponse(
@@ -806,7 +911,10 @@ async def llm_stream_endpoint(req: LLMRequest):
             stream_fn = llm_stream(req.filename, req.prompt, config)
             
             final_result = None
-            for event in stream_fn:
+            async for event in aiter_sync(stream_fn):
+                # ✅ track prompt_id สำหรับ cancel
+                if event.get("type") == "status" and event.get("prompt_id"):
+                    set_current_prompt_id(event["prompt_id"])
                 if event["type"] == "final_result":
                     final_result = event["data"]
                 elif event["type"] == "complete":
@@ -830,6 +938,7 @@ async def llm_stream_endpoint(req: LLMRequest):
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
         finally:
             is_processing = False
+            set_current_prompt_id(None)  # ✅ เคลียร์ state เมื่อจบ job
             print("[Queue-LLM-SSE] 🔓 Unlocked")
     
     return StreamingResponse(
@@ -877,15 +986,45 @@ def generate_image_endpoint(req: GenerationRequest):
     finally:
         is_processing = False
 
+
+# ==========================================
+# 🛑 Cancel Endpoint (✅ อัปเกรดเป็นเวอร์ชันเต็ม)
+# ==========================================
 @app.post("/api/cancel")
 async def cancel_generation():
-    server_address = os.environ.get("COMFYUI_SERVER", "127.0.0.1:8188")
+    """
+    หยุด job ที่กำลังรันอยู่ใน ComfyUI
+    1) ส่ง /interrupt → หยุด node ที่กำลังประมวลผลทันที
+    2) ลบ job ออกจาก queue → กันรันต่อถ้ายังไม่เริ่ม
+    3) reset is_processing + เคลียร์ prompt_id → กันระบบค้าง "System busy"
+    """
+    global is_processing
+    pid = get_current_prompt_id()
+    result = {"cancelled": False, "prompt_id": pid, "message": ""}
+
+    # 1) Interrupt ComfyUI (หยุด node ที่กำลังรัน)
     try:
-        res = requests.post(f"http://{server_address}/interrupt", timeout=3)
-        res.raise_for_status()
-        return {"success": True, "message": "Generation cancelled"}
+        r = requests.post(f"http://{COMFYUI_SERVER}/interrupt", timeout=5)
+        if r.status_code in (200, 204):
+            result["cancelled"] = True
+            result["message"] = "Interrupt sent"
+        else:
+            result["message"] = f"ComfyUI /interrupt returned {r.status_code}"
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Cancel failed: {str(e)}")
+        result["message"] = f"Failed to interrupt: {e}"
+
+    # 2) ลบ job ออกจาก queue (กันรันต่อ)
+    if pid:
+        try:
+            requests.post(f"http://{COMFYUI_SERVER}/queue", json={"delete": [pid]}, timeout=5)
+        except Exception as e:
+            print(f"[Cancel] ⚠️ Failed to remove from queue: {e}")
+
+    # 3) reset state สำคัญมาก! ไม่งั้นระบบจะค้าง busy ตลอด
+    is_processing = False
+    set_current_prompt_id(None)
+    print(f"[Cancel] 🛑 Cancelled job: {pid} | is_processing reset to False")
+    return result
 
 
 @app.get("/api/version")

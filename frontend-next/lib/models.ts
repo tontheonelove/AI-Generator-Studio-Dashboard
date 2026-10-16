@@ -1,5 +1,5 @@
 export const IMAGE_MODELS = [
-  'Qwen Image 2.1','Qwen Image 2.1 (NSFW)','Krea2 Turbo', 'Ideogram 4', 'Boogu Image Turbo', 'Z-image x PID4K',
+  'Flux3 Klein Image Distilled (16Step)','Flux3 Klein Image Base (50Step)','Qwen Image 2.1 Turbo 8 Step','Qwen Image 2.1','Qwen Image 2.1 (NSFW)','Krea2 Turbo', 'Ideogram 4', 'Boogu Image Turbo', 'Z-image x PID4K',
   'Z-Image Turbo', 'Z-Image Turbo-GGUF', 'Flux 2 Klein-GGUF',
   'Qwen Image 2512', 'Wan2.2 Image', 'MeinaMix Anime',
 ];
@@ -7,6 +7,9 @@ export const IMAGE_MODELS = [
 export const SIZE_OPTIONS = [720, 864, 1024, 1080, 1280, 1440, 1536, 1920, 2160, 2560, 3840];
 
 export const VIDEO_MODELS = [
+  { value: 'Minimax H3 I2V Fast 4 Step', label: '⚡ Minimax H3 I2V Fast เร็วมาก แนะนำ *', needsImage: true },
+  { value: 'Minimax H3 Multiple Lipsync', label: '🎤🎤 Minimax H3 Multiple Lipsync เร็วมาก แนะนำ *', needsImage: true, needsAudio: true, needsAudio2: true },
+  { value: 'Minimax H3 Single Lipsync', label: '🎤 Minimax H3 Single Lipsync เร็วมาก แนะนำ *', needsImage: true, needsAudio: true },
   { value: 'Fast Video H3 I2V', label: '⚡ Fast Video H3 I2V (8-Step Turbo)', needsImage: true },
   { value: 'Fast Video H3 T2V', label: '⚡ Fast Video H3 T2V (8-Step Turbo)', needsImage: false },
   { value: 'MiniMax H3 I2V', label: '🎬 MiniMax H3 I2V (Image to Video)', needsImage: true },
@@ -63,6 +66,17 @@ export const TOOLS_MODELS = [
 ];
 
 export const EDIT_MODELS = [
+  {
+    value: 'Flux3 Klein Distilled Edit Fast',
+    label: '⚡ Flux3 Klein Distilled Edit Fast (1-2 Images)',
+    needsImage2: true,
+    image2Required: false,
+    needsLora: false,
+    promptLabel: '📝 Edit Instruction',
+    promptRows: 3,
+    promptPlaceholder:
+      'Describe the edit... Example: replace outfit, change background, adjust pose. If Image 2 is uploaded, it will be used as reference automatically.',
+  },
   {
     value: 'Qwen Image 2.1 Union Control',
     label: '🎛️ Qwen 2.1 Union Control (Canny + LoRA)',

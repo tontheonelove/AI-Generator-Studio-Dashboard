@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { readSSE } from '@/lib/stream';
+import { readSSE, cancelBackendJob, SSECancelledError } from '@/lib/stream';
 import { BACKEND_URL } from '@/lib/api';
 import type { TabProps } from '@/lib/types';
 import { Upload, X, Music } from 'lucide-react';
@@ -109,6 +109,11 @@ export function AudioControls({ onLoading, onResult }: TabProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ✅ Cancel feature
+  const abortRef = useRef<AbortController | null>(null);
+  const cancelledByUserRef = useRef(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const currentModel = AUDIO_MODELS.find((m) => m.id === selectedModel) || AUDIO_MODELS[0];
   const isYuE2 = selectedModel === 'YuE2 T2M';
   const isCover = currentModel.isCover;
@@ -164,7 +169,22 @@ export function AudioControls({ onLoading, onResult }: TabProps) {
     }
   }
 
+  // ✅ ฟังก์ชันยกเลิกรวม
+  async function handleCancel() {
+    if (!abortRef.current) return;
+
+    cancelledByUserRef.current = true;
+
+    // 1) บอก backend ให้ interrupt ComfyUI
+    await cancelBackendJob();
+
+    // 2) abort stream ฝั่ง frontend
+    abortRef.current.abort();
+  }
+
   async function generate() {
+    if (isGenerating) return;
+
     // Validation
     if (isCover && !audioFilename) {
       alert('⚠️ กรุณาอัพโหลดไฟล์เสียงต้นฉบับก่อน!');
@@ -178,6 +198,13 @@ export function AudioControls({ onLoading, onResult }: TabProps) {
       alert("⚠️ Please enter lyrics or use 'instrumental'!");
       return;
     }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    cancelledByUserRef.current = false;
+    setIsGenerating(true);
+
+    let wasCancelled = false;
 
     onResult(null);
     onLoading({ 
@@ -196,12 +223,19 @@ export function AudioControls({ onLoading, onResult }: TabProps) {
         audio_filename: audioFilename,  // ✅ ส่ง filename สำหรับ Cover
       };
 
-      for await (const ev of readSSE('/api/generate-audio-stream', payload)) {
+      for await (const ev of readSSE('/api/generate-audio-stream', payload, controller.signal)) {
         if (ev.type === 'progress') {
           const pct = Math.round((ev.value / ev.max) * 100);
-          onLoading({ title: `${pct}%`, detail: 'Composing...', progress: pct });
+          onLoading({
+            title: `${pct}%`,
+            detail: `Step ${ev.value}/${ev.max}`,
+            progress: pct,
+          });
         } else if (ev.type === 'executing' && ev.node) {
-          onLoading({ title: 'Composing...', detail: `Processing node ${ev.node}...` });
+          onLoading({
+            title: 'Composing...',
+            detail: `Processing node ${ev.node}...`,
+          });
         } else if (ev.type === 'saved') {
           onResult({
             kind: 'audio',
@@ -213,9 +247,33 @@ export function AudioControls({ onLoading, onResult }: TabProps) {
         }
       }
     } catch (e: any) {
-      alert('Error: ' + e.message);
+      const message = String(e?.message || '');
+
+      const isUserCancelled =
+        cancelledByUserRef.current ||
+        e instanceof SSECancelledError ||
+        /No (images|video|audio|output|text) generated/i.test(message);
+
+      wasCancelled = isUserCancelled;
+
+      if (isUserCancelled) {
+        console.log('[Cancel] Audio generation cancelled by user');
+        onLoading({
+          title: '⏹ Cancelled',
+          detail: 'Generation was cancelled',
+        });
+        setTimeout(() => onLoading(null), 1500);
+      } else {
+        alert('Error: ' + message);
+      }
     } finally {
-      onLoading(null);
+      abortRef.current = null;
+      setIsGenerating(false);
+      cancelledByUserRef.current = false;
+
+      if (!wasCancelled) {
+        onLoading(null);
+      }
     }
   }
 
@@ -464,16 +522,34 @@ export function AudioControls({ onLoading, onResult }: TabProps) {
       {/* Generate Button */}
       <Button
         onClick={generate}
+        disabled={isGenerating}
         className={`w-full bg-gradient-to-r ${
           isCover
             ? 'from-orange-500 to-pink-600 hover:from-orange-400 hover:to-pink-500'
             : isYuE2
               ? 'from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500'
               : 'from-purple-500 to-pink-600 hover:from-purple-400 hover:to-pink-500'
-        }`}
+        } ${isGenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
-        {isCover ? '🎤 Cover Song' : isYuE2 ? '🎼 Compose with YuE2' : '🎵 Compose Music'}
+        {isGenerating
+          ? '⏳ Composing...'
+          : isCover
+            ? '🎤 Cover Song'
+            : isYuE2
+              ? '🎼 Compose with YuE2'
+              : '🎵 Compose Music'}
       </Button>
+
+      {/* ✅ Cancel Button - แสดงเฉพาะตอนกำลังรัน */}
+      {isGenerating && (
+        <Button
+          onClick={handleCancel}
+          variant="outline"
+          className="w-full border-red-500/50 text-red-400 hover:bg-red-900/20 hover:text-red-300"
+        >
+          ⏹ Cancel Audio Generation
+        </Button>
+      )}
 
       {/* Model Comparison Info */}
       <div className="rounded-lg border border-slate-700/50 bg-slate-900/30 p-3 text-[10px] text-slate-400">

@@ -184,7 +184,7 @@ def _stream_comfy_execution(workflow, client_id, server_address="127.0.0.1:8188"
         yield {"type": "error", "message": f"Failed to fetch result: {str(e)}"}
 
 
-def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_strength, config):
+def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_strength, config, use_upsampler=False):
     """Generator สำหรับ Generate Mode แบบ Streaming"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -202,6 +202,20 @@ def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_
     actual_seed = seed if seed != -1 else random.randint(1, 10**14)
     if config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
+
+    # ✅ Inject seed เข้าหลาย nodes (เช่น KSampler + Prompt Upsampler)
+    for inj in config.get("seed_injections", []):
+        nid = inj.get("id")
+        key = inj.get("key", "seed")
+        if nid and nid in workflow:
+            workflow[nid]["inputs"][key] = actual_seed
+
+    # ✅ Inject Prompt Upsampler switch (True = ให้ AI ขยาย prompt)
+    upsampler_id = config.get("upsampler_switch_id")
+    if upsampler_id and upsampler_id in workflow:
+        upsampler_key = config.get("upsampler_switch_key", "switch")
+        workflow[upsampler_id]["inputs"][upsampler_key] = bool(use_upsampler)
+        print(f"[ComfyClient] 🪄 Prompt Upsampler: {'ON' if use_upsampler else 'OFF'}")
 
     if "latent_id" in config and config["latent_id"] in workflow:
         workflow[config["latent_id"]]["inputs"]["width"] = width
@@ -240,7 +254,7 @@ def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_
 
 
 def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, lora_filename="", lora_strength=0.0):
-    """Generator สำหรับ Edit Mode แบบ Streaming (รองรับ LoRA)"""
+    """Generator สำหรับ Edit Mode แบบ Streaming (รองรับ LoRA + Optional Image2)"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
     workflow_path = os.path.join(base_dir, config["file"])
@@ -265,7 +279,7 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, 
     if config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
-    # ✅ Inject LoRA (รองรับ require_lora)
+    # Inject LoRA
     lora_node_id = config.get("lora_id")
     if lora_node_id and lora_node_id in workflow:
         if lora_filename:
@@ -283,22 +297,61 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, 
         workflow[config["image1_id"]]["inputs"]["image"] = image1_filename
         workflow[config["image1_id"]]["inputs"]["subfolder"] = ""
         workflow[config["image1_id"]]["inputs"]["type"] = "input"
+        print(f"[Edit] 🖼️ Image1 injected: {image1_filename} -> node {config['image1_id']}")
 
     # Inject Image 2 / Disable Logic
     has_image2 = bool(image2_filename and image2_filename.strip())
-    image2_node_id = config.get("image2_id")
+    image2_node_id = str(config["image2_id"]) if config.get("image2_id") else None
 
     if config.get("single_image_only"):
         pass
-    elif has_image2 and image2_node_id and image2_node_id in workflow:
+
+    elif has_image2:
+        if not image2_node_id or image2_node_id not in workflow:
+            yield {
+                "type": "error",
+                "message": f"Image2 was uploaded but image2_id '{image2_node_id}' is not configured or not found in workflow"
+            }
+            return
+
+        # เปิด node image2 ถ้า default ถูก mute/disable ไว้
+        workflow[image2_node_id].pop("mode", None)
+        workflow[image2_node_id].setdefault("inputs", {})
+
         workflow[image2_node_id]["inputs"]["image"] = image2_filename
         workflow[image2_node_id]["inputs"]["subfolder"] = ""
         workflow[image2_node_id]["inputs"]["type"] = "input"
+        print(f"[Edit] 🖼️ Image2 injected: {image2_filename} -> node {image2_node_id}")
+
+        # เชื่อม input image2 เข้า node เป้าหมายอัตโนมัติ
+        for link in config.get("image2_link_targets", []):
+            target_node_id = str(link.get("node_id", ""))
+            target_key = str(link.get("key", ""))
+
+            if not target_node_id or not target_key:
+                continue
+
+            if target_node_id not in workflow:
+                print(f"[Edit] ⚠️ image2_link_targets node {target_node_id} not found in workflow")
+                continue
+
+            workflow[target_node_id].setdefault("inputs", {})
+            workflow[target_node_id]["inputs"][target_key] = [image2_node_id, 0]
+            print(f"[Edit] 🔗 Linked Image2 to node {target_node_id} input '{target_key}'")
+
+    elif not has_image2 and config.get("require_both_images"):
+        yield {"type": "error", "message": "This model requires both images"}
+        return
+
     elif not has_image2 and config.get("disable_nodes_if_no_img2"):
         disabled_node_ids = set(str(nid) for nid in config["disable_nodes_if_no_img2"])
+
         for node_id in disabled_node_ids:
             if node_id in workflow:
                 workflow[node_id]["mode"] = 4
+                print(f"[Edit] 🚫 Disabled node {node_id} because Image2 was not uploaded")
+
+        # ลบ link ทั้งหมดที่ชี้ไป node ที่ถูก disable
         for nid, node_data in workflow.items():
             inputs = node_data.get("inputs", {})
             keys_to_remove = [
@@ -307,16 +360,13 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, 
             ]
             for k in keys_to_remove:
                 del inputs[k]
-    elif not has_image2 and config.get("require_both_images"):
-        yield {"type": "error", "message": "This model requires both images"}
-        return
+                print(f"[Edit] ✂️ Removed link '{k}' from node {nid} because Image2 node is disabled")
 
     # Stream execution
     final_result = None
     for event in _stream_comfy_execution(workflow, client_id):
         if event["type"] == "complete":
             images = event.get("images", [])
-            # 🎯 Filter เฉพาะ Node ที่ต้องการ (ถ้าระบุ output_node_id)
             if "output_node_id" in config and images:
                 target_node = str(config["output_node_id"])
                 filtered = [img for img in images if str(img.get("node_id")) == target_node]
@@ -329,9 +379,7 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, 
     if final_result:
         yield {"type": "final_result", "data": final_result}
 
-
-# ✅ Video Generator for Streaming (รองรับ Audio สำหรับ Lipsync)
-def generate_video_stream(prompt_text, image1_filename, audio_filename, width, height, length, fps, aspect_ratio, megapixels, config):
+def generate_video_stream(prompt_text, image1_filename, audio_filename, width, height, length, fps, aspect_ratio, megapixels, config, audio2_filename=""):
     """Generator สำหรับ Video Mode แบบ Streaming (รองรับ Audio Input สำหรับ Lipsync)"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -340,16 +388,15 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
     with open(workflow_path, "r", encoding="utf-8") as f:
         workflow = json.load(f)
 
-    # ✅ Inject Prompt (รองรับทั้ง key "text" และ "value" สำหรับ PrimitiveStringMultiline)
+    # ✅ Inject Prompt (รองรับทั้ง key "text" และ "value")
     if config.get("prompt_id") and config["prompt_id"] in workflow:
         prompt_key = config.get("prompt_key", "text")
         workflow[config["prompt_id"]]["inputs"][prompt_key] = prompt_text
 
-    # Inject Seed (รองรับทั้ง seed_id เดียว หรือ seed_ids แบบ list)
+    # Inject Seed (รองรับ seed_ids แบบ list สำหรับ LTX 2.5)
     actual_seed = random.randint(1, 10**14)
     seed_key = config.get("seed_key", "seed")
     
-    # 🆕 รองรับ seed_ids (list) สำหรับ LTX 2.5
     seed_ids = config.get("seed_ids", [])
     if isinstance(seed_ids, list) and len(seed_ids) > 0:
         for sid in seed_ids:
@@ -359,55 +406,77 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
     elif config.get("seed_id") and config["seed_id"] in workflow:
         workflow[config["seed_id"]]["inputs"][seed_key] = actual_seed
 
-    # Inject Image (ถ้ามี image1_id ใน config และ user ส่งรูปมา)
+    # Inject Image 1
     if config.get("image1_id") and config["image1_id"] in workflow and image1_filename:
         workflow[config["image1_id"]]["inputs"]["image"] = image1_filename
         workflow[config["image1_id"]]["inputs"]["subfolder"] = ""
         workflow[config["image1_id"]]["inputs"]["type"] = "input"
     
-    # ✅ Inject FPS (support fixed_fps)
-    if config.get("fps_id") and config["fps_id"] in workflow:
-        fps_key = config.get("fps_key", "value")
-        workflow[config["fps_id"]]["inputs"][fps_key] = fps
-    elif config.get("fixed_fps"):
-        # FPS fixed ใน workflow - ไม่ต้อง inject
-        print(f"[Video] 🎞️ FPS fixed at {config['fixed_fps']}")
-
-    # ✅ Inject Audio (สำหรับ Lipsync)
+    # ✅ Inject Audio 1 (สำหรับ Lipsync)
     if config.get("is_lipsync") and config.get("audio_id") and config["audio_id"] in workflow:
         if audio_filename:
             workflow[config["audio_id"]]["inputs"]["audio"] = audio_filename
             print(f"[Video] 🎵 Audio injected: {audio_filename}")
             
-            # เปิด Audio Switch ให้ใช้ Custom Audio
             if config.get("audio_switch_id") and config["audio_switch_id"] in workflow:
                 workflow[config["audio_switch_id"]]["inputs"]["switch"] = True
                 print("[Video] ✅ Audio switch enabled (using custom audio)")
         else:
             yield {"type": "error", "message": "Lipsync model requires audio file"}
             return
+            
+    # ✅ Inject Audio 2 (สำหรับ Multi Lipsync)
+    if config.get("audio2_id") and config["audio2_id"] in workflow:
+        if audio2_filename:
+            workflow[config["audio2_id"]]["inputs"]["audio"] = audio2_filename
+            print(f"[Video] 🎵 Audio 2 injected: {audio2_filename}")
+        else:
+            yield {"type": "error", "message": "Multi Lipsync requires 2 audio files"}
+            return
 
-    # Inject Video Parameters (รองรับ custom key)
-    if config.get("width_id") and config["width_id"] in workflow:
-        width_key = config.get("width_key", "value")
-        workflow[config["width_id"]]["inputs"][width_key] = width
-    if config.get("height_id") and config["height_id"] in workflow:
-        height_key = config.get("height_key", "value")
-        workflow[config["height_id"]]["inputs"][height_key] = height
+    # ✅ Inject Width/Height - รองรับทั้งแบบ single (width_id) และ multiple (width_ids)
+    width_ids = config.get("width_ids", [])
+    if not width_ids and config.get("width_id"):
+        width_ids = [config["width_id"]]
+    width_key = config.get("width_key", "value")
+    for wid in width_ids:
+        if wid in workflow:
+            workflow[wid]["inputs"][width_key] = width
+
+    height_ids = config.get("height_ids", [])
+    if not height_ids and config.get("height_id"):
+        height_ids = [config["height_id"]]
+    height_key = config.get("height_key", "value")
+    for hid in height_ids:
+        if hid in workflow:
+            workflow[hid]["inputs"][height_key] = height
+    
+    if width_ids:
+        print(f"[Video] 📐 Resolution injected: {width}x{height} into {len(width_ids)} node(s)")
+
+    # ✅ Inject Length - รองรับ length_multiplier (seconds → frames)
     if config.get("length_id") and config["length_id"] in workflow:
         length_key = config.get("length_key", "value")
-        workflow[config["length_id"]]["inputs"][length_key] = length
+        length_value = length
+        if config.get("length_multiplier"):
+            length_value = int(round(length * config["length_multiplier"]))
+        print(f"[Video] ⏱️ Length: {length_value} frames (request: {length}s, multiplier: {config.get('length_multiplier', 1)})")
+        workflow[config["length_id"]]["inputs"][length_key] = length_value
+
+    # ✅ Inject FPS (support fixed_fps) - ทำครั้งเดียว
     if config.get("fps_id") and config["fps_id"] in workflow:
         fps_key = config.get("fps_key", "value")
         workflow[config["fps_id"]]["inputs"][fps_key] = fps
+    elif config.get("fixed_fps"):
+        print(f"[Video] 🎞️ FPS fixed at {config['fixed_fps']}")
 
-    # 🆕 Inject Aspect Ratio (สำหรับ MiniMax H3)
+    # Inject Aspect Ratio (MiniMax H3)
     if config.get("aspect_ratio_id") and config["aspect_ratio_id"] in workflow:
         aspect_ratio_key = config.get("aspect_ratio_key", "aspect_ratio")
         workflow[config["aspect_ratio_id"]]["inputs"][aspect_ratio_key] = aspect_ratio
         print(f"[Video] 📐 Aspect Ratio: {aspect_ratio}")
     
-    # 🆕 Inject Megapixels (สำหรับ MiniMax H3)
+    # Inject Megapixels (MiniMax H3)
     if config.get("megapixels_id") and config["megapixels_id"] in workflow:
         megapixels_key = config.get("megapixels_key", "megapixels")
         workflow[config["megapixels_id"]]["inputs"][megapixels_key] = megapixels

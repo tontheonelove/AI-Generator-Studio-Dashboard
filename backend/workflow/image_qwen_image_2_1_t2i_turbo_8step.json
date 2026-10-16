@@ -1,0 +1,162 @@
+{
+  "13": {
+    "inputs": {
+      "aspect_ratio": "3:4 (Portrait Standard)",
+      "megapixels": 1.5,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "461": {
+    "inputs": {
+      "filename_prefix": "Qwen_image_2.1",
+      "format": "png",
+      "format.bit_depth": "8-bit",
+      "format.input_color_space": "sRGB",
+      "images": [
+        "459:457",
+        0
+      ]
+    },
+    "class_type": "SaveImageAdvanced",
+    "_meta": {
+      "title": "Save Image (Advanced)"
+    }
+  },
+  "459:451": {
+    "inputs": {
+      "unet_name": "qwen_image_2.1_turbo_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "459:453": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "459:454": {
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "459:456": {
+    "inputs": {
+      "width": [
+        "13",
+        0
+      ],
+      "height": [
+        "13",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "459:457": {
+    "inputs": {
+      "samples": [
+        "459:458",
+        0
+      ],
+      "vae": [
+        "459:454",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "459:458": {
+    "inputs": {
+      "seed": 447606998181262,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "459:480",
+        0
+      ],
+      "positive": [
+        "459:485",
+        0
+      ],
+      "negative": [
+        "459:487",
+        0
+      ],
+      "latent_image": [
+        "459:456",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "459:480": {
+    "inputs": {
+      "device": "auto",
+      "dtype": "default",
+      "model": [
+        "459:451",
+        0
+      ]
+    },
+    "class_type": "QwenImage21Cache",
+    "_meta": {
+      "title": "Qwen Image 2.1 Cache"
+    }
+  },
+  "459:485": {
+    "inputs": {
+      "text": "A high-resolution, close-up portrait of a beautiful young woman with long, dark black hair featuring subtle dark red highlights and full, straight bangs. She is wearing elegant pearl and rhinestone hair clips on both sides of her head. Her makeup is in a flawless K-pop idol style, featuring prominent aegyosal (under-eye bags), dramatic curled eyelashes, shimmering eyeshadow, subtle eyeliner, soft peachy blush, and glossy red lips. She is wearing a dark grey, ribbed knit, off-the-shoulder sweater. A large, sparkly silver rhinestone letter \"A\" brooch is pinned to the left side of her chest. She is accessorized with delicate silver stud earrings and a thin silver necklace with a small round pendant. The background is a soft, blurred, warm-toned indoor setting with moody, cinematic lighting. The overall aesthetic is luxurious, elegant, and glamorous, with a photorealistic, highly detail▼主体\n20代半ばの成人女性。白い寝具の上に仰向けになり、両腕を頭上でゆるく重ねてくつろぐ。頭は画面上部の右寄り、胸から腹部は中央、腰は中央より下にあり、体の軸は左下から右上へ斜めに伸びる。右脚は画面左下へ伸ばし、左脚は膝を曲げて画面右に開き、両脚が手前に大きく見える。\n\n▼人物・表情\n小さな卵形の顔、短く細い顎、小さな鼻先。灰茶色のアーモンド形の目、ローズピンクの唇。胸下まで届くライトブラウンのゆるいウェーブ、薄く分かれた前髪。明るいアイボリーに淡い桃色の肌、頬に薄い血色、顔の影は浅い。両目を閉じ、唇をわずかに開いた穏やかな寝顔で、顔を画面右へ少し傾ける。髪は枕とシーツの上に広がり、肩の両側から胸の脇へ自然に散らばる。\n\n▼服装・ポーズ\n生成りに淡いピンクの小花と緑の葉を散らした、薄手の柔らかな布のキャミソールと同柄のショーツ。キャミソールは細い肩紐、胸に沿う切り替え、白い繊細なレースの胸元、中央の小さなピンクのリボンを備え、胸下からふわりと広がる短い裾に白い波形レースが付く。裾が腹部の上でゆるく浮き、へそと腰が見える。ショーツは腰と脚ぐりに白いレースをあしらい、前中央に小さなピンクのリボンを付ける。本人の右腕は画面左で肘を外へ張り、前腕を頭上へ伸ばして、右手を画面上部右寄りで左手首付近に軽く添える。左腕は画面右で肘を曲げ、前腕を頭の後ろへ回し、左手の指先を上部中央でのぞかせる。両手とも指先まで画面内に収める。右腿と膝は画面左下へ続き、左膝は画面右下寄りで高く曲がり、左すねはそこから下端中央へ斜めに下がる。足先は画面外。装飾品は付けない。\n\n▼背景・光\n上端に横木のある木製ヘッドボード、頭の下から右上に白い枕、全体にしわのある白いシーツと掛け布団が広がる。画面右には生成りの太い糸で編んだ透かし編みのブランケットが重なり、左奥には丸い引き出しつまみの付いた木製サイドテーブルがある。テーブル奥に白い鉢の観葉植物、手前寄りに白と淡いピンクの花を挿した透明なガラス花瓶、左手前に淡い色の表紙の本を2冊重ねる。画面左上には白い窓枠と明るい窓辺が見える。左上の窓から朝の自然光が斜めに入り、腕、胸元、腹部、腿と白い寝具に柔らかな日なたと影を作る。髪の左側の縁には淡い逆光が入り、白い寝具の反射光が顔と体の影をやさしく起こす。\n\n▼構図・カメラ\n縦長3:4。ベッドの足元寄り、本人の右側に少し寄った位置から、寝ている体より高い位置のカメラで斜めに見下ろす。頭上の両手と指先、その上の少量の枕とヘッドボードまで入れ、下端は右すねの途中と左足首付近で切り、足先は写さない。人物を画面の大部分に大きく収めつつ、左上の窓辺とサイドテーブル、右側の編みブランケットを残す。\n\n▼質感・スタイル\n白と生成りを基調に、小花の淡いピンクと植物の緑を添えた、明るく自然な実写グラビア写真。寝具の細かな折りじわ、レースの縁、薄手の布の柔らかなひだ、太い編み糸の凹凸を写し、肌は自然なきめと柔らかな光の階調を残す。 肌はなめらかな階調に小さな光点、髪の縁に細い逆光の輝き、瞳にキャッチライト、目にピント。\n\n▼守ること\n頭上の両手を指先まで見せ、上端の余白を保つ；花柄の上下と左右で異なる脚の曲げ方を保つed finish.",
+      "clip": [
+        "459:453",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "459:487": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "459:453",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -8,9 +8,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { UploadBox } from '@/components/studio/upload-box';
-import { readSSE } from '@/lib/stream';
+import { readSSE, cancelBackendJob, SSECancelledError } from '@/lib/stream';
 import { TOOLS_MODELS } from '@/lib/models';
-import type { TabProps, ResultState } from '@/lib/types';
+import type { TabProps } from '@/lib/types';
 
 const SCALE_OPTIONS = [
   { value: '2', label: '2x' },
@@ -40,6 +40,11 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
   const [quality, setQuality] = useState('ULTRA');
   const [llmPrompt, setLlmPrompt] = useState('Describe this image in detail.');
 
+  // ✅ Cancel feature
+  const abortRef = useRef<AbortController | null>(null);
+  const cancelledByUserRef = useRef(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const currentModel = useMemo(
     () => TOOLS_MODELS.find((m) => m.value === model),
     [model]
@@ -54,9 +59,24 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
     setVideoFilename('');
   }
 
+  // ✅ ฟังก์ชันยกเลิกรวม
+  async function handleCancel() {
+    if (!abortRef.current) return;
+
+    cancelledByUserRef.current = true;
+
+    // 1) บอก backend ให้ interrupt ComfyUI
+    await cancelBackendJob();
+
+    // 2) abort stream ฝั่ง frontend
+    abortRef.current.abort();
+  }
+
   async function generate() {
-    // Validation
     if (!currentModel) return;
+    if (isGenerating) return;
+
+    // Validation
     if (currentModel.needsImage && !imageFilename) {
       alert('⚠️ Please upload an image!');
       return;
@@ -70,25 +90,41 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
       return;
     }
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+    cancelledByUserRef.current = false;
+    setIsGenerating(true);
+
+    let wasCancelled = false;
+
     onResult(null);
 
     const endpoint = isLLM ? '/api/llm-stream' : '/api/tools-stream';
     const payload = isLLM
       ? { model, filename: imageFilename, prompt: llmPrompt.trim() }
-      : { model, filename: currentModel.needsVideo ? videoFilename : imageFilename, scale: parseInt(scale), quality };
+      : {
+          model,
+          filename: currentModel.needsVideo ? videoFilename : imageFilename,
+          scale: parseInt(scale),
+          quality,
+        };
 
     onLoading({
       title: isLLM ? 'Analyzing Image...' : 'Upscaling...',
-      detail: isLLM ? 'This may take 10-30 seconds...' : 'This may take several minutes for videos...',
+      detail: isLLM
+        ? 'This may take 10-30 seconds...'
+        : 'This may take several minutes for videos...',
     });
 
     try {
-      for await (const ev of readSSE(endpoint, payload)) {
+      for await (const ev of readSSE(endpoint, payload, controller.signal)) {
         if (ev.type === 'progress') {
           const pct = Math.round((ev.value / ev.max) * 100);
           onLoading({
             title: `${pct}%`,
-            detail: isLLM ? 'Processing...' : `Processing frame ${ev.value} of ${ev.max}`,
+            detail: isLLM
+              ? `Step ${ev.value}/${ev.max}`
+              : `Frame/Step ${ev.value}/${ev.max}`,
             progress: pct,
           });
         } else if (ev.type === 'executing' && ev.node) {
@@ -100,7 +136,12 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
           if (ev.is_text) {
             onResult({ kind: 'text', text: ev.text });
           } else if (ev.is_video) {
-            onResult({ kind: 'video', url: ev.url, seed: '-', filename: ev.filename });
+            onResult({
+              kind: 'video',
+              url: ev.url,
+              seed: '-',
+              filename: ev.filename,
+            });
           } else {
             onResult({
               kind: 'image',
@@ -114,9 +155,35 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
         }
       }
     } catch (e: any) {
-      alert('Error: ' + e.message);
+      const message = String(e?.message || '');
+
+      const isUserCancelled =
+        cancelledByUserRef.current ||
+        e instanceof SSECancelledError ||
+        /No (images|video|audio|output|text) generated|Processing failed/i.test(
+          message
+        );
+
+      wasCancelled = isUserCancelled;
+
+      if (isUserCancelled) {
+        console.log('[Cancel] Tools generation cancelled by user');
+        onLoading({
+          title: '⏹ Cancelled',
+          detail: 'Generation was cancelled',
+        });
+        setTimeout(() => onLoading(null), 1500);
+      } else {
+        alert('Error: ' + message);
+      }
     } finally {
-      onLoading(null);
+      abortRef.current = null;
+      setIsGenerating(false);
+      cancelledByUserRef.current = false;
+
+      if (!wasCancelled) {
+        onLoading(null);
+      }
     }
   }
 
@@ -165,10 +232,14 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
           <div className="space-y-2">
             <Label>Scale Factor</Label>
             <Select value={scale} onValueChange={(v) => v && setScale(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {SCALE_OPTIONS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -176,10 +247,14 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
           <div className="space-y-2">
             <Label>Quality</Label>
             <Select value={quality} onValueChange={(v) => v && setQuality(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {QUALITY_OPTIONS.map((q) => (
-                  <SelectItem key={q.value} value={q.value}>{q.label}</SelectItem>
+                  <SelectItem key={q.value} value={q.value}>
+                    {q.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -198,7 +273,7 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
             placeholder="Describe what you want to analyze..."
             className="resize-y"
           />
-          
+
           {/* LLM Prompt Presets */}
           <div className="flex flex-wrap gap-1.5">
             {LLM_PROMPT_PRESETS.map((p) => (
@@ -219,17 +294,36 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
         <div className="rounded-lg border border-blue-700/30 bg-blue-900/20 p-3 text-xs text-blue-300">
           <span className="mr-1">ℹ️</span>
           <strong>{model}</strong> ใช้ NVIDIA RTX GPU สำหรับ AI-powered upscaling
-          {model === 'NvidiaPID Upscale 4K' && ' — NvidiaPID เป็นวิธี upscale แบบใหม่'}
+          {model === 'NvidiaPID Upscale 4K' &&
+            ' — NvidiaPID เป็นวิธี upscale แบบใหม่'}
         </div>
       )}
 
       {/* Generate Button */}
       <Button
         onClick={generate}
-        className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500"
+        disabled={isGenerating}
+        className={`w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 ${
+          isGenerating ? 'opacity-60 cursor-not-allowed' : ''
+        }`}
       >
-        ⚡ {isLLM ? 'Analyze Image' : 'Upscale'}
+        {isGenerating
+          ? '⏳ Processing...'
+          : isLLM
+            ? '🔍 Analyze Image'
+            : '⚡ Upscale'}
       </Button>
+
+      {/* ✅ Cancel Button - แสดงเฉพาะตอนกำลังรัน */}
+      {isGenerating && (
+        <Button
+          onClick={handleCancel}
+          variant="outline"
+          className="w-full border-red-500/50 text-red-400 hover:bg-red-900/20 hover:text-red-300"
+        >
+          ⏹ Cancel Tool Operation
+        </Button>
+      )}
     </div>
   );
 }

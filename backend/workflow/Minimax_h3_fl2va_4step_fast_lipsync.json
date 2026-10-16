@@ -1,0 +1,311 @@
+{
+  "1": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Video VAE"
+    }
+  },
+  "2": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Audio VAE"
+    }
+  },
+  "3": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Text Encoder"
+    }
+  },
+  "4": {
+    "inputs": {
+      "unet_name": "minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "MATLOW Fused Turbo INT8 ConvRot"
+    }
+  },
+  "5": {
+    "inputs": {
+      "chunks": 0,
+      "seq_threshold": 4096,
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "H3X2ChunkFeedForward",
+    "_meta": {
+      "title": "MiniMax H3 FFN 2048 tokens / threshold4096"
+    }
+  },
+  "6": {
+    "inputs": {
+      "selection": "sla",
+      "selection.keep_percent": 5,
+      "start_percent": 0,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": true,
+      "model": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "BlockSparseAttention",
+    "_meta": {
+      "title": "Model Sparse Attention (SLA 5%)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "shift_video": 12,
+      "shift_audio": 3,
+      "model": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "Sigma Shift 12/3"
+    }
+  },
+  "8": {
+    "inputs": {
+      "image": "99f38ceb8866.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "First Frame"
+    }
+  },
+  "10": {
+    "inputs": {
+      "noise_seed": 43
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "Seed 43"
+    }
+  },
+  "11": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "res_multistep"
+    }
+  },
+  "12": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 4,
+      "denoise": 1,
+      "model": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "simple / 4 steps"
+    }
+  },
+  "13": {
+    "inputs": {
+      "model": [
+        "7",
+        0
+      ],
+      "conditioning": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "BasicGuider"
+    }
+  },
+  "14": {
+    "inputs": {
+      "noise": [
+        "10",
+        0
+      ],
+      "guider": [
+        "13",
+        0
+      ],
+      "sampler": [
+        "11",
+        0
+      ],
+      "sigmas": [
+        "12",
+        0
+      ],
+      "latent_image": [
+        "23",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Sampler"
+    }
+  },
+  "15": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "Audio Decode"
+    }
+  },
+  "16": {
+    "inputs": {
+      "filename_prefix": "H3_X2_Stream/case01",
+      "fps": 24,
+      "nvenc_gpu": 0,
+      "cq": 18,
+      "fp16_accumulation": true,
+      "video-preview": "",
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "17",
+        0
+      ],
+      "audio": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "H3X2StreamSave",
+    "_meta": {
+      "title": "X2 decode and asynchronous NVENC save"
+    }
+  },
+  "17": {
+    "inputs": {
+      "source_vae": "MiniMax-H3-X2-Detail-v1.safetensors",
+      "output_name": "MiniMax-H3-X2-Detail-v1-decoder-int8-convrot.safetensors"
+    },
+    "class_type": "H3X2PrepareINT8VAE",
+    "_meta": {
+      "title": "Prepare once / reuse INT8 X2 VAE"
+    }
+  },
+  "18": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": 1280,
+      "height": 720,
+      "crop": "disabled",
+      "image": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "ImageScale",
+    "_meta": {
+      "title": "Upscale Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "width": 1280,
+      "height": 720,
+      "x": 2,
+      "y": 0,
+      "image": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "ImageCrop",
+    "_meta": {
+      "title": "Crop Image (DEPRECATED)"
+    }
+  },
+  "23": {
+    "inputs": {
+      "prompt": "The woman in <Picture 1> speaks only in Thai, reproducing <Audio 1> exactly as it is, word for word, perfectly lip-synced. Dialogue: '(ทั้งสองตัวนี้สามารถสั่งซื้อได้เลยนะคะ พร้อมส่งในสี่ชั่วโมงนี้เลยค่ะ  )' No other speech, no music, background unchanged.\nShe presented the products with a bright, Smile softly after finishing speaking. At the same time, hold up the product on your left-hand side towards the camera.\n",
+      "width": 1280,
+      "height": 736,
+      "length": 124,
+      "ref_image_size": "match",
+      "clip": [
+        "3",
+        0
+      ],
+      "vae": [
+        "1",
+        0
+      ],
+      "audio_vae": [
+        "24",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "19",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_0": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Reference to Video"
+    }
+  },
+  "24": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "25": {
+    "inputs": {
+      "audio": "audio.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio"
+    }
+  }
+}
