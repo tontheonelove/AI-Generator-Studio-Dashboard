@@ -12,6 +12,8 @@
   - ⭐ Progressbar Added แสดง % ตอน Generate
   - ⭐ Cancle Process Added เพิ่มปุ่มยกเลิกการ Generate
 ---
+<img src=ex2.png/>
+
 
 # Feature
 - Next Frontend +  Python FASAPI (Comfyui)
