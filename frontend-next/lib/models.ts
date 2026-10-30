@@ -1,5 +1,7 @@
 export const IMAGE_MODELS = [
-  'Flux3 Klein Image Distilled (16Step)','Flux3 Klein Image Base (50Step)','Qwen Image 2.1 Turbo 8 Step','Qwen Image 2.1','Qwen Image 2.1 (NSFW)','Krea2 Turbo', 'Ideogram 4', 'Boogu Image Turbo', 'Z-image x PID4K',
+  'Minimax H3 Image','Moss Image SFT','Flux3 Klein Image Distilled (16Step)','Flux3 Klein Image Base (50Step)',
+  'Qwen Image 2.1 Turbo 8 Step','Qwen Image 2.1','Qwen Image 2.1 (NSFW)','Krea2 Turbo', 'Ideogram 4',
+  'Boogu Image Turbo', 'Z-image x PID4K',
   'Z-Image Turbo', 'Z-Image Turbo-GGUF', 'Flux 2 Klein-GGUF',
   'Qwen Image 2512', 'Wan2.2 Image', 'MeinaMix Anime',
 ];
@@ -7,6 +9,8 @@ export const IMAGE_MODELS = [
 export const SIZE_OPTIONS = [720, 864, 1024, 1080, 1280, 1440, 1536, 1920, 2160, 2560, 3840];
 
 export const VIDEO_MODELS = [
+  { value: 'Minimax Charactor Swap Turbo', label: '🔄 Minimax Character Swap Turbo (Video+Image)', needsImage: true, needsVideo: true },
+  { value: 'Fast H3 OminiRef 8 Step with lipsync', label: '🎬 Fast H3 OminiRef 8 Step (Multi-Ref)', needsImage: true, needsAudio: true },
   { value: 'Minimax H3 I2V Fast 4 Step', label: '⚡ Minimax H3 I2V Fast เร็วมาก แนะนำ *', needsImage: true },
   { value: 'Minimax H3 Multiple Lipsync', label: '🎤🎤 Minimax H3 Multiple Lipsync เร็วมาก แนะนำ *', needsImage: true, needsAudio: true, needsAudio2: true },
   { value: 'Minimax H3 Single Lipsync', label: '🎤 Minimax H3 Single Lipsync เร็วมาก แนะนำ *', needsImage: true, needsAudio: true },

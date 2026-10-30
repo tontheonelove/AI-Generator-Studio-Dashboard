@@ -121,6 +121,22 @@ def get_current_prompt_id():
 
 WORKFLOW_SETTINGS = {
     # === Images Models ===
+
+    "Minimax H3 Image": {
+        "file": "workflow/image_minimax_h3_t2i.json","prompt_id": "58:12","prompt_key": "text","seed_id": "58:15",
+        "seed_key": "noise_seed","latent_id": "58:46","turbo_switch_id": "58:52","turbo_switch_key": "switch",
+        "steps_id": "58:9","steps_key": "steps","base_steps": 30,"turbo_steps": 8,"output_node_id": "48","no_lora": True,
+    },
+
+    "Moss Image SFT": {
+        "file": "workflow/image_moss_image_t2i.json","prompt_id": "18:17","prompt_key": "value",
+        "seed_id": "18:7","seed_key": "seed",
+        "seed_injections": [
+            {"id": "18:7", "key": "seed"},
+            {"id": "18:11", "key": "sampling_mode.seed"},
+        ],
+        "latent_id": "18:6","upsampler_switch_id": "18:16","upsampler_switch_key": "switch","output_node_id": "9","no_lora": True,
+    },
     "Flux3 Klein Image Distilled (16Step)": {
         "file": "workflow/image_flux3_klein_distilled_t2i.json","prompt_id": "18:17","prompt_key": "value","seed_id": "18:7","seed_key": "seed",
         "seed_injections": [
@@ -261,6 +277,21 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Video Models ===
+
+    "Minimax Charactor Swap Turbo": {
+        "file": "workflow/Minimax_character-swap-turbo.json","prompt_id": "11","prompt_key": "value",
+        "seed_id": "223","seed_key": "seed","sync_window_seed": True,"image1_id": "9",
+        "video_id": "30","video_key": "file","output_node_id": "24","has_audio": True,
+    },
+
+    "Fast H3 OminiRef 8 Step with lipsync": {
+        "file": "workflow/video_fasth3_ominiref_r2v.json","prompt_id": "138","prompt_key": "value","seed_id": "129",
+        "seed_key": "noise_seed","image1_id": "137","image2_id": "149","disable_nodes_if_no_img2": ["149"],
+        "audio_id": "150","audio2_id": "151","disable_nodes_if_no_audio2": ["151"],
+        "is_lipsync": True,"is_ominiref": True,"aspect_ratio_id": "115","aspect_ratio_key": "aspect_ratio",
+        "megapixels_id": "115","megapixels_key": "megapixels","duration_id": "132","duration_key": "value",
+        "output_node_id": "92","has_audio": True,"fixed_fps": 24,
+    },
     "Minimax H3 I2V Fast 4 Step": {
         "file": "workflow/Minimax_h3_image_to_video_4step_fast.json","prompt_id": "9","prompt_key": "prompt","seed_id": "10",
         "seed_key": "noise_seed","image1_id": "8","length_id": "9","length_key": "length","length_multiplier": 24,
@@ -438,6 +469,7 @@ class GenerationRequest(BaseModel):
     lora_strength: float = 0.0
     mode: str = "generate"
     use_upsampler: bool = False
+    turbo_mode: bool = False
     image1_filename: str = ""
     image2_filename: str = ""
 
@@ -445,6 +477,8 @@ class VideoGenerationRequest(BaseModel):
     prompt: str
     model: str
     image1_filename: str = ""  
+    image2_filename: str = ""  
+    video_filename: str = ""   
     audio_filename: str = ""
     audio2_filename: str = "" 
     width: int = 480
@@ -622,7 +656,7 @@ async def generate_stream_endpoint(req: GenerationRequest):
                     lora_strength=req.lora_strength 
                 )
             else:
-                stream_fn = generate_image_stream(req.prompt, req.seed, req.width, req.height, req.lora_filename, req.lora_strength, config, use_upsampler=req.use_upsampler,)
+                stream_fn = generate_image_stream(req.prompt, req.seed, req.width, req.height, req.lora_filename, req.lora_strength, config, use_upsampler=req.use_upsampler,turbo_mode=req.turbo_mode,)
 
             final_result = None
             async for event in aiter_sync(stream_fn):
@@ -685,6 +719,13 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
         async def error_stream(): 
             yield f"data: {json.dumps({'type': 'error', 'message': f'Workflow file missing'}, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_stream(), media_type="text/event-stream")
+
+    # ✅ บังคับ source video สำหรับ Video-to-Video models
+    if config.get("video_id") and not req.video_filename:
+        async def error_stream(): 
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Source video required'}, ensure_ascii=False)}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
+
     
     if not config.get("no_image_required") and not req.image1_filename:
         async def error_stream(): 
@@ -697,7 +738,14 @@ async def generate_video_stream_endpoint(req: VideoGenerationRequest):
     async def event_generator():
         global is_processing
         try:
-            stream_fn = generate_video_stream(req.prompt, req.image1_filename, req.audio_filename, req.width, req.height, req.length, req.fps, req.aspect_ratio, req.megapixels, config, audio2_filename=req.audio2_filename,)
+            stream_fn = generate_video_stream(
+                req.prompt, req.image1_filename, req.audio_filename,
+                req.width, req.height, req.length, req.fps,
+                req.aspect_ratio, req.megapixels, config,
+                audio2_filename=req.audio2_filename,
+                image2_filename=req.image2_filename,
+                video_filename=req.video_filename,
+            )
             final_result = None
             async for event in aiter_sync(stream_fn):
                 # ✅ track prompt_id สำหรับ cancel

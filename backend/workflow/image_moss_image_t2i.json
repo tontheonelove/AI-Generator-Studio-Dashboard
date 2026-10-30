@@ -1,0 +1,294 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "moss_image_t2i",
+      "images": [
+        "18:8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "19": {
+    "inputs": {
+      "aspect_ratio": "2:3 (Portrait Photo)",
+      "megapixels": 1,
+      "multiple": 16
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:17": {
+    "inputs": {
+      "value": "主題：\nおばけの向こうで目が合った\n\n主体：\n20代の成人女性が白いおばけ風の布をかぶり、ラグの上で正面向きに座る。顔の見える開口部を上部中央に置き、胴は正面、腰だけ画面右へ少し寄せる。両腕が頭の周囲に大きなアーチを作る。\n\n人物・表情：\n布の開口部から茶色の大きな目、長いまつげ、鼻の上部と薄い茶色の前髪が見える。視線はまっすぐこちら。口と顎は白い布に隠し、見えている目元の肌は明るいピーチ色で薄い頬紅。長い茶色の髪が布の下から両肩の外へ落ちる。\n\n服装・ポーズ：\n頭の白い布に縦長の黒い楕円の目とピンクの丸い頬を描き、顔の下半分を覆う前垂れは胸の上で終わる。白い体に沿うノースリーブのミニワンピース。両肘を左右に高く開き、両前腕を頭頂へ寄せ、両手を頭の上で平らに重ねる。腕から透ける白いシフォンを長く垂らし、左右の画面端から下端まで流す。座った両腿を下に見せる。\n\n背景・光：\n白い毛足のあるラグの上。左手前に黒いランタンとキャンドル、左右の中景に発光するかぼちゃ、右上の奥に小さな白いおばけ人形。黒いレース、クモの巣飾り、壁の額が奥を埋める。左下から橙の柔らかな光、奥と画面右に紫の光。白布は手前で白さを保ち、端に桃色と薄紫の色光が乗る。\n\n構図・カメラ：\n縦3:4。正面寄りのやや高い視点で、頭上の重ねた手から腿の途中までを近く切り取る。両肘が左右上部、長い布が両縁、目元が上部中央を占める。両足は画面外。見える目と衣装を明瞭にし、部屋の小物は一段柔らかくする。\n\n質感・スタイル：\n写真表現。薄いシフォンの透けと重なり、厚みのある頭の布、ワンピースの細かな横皺を区別する。肌の光はなだらかで艶は控えめ、橙と紫の光を背景に残しつつ白を飛ばしすぎない。"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text (User Prompt)",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:14": {
+    "inputs": {
+      "value": "You turn a user's image idea into one detailed caption for a text-to-image model. The model learned from captions that describe finished images, so write the caption as a description of the image itself, not as instructions.\n\nKeep the request\n- Keep everything the user specified: subjects, counts, actions, relationships, medium, style, mood, colors and anything they excluded. Never contradict or drop it.\n- Fill in what they left open with concrete visual choices: setting, composition and framing, viewpoint, lighting, materials and textures, color palette, and the artistic medium.\n- Describe only what can be seen. Leave out sounds, smells, backstory and intentions.\n- Do not invent real-world facts the user did not give, such as specific dates, prices, names or specifications.\n\nText in the image\n- Quote every piece of visible text exactly, in double quotes. Keep the user's wording, language, spelling, capitalization, punctuation and line breaks; never translate it.\n- If the user asks for a designed image (poster, cover, menu, label, sign, infographic) without giving its text, write short, specific copy that fits instead of placeholders.\n- Describe where each text sits and how it looks: position, reading order, alignment, line breaks, relative size, font style, color and spacing.\n- Do not mention watermarks or artist signatures.\n\nWriting\n- Write in English, in plain prose: one to three paragraphs, usually 80 to 200 words, longer only when there is a lot of text to place.\n- Open with the medium and the main subject, then the setting and composition, then lighting, colors and finer details.\n- Give positions with words such as left, right, top, bottom, foreground and background. No coordinates, lists, headings, JSON or Markdown.\n- No quality keywords such as \"masterpiece\", \"best quality\", \"8k\" or \"highly detailed\", and no negative prompt.\n\nReply with the caption only: no title, introduction, explanation or surrounding quotes."
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text (System prompt)",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:11": {
+    "inputs": {
+      "prompt": [
+        "18:17",
+        0
+      ],
+      "max_length": 4096,
+      "sampling_mode": "on",
+      "sampling_mode.temperature": 0.7,
+      "sampling_mode.top_k": 64,
+      "sampling_mode.top_p": 0.95,
+      "sampling_mode.min_p": 0.05,
+      "sampling_mode.repetition_penalty": 1,
+      "sampling_mode.seed": 0,
+      "sampling_mode.presence_penalty": 0,
+      "thinking": false,
+      "use_default_template": true,
+      "mtp": "auto",
+      "clip": [
+        "18:2",
+        0
+      ],
+      "system_prompt": [
+        "18:14",
+        0
+      ]
+    },
+    "class_type": "TextGenerate",
+    "_meta": {
+      "title": "Generate Text",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:1": {
+    "inputs": {
+      "unet_name": "moss_image_sft_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:4": {
+    "inputs": {
+      "text": [
+        "18:13",
+        0
+      ],
+      "clip": [
+        "18:2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:2": {
+    "inputs": {
+      "clip_name": "qwen3.5_9b_w4a8_gptq.safetensors",
+      "type": "moss_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:7": {
+    "inputs": {
+      "seed": 43715685193293,
+      "steps": 25,
+      "cfg": 2.5,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "18:24",
+        0
+      ],
+      "positive": [
+        "18:4",
+        0
+      ],
+      "negative": [
+        "18:5",
+        0
+      ],
+      "latent_image": [
+        "18:6",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:3": {
+    "inputs": {
+      "vae_name": "flux2-vae_small.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:13": {
+    "inputs": {
+      "source": [
+        "18:16",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview as Text (final prompt)",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:16": {
+    "inputs": {
+      "switch": false,
+      "on_false": [
+        "18:17",
+        0
+      ],
+      "on_true": [
+        "18:11",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:6": {
+    "inputs": {
+      "width": [
+        "19",
+        0
+      ],
+      "height": [
+        "19",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux 2 Latent",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:5": {
+    "inputs": {
+      "text": "worst quality, bad anatomy, watermark, jpeg artifact",
+      "clip": [
+        "18:2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt (empty = reference default)",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:8": {
+    "inputs": {
+      "samples": [
+        "18:7",
+        0
+      ],
+      "vae": [
+        "18:3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:15": {
+    "inputs": {
+      "double_layers": "",
+      "single_layers": "22",
+      "start_percent": 0,
+      "end_percent": 0.5,
+      "model": [
+        "18:1",
+        0
+      ]
+    },
+    "class_type": "SkipLayerGuidanceDiTSimple",
+    "_meta": {
+      "title": "SkipLayerGuidanceDiTSimple",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  },
+  "18:24": {
+    "inputs": {
+      "switch": false,
+      "on_false": [
+        "18:1",
+        0
+      ],
+      "on_true": [
+        "18:15",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch",
+      "cnr_id": "comfy-core",
+      "ver": "0.42.0"
+    }
+  }
+}

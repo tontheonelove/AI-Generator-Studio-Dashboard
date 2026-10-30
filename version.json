@@ -1,13 +1,11 @@
 {
-  "version": "4.4",
-  "release_date": "16-10-2026",
+  "version": "4.5",
+  "release_date": "30-10-2026",
   "features": [
-    "🚀 Flux3 Klein Image Base & Distilled",
-    "🔥 Minimax H3 4 Step I2V เร็วที่สุด",
-    "🎥 Minimax H3 4 Step Simgle & Multiple Lipsync เร็วที่สุด ",
-    "🚀 Qwen Image 2.1 Turbo Fast 8 Step",
-    "⭐ Progressbar Added แสดง % ตอน Generate ",
-    "⭐ Cancle Process Added เพิ่มปุ่มยกเลิกการ Generate ",
+    "🚀 Moss-Image-SFT",
+    "🔥 Minimax H3 Image",
+    "🎥 Minimax H3 4 Step Charactor Swap ",
+    "🚀 Fast H3 8 Step OminiREF + Lipsync",
     "🌍 Link DownLoad Model Updated!",
     "❤️ Dev by TonLikeIT ติดตามอัพเดตใหม่ๆที่ Facebook"
   ]

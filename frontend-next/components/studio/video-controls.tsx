@@ -62,10 +62,15 @@ No other speech, no music, background unchanged.
 overall_soundscape:
 The final audio track is exactly <Audio 1> followed immediately by <Audio 2>, both copied 1:1 with no overlap. Under it, only the soft ambience of the scene. No music, no extra voices.`;
 
+// ✅ Template สำหรับ Character Swap
+const CHAR_SWAP_PROMPT_TEMPLATE = `Replace only the [person/subject] in the foreground in <Video 1> with the character in <Picture 1>. Keep the replacement character's identity and art style from <Picture 1>. Preserve the source video's camera, framing, background, lighting, objects, and all other people. Match the selected person's position, scale, pose, and movement throughout the clip. Do not show the reference sheet or its background.`;
+
 export function VideoControls({ onLoading, onResult }: TabProps) {
   const [model, setModel] = useState(VIDEO_MODELS[0].value);
   const [prompt, setPrompt] = useState('');
   const [imageFilename, setImageFilename] = useState('');
+  const [image2Filename, setImage2Filename] = useState('');
+  const [videoFilename, setVideoFilename] = useState('');
   const [audioFilename, setAudioFilename] = useState('');
   const [audio2Filename, setAudio2Filename] = useState('');
   const [aspectRatio, setAspectRatio] = useState(ASPECT_RATIOS[0].value);
@@ -83,8 +88,10 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
     [model]
   );
 
-  // ✅ H3 Lipsync family (Single + Multi)
+  // ✅ Flags ทั้งหมด
   const isMultiLipsync = model === 'Minimax H3 Multiple Lipsync';
+  const isOminiRef = model === 'Fast H3 OminiRef 8 Step with lipsync';
+  const isCharSwap = model === 'Minimax Charactor Swap Turbo';
   const isFastH3Lipsync = model === 'Minimax H3 Single Lipsync' || isMultiLipsync;
   const isFastH3I2V = model === 'Fast Video H3 I2V';
   const isFastH3T2V = model === 'Fast Video H3 T2V';
@@ -92,7 +99,9 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
   const isFastH3 =
     model.startsWith('Fast Video H3') ||
     isFastH3Lipsync ||
-    isMinimaxI2VFast;
+    isMinimaxI2VFast ||
+    isOminiRef ||
+    isCharSwap;
 
   const isMiniMaxOrLTX25 = useMemo(() => {
     return (
@@ -101,14 +110,14 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
     );
   }, [model, isFastH3]);
 
-  // ✅ ตอนนี้ Lipsync ก็เลือก resolution ได้แล้ว
   const needsAspectRatio =
     isMiniMaxOrLTX25 ||
     isFastH3T2V ||
     isFastH3Lipsync ||
-    isMinimaxI2VFast;
+    isMinimaxI2VFast ||
+    isOminiRef;
 
-  const isLipsync = model === 'LTX 2.3 Lipsync' || isFastH3Lipsync;
+  const isLipsync = model === 'LTX 2.3 Lipsync' || isFastH3Lipsync || isOminiRef;
   const isLTXLipsync = model === 'LTX 2.3 Lipsync';
 
   const calculatedResolution = useMemo(() => {
@@ -123,9 +132,9 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
     return { width, height };
   }, [needsAspectRatio, megapixels, aspectRatio]);
 
-  // ✅ ตั้งค่า resolution เริ่มต้นให้ตรงตัวอย่าง workflow เมื่อเปลี่ยนโมเดล
   function handleModelChange(v: string) {
     setModel(v);
+    setVideoFilename('');  // ✅ เคลียร์ video ทุกครั้งที่เปลี่ยนโมเดล
     if (v === 'Minimax H3 Single Lipsync') {
       setAspectRatio('16:9 (Landscape Widescreen)');
       setMegapixels('0.9');
@@ -135,29 +144,30 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
     } else if (v === 'Minimax H3 I2V Fast 4 Step') {
       setAspectRatio('9:16 (Portrait Widescreen)');
       setMegapixels('0.5');
+    } else if (v === 'Fast H3 OminiRef 8 Step with lipsync') {
+      setAspectRatio('16:9 (Landscape Widescreen)');
+      setMegapixels('1.0');
     }
   }
 
-  function loadLipsyncTemplate() {
+  function loadTemplate() {
     const template = isMultiLipsync
       ? LIPSYNC_MULTI_PROMPT_TEMPLATE
-      : LIPSYNC_PROMPT_TEMPLATE;
+      : isCharSwap
+        ? CHAR_SWAP_PROMPT_TEMPLATE
+        : LIPSYNC_PROMPT_TEMPLATE;
 
-    if (!prompt.trim() || confirm('Replace current prompt with Lipsync template?')) {
+    if (!prompt.trim() || confirm('Replace current prompt with template?')) {
       setPrompt(template);
     }
   }
 
-  // ✅ ฟังก์ชันยกเลิกรวม
   async function handleCancel() {
     if (!abortRef.current) return;
 
     cancelledByUserRef.current = true;
 
-    // 1) บอก backend ให้ interrupt ComfyUI
     await cancelBackendJob();
-
-    // 2) abort stream ฝั่ง frontend
     abortRef.current.abort();
   }
 
@@ -166,6 +176,10 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
 
     if (!prompt.trim() && !isLTXLipsync) {
       alert('Please enter a prompt!');
+      return;
+    }
+    if (currentModel?.needsVideo && !videoFilename) {
+      alert('⚠️ Please upload a source video!');
       return;
     }
     if (currentModel?.needsImage && !imageFilename) {
@@ -190,16 +204,20 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
 
     onResult(null);
     onLoading({
-      title: isMultiLipsync
-        ? '🎤 Multi Lipsyncing...'
-        : isFastH3Lipsync
-          ? '🎤 Lipsyncing...'
-          : isFastH3
-            ? '⚡ Fast Generating Video...'
-            : 'Generating Video...',
-      detail: isFastH3
-        ? '4-step turbo mode - very fast...'
-        : 'This may take several minutes...',
+      title: isCharSwap
+        ? '🔄 Swapping Character...'
+        : isMultiLipsync
+          ? '🎤 Multi Lipsyncing...'
+          : isFastH3Lipsync
+            ? '🎤 Lipsyncing...'
+            : isFastH3
+              ? '⚡ Fast Generating Video...'
+              : 'Generating Video...',
+      detail: isCharSwap
+        ? 'Video-to-video processing - this may take several minutes...'
+        : isFastH3
+          ? '4-step turbo mode - very fast...'
+          : 'This may take several minutes...',
     });
 
     try {
@@ -207,6 +225,8 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         prompt: prompt || 'default',
         model,
         image1_filename: imageFilename,
+        image2_filename: image2Filename,
+        video_filename: videoFilename,
         audio_filename: audioFilename,
         audio2_filename: audio2Filename,
         width: isFastH3I2V ? 1024 : calculatedResolution.width,
@@ -300,7 +320,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         <div className="rounded-lg border border-emerald-700/30 bg-emerald-900/20 p-3 text-xs text-emerald-300">
           <span className="mr-1">⚡</span>
           <strong>
-            Fast Mode ({isFastH3Lipsync || isMinimaxI2VFast ? '4' : '8'} Steps):
+            Fast Mode ({isFastH3Lipsync || isMinimaxI2VFast || isCharSwap ? '4' : '8'} Steps):
           </strong>{' '}
           เร็วกว่า MiniMax H3 ปกติ 3-4 เท่า FPS fixed ที่ 24 (แนะนำอัพโหลดรูปขนาดให้ตรงกับ output ที่ต้องการ ไม่งั้นภาพจะยืด)
         </div>
@@ -310,7 +330,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
       {isFastH3Lipsync && !isMultiLipsync && (
         <div className="rounded-lg border border-pink-700/30 bg-pink-900/20 p-3 text-xs text-pink-300">
           <span className="mr-1">🎤</span>
-          <strong>Single Lipsync:</strong> รูปตัวละคร + เสียงพูด → วิดีโอปากขตรงคำพูด ใช้{' '}
+          <strong>Single Lipsync:</strong> รูปตัวละคร + เสียงพูด → วิดีโอปากตรงคำพูด ใช้{' '}
           <code className="rounded bg-slate-900/50 px-1">&lt;Picture 1&gt;</code>{' '}
           และ{' '}
           <code className="rounded bg-slate-900/50 px-1">&lt;Audio 1&gt;</code>{' '}
@@ -323,24 +343,54 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         <div className="rounded-lg border border-purple-700/30 bg-purple-900/20 p-3 text-xs text-purple-300">
           <span className="mr-1">🎤</span>
           <strong>Multiple Lipsync:</strong> 2 คนในรูป + 2 เสียง → ผลัดกันพูดตาม timeline ใช้{' '}
-          <code className="rounded bg-slate-900/50 px-1">
-            &lt;Subject 1/2&gt;
-          </code>
+          <code className="rounded bg-slate-900/50 px-1">&lt;Subject 1/2&gt;</code>
           ,{' '}
-          <code className="rounded bg-slate-900/50 px-1">
-            &lt;Audio 1/2&gt;
-          </code>{' '}
+          <code className="rounded bg-slate-900/50 px-1">&lt;Audio 1/2&gt;</code>{' '}
           ใน prompt (แนะนำรูปต้นฉบับ resolution ต้องตรงกับ output ที่คุณเลือก ไม่งั้นภาพจะยืด)
         </div>
+      )}
+
+      {/* OminiRef Info Banner */}
+      {isOminiRef && (
+        <div className="rounded-lg border border-indigo-700/30 bg-indigo-900/20 p-3 text-xs text-indigo-300">
+          <span className="mr-1">🎬</span>
+          <strong>OminiRef Multi-Reference:</strong> รองรับ 2 รูป + 2 เสียง (optional) — ใช้{' '}
+          <code className="rounded bg-slate-900/50 px-1">&lt;Picture 1/2&gt;</code> และ{' '}
+          <code className="rounded bg-slate-900/50 px-1">&lt;Audio 1/2&gt;</code> ใน prompt
+          สำหรับ multi-cut cinematic video
+        </div>
+      )}
+
+      {/* ✅ Character Swap Info Banner */}
+      {isCharSwap && (
+        <div className="rounded-lg border border-cyan-700/30 bg-cyan-900/20 p-3 text-xs text-cyan-300">
+          <span className="mr-1">🔄</span>
+          <strong>Character Swap:</strong> เปลี่ยนตัวละครในวิดีโอต้นฉบับเป็นตัวละครจากรูปอ้างอิง —
+          คงกล้อง ฉาก แสง และคนอื่นๆ ไว้ทั้งหมด ความยาว / FPS / Resolution ตามวิดีโอต้นฉบับอัตโนมัติ
+        </div>
+      )}
+
+      {/* ✅ Source Video Upload (Video-to-Video models) */}
+      {currentModel?.needsVideo && (
+        <UploadBox
+          label="🎬 Source Video (วิดีโอต้นฉบับ)"
+          kind="video"
+          onUploaded={setVideoFilename}
+          required
+        />
       )}
 
       {/* Image Upload */}
       {currentModel?.needsImage && (
         <UploadBox
           label={
-            isFastH3Lipsync
-              ? '📷 Character Image (คนที่จะพูด)'
-              : '📷 Input Image'
+            isCharSwap
+              ? '📷 Character Reference (รูปตัวละครที่จะใส่)'
+              : isOminiRef
+                ? '📷 Reference Image 1 (Required - รูปหลัก)'
+                : isFastH3Lipsync
+                  ? '📷 Character Image (คนที่จะพูด)'
+                  : '📷 Input Image'
           }
           kind="image"
           onUploaded={setImageFilename}
@@ -348,13 +398,25 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         />
       )}
 
+      {/* ✅ OminiRef: Image 2 (optional) */}
+      {isOminiRef && (
+        <UploadBox
+          label="📷 Reference Image 2 (Optional - ตัวละคร/ฉากเพิ่มเติม)"
+          kind="image"
+          onUploaded={setImage2Filename}
+          required={false}
+        />
+      )}
+
       {/* Audio 1 Upload */}
       {isLipsync && (
         <UploadBox
           label={
-            isMultiLipsync
-              ? '🎵 Audio 1 (เสียงคนที่ 1 / Subject 1)'
-              : '🎵 Reference Audio (เสียงพูด)'
+            isOminiRef
+              ? '🎵 Reference Audio 1 (Required - เสียงหลัก)'
+              : isMultiLipsync
+                ? '🎵 Audio 1 (เสียงคนที่ 1 / Subject 1)'
+                : '🎵 Reference Audio (เสียงพูด)'
           }
           kind="audio"
           onUploaded={setAudioFilename}
@@ -362,7 +424,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         />
       )}
 
-      {/* Audio 2 Upload (Multi เท่านั้น) */}
+      {/* Audio 2 Upload (Multi + OminiRef) */}
       {isMultiLipsync && (
         <UploadBox
           label="🎵 Audio 2 (เสียงคนที่ 2 / Subject 2)"
@@ -371,16 +433,24 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
           required
         />
       )}
+      {isOminiRef && (
+        <UploadBox
+          label="🎵 Reference Audio 2 (Optional - เสียงเพิ่มเติม)"
+          kind="audio"
+          onUploaded={setAudio2Filename}
+          required={false}
+        />
+      )}
 
       {/* Prompt */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>📝 Prompt</Label>
-          {isFastH3Lipsync && (
+          {(isFastH3Lipsync || isCharSwap) && (
             <Button
               variant="outline"
               size="sm"
-              onClick={loadLipsyncTemplate}
+              onClick={loadTemplate}
               className="h-7 px-2 text-xs"
             >
               📝 Load Template
@@ -392,13 +462,17 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={
-            isMultiLipsync
-              ? 'subject_definitions: ... <Subject 1> ... <Audio 1> ... (กด Load Template ได้เลย)'
-              : isFastH3Lipsync
-                ? "The person in <Picture 1> speaks only in Thai, reproducing <Audio 1> exactly... Dialogue: '(บทพูด)'"
-                : isFastH3
-                  ? 'Describe the video motion, camera action, and scene... (8-step turbo mode)'
-                  : 'Describe the video you want to create...'
+            isCharSwap
+              ? 'Replace only the [person] in <Video 1> with the character in <Picture 1>... (กด Load Template ได้เลย)'
+              : isOminiRef
+                ? 'subject_definitions: <Subject 1> is ... <Picture 1>... <Subject 2> is ... <Audio 1>... detailed_description: [Shot 1]...'
+                : isMultiLipsync
+                  ? 'subject_definitions: ... <Subject 1> ... <Audio 1> ... (กด Load Template ได้เลย)'
+                  : isFastH3Lipsync
+                    ? "The person in <Picture 1> speaks only in Thai, reproducing <Audio 1> exactly... Dialogue: '(บทพูด)'"
+                    : isFastH3
+                      ? 'Describe the video motion, camera action, and scene... (8-step turbo mode)'
+                      : 'Describe the video you want to create...'
           }
         />
       </div>
@@ -443,7 +517,7 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         </>
       )}
 
-      {/* Auto Info Grid (เฉพาะ Fast I2V ที่ resolution auto จากรูป) */}
+      {/* Auto Info Grid (Fast I2V) */}
       {isFastH3I2V && (
         <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-2.5 text-[10px] text-slate-400">
           <div className="grid grid-cols-2 gap-2">
@@ -467,31 +541,61 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         </div>
       )}
 
-      {/* Duration */}
-      <div className="space-y-2">
-        <Label>⏱️ Duration (seconds)</Label>
-        <Input
-          type="number"
-          min={1}
-          max={isMultiLipsync ? 60 : isFastH3Lipsync ? 30 : 10}
-          step={0.5}
-          value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
-        />
-        {isMultiLipsync ? (
-          <p className="text-[10px] text-purple-400">
-            💡 ตั้งให้ตรงกับความยาว เสียง1 + เสียง2 รวมกัน (เช่น 3s + 3s → ตั้ง 6)
-          </p>
-        ) : isFastH3Lipsync ? (
-          <p className="text-[10px] text-pink-400">
-            💡 ตั้งให้ตรงกับความยาวเสียงพูด ไม่งั้นวิดีโอจะถูกตัดหรือยาวเกิน
-          </p>
-        ) : isFastH3 ? (
-          <p className="text-[10px] text-amber-400">
-            💡 แนะนำ 5 วินาทีสำหรับ quick preview, 10 วินาทีสำหรับ full video
-          </p>
-        ) : null}
-      </div>
+      {/* ✅ Auto Info Grid (Character Swap) */}
+      {isCharSwap && (
+        <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-2.5 text-[10px] text-slate-400">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <span className="text-slate-500">📐 Resolution:</span>{' '}
+              <span className="text-cyan-400">Auto (480p budget)</span>
+            </div>
+            <div>
+              <span className="text-slate-500">⏱️ Duration:</span>{' '}
+              <span className="text-cyan-400">Auto (ตามวิดีโอต้นฉบับ)</span>
+            </div>
+            <div>
+              <span className="text-slate-500">🎞️ FPS:</span>{' '}
+              <span className="text-cyan-400">Auto (จากวิดีโอต้นฉบับ)</span>
+            </div>
+            <div>
+              <span className="text-slate-500">🔊 Audio:</span>{' '}
+              <span className="text-cyan-400">จากวิดีโอต้นฉบับ</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duration (ซ่อนสำหรับ Character Swap) */}
+      {!isCharSwap && (
+        <div className="space-y-2">
+          <Label>⏱️ Duration (seconds)</Label>
+          <Input
+            type="number"
+            min={1}
+            max={isMultiLipsync ? 60 : isOminiRef ? 20 : isFastH3Lipsync ? 30 : 10}
+            step={0.5}
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+          />
+          {isMultiLipsync ? (
+            <p className="text-[10px] text-purple-400">
+              💡 ตั้งให้ตรงกับความยาว เสียง1 + เสียง2 รวมกัน (เช่น 3s + 3s → ตั้ง 6)
+            </p>
+          ) : isOminiRef ? (
+            <p className="text-[10px] text-indigo-400">
+              💡 ตั้งให้ตรงกับความยาวเสียงรวมทั้งหมด
+            </p>
+          ) : isFastH3Lipsync ? (
+            <p className="text-[10px] text-pink-400">
+              💡 ตั้งให้ตรงกับความยาวเสียงพูด ไม่งั้นวิดีโอจะถูกตัดหรือยาวเกิน
+            </p>
+          ) : isFastH3 ? (
+            <p className="text-[10px] text-amber-400">
+              💡 แนะนำ 5 วินาทีสำหรับ quick preview, 10 วินาทีสำหรับ full video
+            </p>
+          ) : null}
+        </div>
+      )}
 
       {/* FPS (เฉพาะ LTX 2.3) */}
       {!isMiniMaxOrLTX25 && !isFastH3 && (
@@ -512,27 +616,35 @@ export function VideoControls({ onLoading, onResult }: TabProps) {
         onClick={generate}
         disabled={isGenerating}
         className={`w-full bg-gradient-to-r ${
-          isMultiLipsync
-            ? 'from-purple-500 to-fuchsia-600 hover:from-purple-400 hover:to-fuchsia-500'
-            : isFastH3Lipsync
-              ? 'from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500'
-              : isFastH3
-                ? 'from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500'
-                : 'from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500'
+          isCharSwap
+            ? 'from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500'
+            : isOminiRef
+              ? 'from-indigo-500 to-blue-600 hover:from-indigo-400 hover:to-blue-500'
+              : isMultiLipsync
+                ? 'from-purple-500 to-fuchsia-600 hover:from-purple-400 hover:to-fuchsia-500'
+                : isFastH3Lipsync
+                  ? 'from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500'
+                  : isFastH3
+                    ? 'from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500'
+                    : 'from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500'
         } ${isGenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
         {isGenerating
           ? '⏳ Generating Video...'
-          : isMultiLipsync
-            ? '🎤🎤 Generate Multi Lipsync'
-            : isFastH3Lipsync
-              ? '🎤 Generate Lipsync Video'
-              : isFastH3
-                ? '⚡ Fast Generate Video'
-                : '🎬 Generate Video'}
+          : isCharSwap
+            ? '🔄 Swap Character'
+            : isOminiRef
+              ? '🎬 Generate OminiRef Video'
+              : isMultiLipsync
+                ? '🎤🎤 Generate Multi Lipsync'
+                : isFastH3Lipsync
+                  ? '🎤 Generate Lipsync Video'
+                  : isFastH3
+                    ? '⚡ Fast Generate Video'
+                    : '🎬 Generate Video'}
       </Button>
 
-      {/* ✅ Cancel Button - แสดงเฉพาะตอนกำลังรัน */}
+      {/* Cancel Button */}
       {isGenerating && (
         <Button
           onClick={handleCancel}

@@ -1,5 +1,33 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+MINIMAX H3 Text to Image 
+
+[ minimax_h3_fl2va_pruned_int8_convrot ]   =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors
+
+[ qwen3vl_32b_minimax_h3_nvfp4 ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors
+
+[ minimax_h3_video_vae_fp16 ]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors
+
+[ minimax_h3_fl2v_turbo_8step_v1.0 ] => วางไฟล์ที่ /model/loras
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/loras/minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors
+
+--------------------------------------------------------------------------------------
+
+MOSS IMAGE SFT 
+
+[ moss_image_sft_int8_convrot ]  =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors
+
+[ qwen3.5_9b_w4a8_gptq ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors
+
+[ flux2-vae_small ]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors
+
+
 --------------------------------------------------------------------------------------
 
 FLUX3 Klein Base & Distill diffusion_models เลือกโหลดที่จะใช้ได้ ทีเหลือใช้ร่วมกัน

@@ -1,0 +1,269 @@
+{
+  "48": {
+    "inputs": {
+      "filename_prefix": "image_minimax_h3_t2i",
+      "images": [
+        "58:10",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "79": {
+    "inputs": {
+      "aspect_ratio": "4:3 (Standard)",
+      "megapixels": 1.5,
+      "multiple": 8
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:6": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:41": {
+    "inputs": {
+      "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "58:6",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Turbo LoRA (8 step) - bypass for base 30 steps",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:12": {
+    "inputs": {
+      "text": "主題：\nおばけの向こうで目が合った\n\n主体：\n20代の成人女性が白いおばけ風の布をかぶり、ラグの上で正面向きに座る。顔の見える開口部を上部中央に置き、胴は正面、腰だけ画面右へ少し寄せる。両腕が頭の周囲に大きなアーチを作る。\n\n人物・表情：\n布の開口部から茶色の大きな目、長いまつげ、鼻の上部と薄い茶色の前髪が見える。視線はまっすぐこちら。口と顎は白い布に隠し、見えている目元の肌は明るいピーチ色で薄い頬紅。長い茶色の髪が布の下から両肩の外へ落ちる。\n\n服装・ポーズ：\n頭の白い布に縦長の黒い楕円の目とピンクの丸い頬を描き、顔の下半分を覆う前垂れは胸の上で終わる。白い体に沿うノースリーブのミニワンピース。両肘を左右に高く開き、両前腕を頭頂へ寄せ、両手を頭の上で平らに重ねる。腕から透ける白いシフォンを長く垂らし、左右の画面端から下端まで流す。座った両腿を下に見せる。\n\n背景・光：\n白い毛足のあるラグの上。左手前に黒いランタンとキャンドル、左右の中景に発光するかぼちゃ、右上の奥に小さな白いおばけ人形。黒いレース、クモの巣飾り、壁の額が奥を埋める。左下から橙の柔らかな光、奥と画面右に紫の光。白布は手前で白さを保ち、端に桃色と薄紫の色光が乗る。\n\n構図・カメラ：\n縦3:4。正面寄りのやや高い視点で、頭上の重ねた手から腿の途中までを近く切り取る。両肘が左右上部、長い布が両縁、目元が上部中央を占める。両足は画面外。見える目と衣装を明瞭にし、部屋の小物は一段柔らかくする。\n\n質感・スタイル：\n写真表現。薄いシフォンの透けと重なり、厚みのある頭の布、ワンピースの細かな横皺を区別する。肌の光はなだらかで艶は控えめ、橙と紫の光を背景に残しつつ白を飛ばしすぎない。",
+      "clip": [
+        "58:13",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:13": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:11": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:46": {
+    "inputs": {
+      "width": [
+        "79",
+        0
+      ],
+      "height": [
+        "79",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:52": {
+    "inputs": {
+      "switch": false,
+      "on_false": [
+        "58:6",
+        0
+      ],
+      "on_true": [
+        "58:41",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch (Model)",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:16": {
+    "inputs": {
+      "model": [
+        "58:44",
+        0
+      ],
+      "conditioning": [
+        "58:12",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:15": {
+    "inputs": {
+      "noise_seed": 956203991006714
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:17": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:9": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 30,
+      "denoise": 1,
+      "model": [
+        "58:44",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:44": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "58:52",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "Model Attention Backend",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:14": {
+    "inputs": {
+      "noise": [
+        "58:15",
+        0
+      ],
+      "guider": [
+        "58:16",
+        0
+      ],
+      "sampler": [
+        "58:17",
+        0
+      ],
+      "sigmas": [
+        "58:9",
+        0
+      ],
+      "latent_image": [
+        "58:46",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:39": {
+    "inputs": {
+      "av_latent": [
+        "58:14",
+        0
+      ]
+    },
+    "class_type": "LTXVSeparateAVLatent",
+    "_meta": {
+      "title": "Separate AV Latent",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "58:10": {
+    "inputs": {
+      "samples": [
+        "58:39",
+        0
+      ],
+      "vae": [
+        "58:11",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  }
+}

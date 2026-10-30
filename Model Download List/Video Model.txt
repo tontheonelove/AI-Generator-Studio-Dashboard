@@ -1,6 +1,31 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
 อย่าลืม Install Node ให้เรียบร้อยนะครับ หากไม่มั่นใจ ให้ Import Workflow ไปยัง Comfyui คุณ แล้ว Install Missing Node ครับ
+[ Custom Node ]
+https://github.com/akatz-ai/h3-relay
+
+[ minimax_h3_ref2va_pruned_int8_convrot ]
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors
+
+[ text_encoders ] =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors
+
+[ minimax_h3_video_vae] => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors
+
+[ minimax_h3_audio_vae ]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/MiniMax-H3/blob/main/vae/minimax_h3_audio_vae_fp32.safetensors
+
+[ Lora 2 ตัว ]  => วางไฟล์ที่ /model/loras
+https://huggingface.co/lightx2v/Minimax-h3-Turbo/resolve/main/minimax_h3_ref2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors
+
+https://huggingface.co/akatz-ai/MiniMax-H3-Character-Swap-LoRA/resolve/main/h3_character_swap_v1.5.safetensors
+
+--------------------------------------------------------------------------------
+
+
+
+อย่าลืม Install Node ให้เรียบร้อยนะครับ หากไม่มั่นใจ ให้ Import Workflow ไปยัง Comfyui คุณ แล้ว Install Missing Node ครับ
 
 --------------------------------------------------------------------------------
 [ MINIMAX H3 4STEP ] ทั้งแบบ I2V , SINGLE LIPSYNC และ MULTI LIPSYNC  โหลดทั้งหมดตามด้านล่าง และ ติดตั้ง Custom Node ด้วย 

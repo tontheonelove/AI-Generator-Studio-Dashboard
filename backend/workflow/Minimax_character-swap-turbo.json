@@ -1,0 +1,308 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "2": {
+    "inputs": {
+      "shift_video": 12,
+      "shift_audio": 3,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "ModelSamplingMiniMaxH3",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "3": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "Model Attention Backend",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "4": {
+    "inputs": {
+      "lora_name": "h3_character_swap_v1.5.safetensors",
+      "strength_model": 1,
+      "model": [
+        "204",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Character Swap v1",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "6": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "7": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "8": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "9": {
+    "inputs": {
+      "image": "Qwen_image_2.1_00032.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "2 · Upload character reference",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "11": {
+    "inputs": {
+      "value": "Replace only the women in the foreground in <Video 1> with the charactor sheet in <Picture 1>. Keep the replacement women's identity, and art style from <Picture 1>. Preserve the source video's camera, framing, background, lighting, objects, and all other people. Match the selected women's position, scale, pose, and movement throughout the clip. Do not show the reference sheet or its background."
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Swap prompt · preserved",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "23": {
+    "inputs": {
+      "fps": [
+        "219",
+        6
+      ],
+      "bit_depth": "auto",
+      "color_space": "sRGB",
+      "codec": "none",
+      "images": [
+        "223",
+        0
+      ],
+      "audio": [
+        "219",
+        1
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "24": {
+    "inputs": {
+      "filename_prefix": "labs-swap-relay/result",
+      "format": "mp4",
+      "format.codec": "h264",
+      "format.codec.encoding": "re-encode",
+      "format.codec.encoding.crf": 16,
+      "codec": "auto",
+      "video": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "30": {
+    "inputs": {
+      "file": "dfedb49c6a7176858552ae79470dfc37_720w.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "1 · Upload source video",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "204": {
+    "inputs": {
+      "lora_name": "minimax_h3_ref2v_turbo_4step_v1.0_768p_comfyui_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Turbo 8 — strength 1.0",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "205": {
+    "inputs": {
+      "device": "gpu:0",
+      "clip": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "SelectCLIPDevice",
+    "_meta": {
+      "title": "Select CLIP Device",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "219": {
+    "inputs": {
+      "resolution": "480",
+      "duration_seconds": 0,
+      "video": [
+        "30",
+        0
+      ]
+    },
+    "class_type": "LabsH3PrepareVideo",
+    "_meta": {
+      "title": "Resolution budget & output duration",
+      "cnr_id": "h3-relay",
+      "ver": "cf489b7f2472fdf33866fae36de49aea03ef464f"
+    }
+  },
+  "221": {
+    "inputs": {
+      "source": [
+        "219",
+        7
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Prepared dimensions & duration",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  },
+  "223": {
+    "inputs": {
+      "fps": [
+        "219",
+        6
+      ],
+      "prompt": [
+        "11",
+        0
+      ],
+      "window_frames": "124",
+      "history_frames": "18",
+      "seed": 904234,
+      "steps": 4,
+      "cfg": 1,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
+      "denoise": 1,
+      "source_count": [
+        "219",
+        5
+      ],
+      "window_controls": "{\"windows\":{\"0\":{\"seed\":\"904234\",\"locked\":true,\"record_id\":\"7738811521c446f6aaa9e12bf2a8d8a9\"}},\"config_key\":\"c547764d5c27e744d97b4032091f0a16fe726854801f28e623df2fc54b581a1a\"}",
+      "model": [
+        "4",
+        0
+      ],
+      "clip": [
+        "205",
+        0
+      ],
+      "video_vae": [
+        "7",
+        0
+      ],
+      "audio_vae": [
+        "8",
+        0
+      ],
+      "source": [
+        "219",
+        0
+      ],
+      "reference_image": [
+        "9",
+        0
+      ],
+      "source_audio": [
+        "219",
+        1
+      ]
+    },
+    "class_type": "H3RelayWindowedEdit",
+    "_meta": {
+      "title": "H3 Relay · Character Swap · windows & rerolls",
+      "cnr_id": "h3-relay",
+      "ver": "cf489b7f2472fdf33866fae36de49aea03ef464f"
+    }
+  },
+  "224": {
+    "inputs": {
+      "source": [
+        "223",
+        1
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Window plan · exact source-frame mapping",
+      "cnr_id": "comfy-core",
+      "ver": "0.41.2"
+    }
+  }
+}
