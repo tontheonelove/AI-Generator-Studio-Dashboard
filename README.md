@@ -10,7 +10,7 @@
   - 🎥 Minimax H3 4 Step Charactor Swap Added
   - 🚀 FAST H3 8 Step OminiREF + Lipsync Added
 ---
-<img src=ex2.png/>
+<img src=ex2.jpg/>
 
 
 # Feature
