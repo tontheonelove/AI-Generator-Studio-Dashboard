@@ -28,6 +28,9 @@ const FACESWAP_MEGAPIXELS = [
   { value: '3', label: '3 MP (1728x1728)' },
 ];
 
+// ✅ โมเดล Edit ที่มี Prompt Upsampler
+const UPSAMPLER_EDIT_MODELS = ['P-H3-Image Edit'];
+
 export function EditControls({ onLoading, onResult }: TabProps) {
   const [model, setModel] = useState(EDIT_MODELS[0].value);
   const [prompt, setPrompt] = useState('');
@@ -38,6 +41,9 @@ export function EditControls({ onLoading, onResult }: TabProps) {
 
   const [aspectRatio, setAspectRatio] = useState('1:1 (Square)');
   const [megapixels, setMegapixels] = useState('2');
+
+  // ✅ Upsampler (P-H3)
+  const [useUpsampler, setUseUpsampler] = useState(false);
 
   // ✅ Cancel feature
   const abortRef = useRef<AbortController | null>(null);
@@ -52,6 +58,8 @@ export function EditControls({ onLoading, onResult }: TabProps) {
   const isFaceSwap = model === 'Qwen Image 2.1 FaceSwap';
   const isBodySwap = model === 'Qwen Image 2.1 Body Swap';
   const isSwapModel = isFaceSwap || isBodySwap;
+  const isPH3Edit = model === 'P-H3-Image Edit';
+  const isUpsamplerEdit = UPSAMPLER_EDIT_MODELS.includes(model);
 
   useEffect(() => {
     if (currentModel?.needsLora) {
@@ -65,6 +73,11 @@ export function EditControls({ onLoading, onResult }: TabProps) {
     }
   }, [model, currentModel?.needsLora]);
 
+  // ✅ Upsampler default: P-H3 เปิดเป็น default (ตรง workflow switch=true)
+  useEffect(() => {
+    setUseUpsampler(model === 'P-H3-Image Edit');
+  }, [model]);
+
   function handleModelChange(newModel: string) {
     setModel(newModel);
     setImage2Filename('');
@@ -73,28 +86,21 @@ export function EditControls({ onLoading, onResult }: TabProps) {
     setMegapixels('2');
   }
 
-  // ✅ ฟังก์ชันยกเลิกรวม
   async function handleCancel() {
     if (!abortRef.current) return;
-
     cancelledByUserRef.current = true;
-
-    // 1) บอก backend ให้ interrupt ComfyUI
     await cancelBackendJob();
-
-    // 2) abort stream ฝั่ง frontend
     abortRef.current.abort();
   }
 
   async function generate() {
     if (!currentModel) return;
-    if (isGenerating) return; // กันกดซ้ำ
+    if (isGenerating) return;
 
     if (!image1Filename) {
       alert('⚠️ Please upload Image 1!');
       return;
     }
-
     if (currentModel.image2Required && !image2Filename) {
       alert(`⚠️ ${currentModel.value} requires Image 2!`);
       return;
@@ -105,7 +111,6 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       alert('⚠️ Please enter an instruction!');
       return;
     }
-
     if (currentModel.needsLora && loraIndex < 0) {
       alert('⚠️ This model requires a LoRA! Please check lora_config.json');
       return;
@@ -120,11 +125,10 @@ export function EditControls({ onLoading, onResult }: TabProps) {
 
     onResult(null);
     onLoading({
-      title: isFaceSwap
-        ? 'Face Swapping...'
-        : isBodySwap
-          ? 'Body Swapping...'
-          : 'Editing Image...',
+      title: isFaceSwap ? 'Face Swapping...' :
+             isBodySwap ? 'Body Swapping...' :
+             isPH3Edit ? 'Editing with P-H3 (8 Steps)...' :
+             'Editing Image...',
       detail: 'Please wait...',
     });
 
@@ -139,6 +143,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
         height: 1024,
         lora_filename: selectedLora?.filename ?? '',
         lora_strength: selectedLora?.strength ?? 0,
+        use_upsampler: isUpsamplerEdit ? useUpsampler : false,   // ✅ เพิ่ม
         mode: 'edit',
         image1_filename: image1Filename,
         image2_filename: image2Filename,
@@ -147,16 +152,9 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       for await (const ev of readSSE('/api/generate-stream', payload, controller.signal)) {
         if (ev.type === 'progress') {
           const pct = Math.round((ev.value / ev.max) * 100);
-          onLoading({
-            title: `${pct}%`,
-            detail: `Step ${ev.value}/${ev.max}`,
-            progress: pct,
-          });
+          onLoading({ title: `${pct}%`, detail: `Step ${ev.value}/${ev.max}`, progress: pct });
         } else if (ev.type === 'executing' && ev.node) {
-          onLoading({
-            title: 'Processing...',
-            detail: `Node ${ev.node}...`,
-          });
+          onLoading({ title: 'Processing...', detail: `Node ${ev.node}...` });
         } else if (ev.type === 'saved') {
           onResult({
             kind: 'image',
@@ -170,7 +168,6 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       }
     } catch (e: any) {
       const message = String(e?.message || '');
-
       const isUserCancelled =
         cancelledByUserRef.current ||
         e instanceof SSECancelledError ||
@@ -180,10 +177,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
 
       if (isUserCancelled) {
         console.log('[Cancel] Edit generation cancelled by user');
-        onLoading({
-          title: '⏹ Cancelled',
-          detail: 'Generation was cancelled',
-        });
+        onLoading({ title: '⏹ Cancelled', detail: 'Generation was cancelled' });
         setTimeout(() => onLoading(null), 1500);
       } else {
         alert('Error: ' + message);
@@ -193,11 +187,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       abortRef.current = null;
       setIsGenerating(false);
       cancelledByUserRef.current = false;
-
-      // ถ้าไม่ใช่การ cancel ให้เคลียร์ loading
-      if (!wasCancelled) {
-        onLoading(null);
-      }
+      if (!wasCancelled) onLoading(null);
     }
   }
 
@@ -220,14 +210,22 @@ export function EditControls({ onLoading, onResult }: TabProps) {
         </Select>
       </div>
 
+      {/* ✅ P-H3 Edit Info Banner */}
+      {isPH3Edit && (
+        <div className="rounded-lg border border-fuchsia-700/30 bg-fuchsia-900/20 p-2.5 text-xs text-fuchsia-300">
+          <span className="mr-1">🌸</span>
+          <strong>P-H3-Image Edit:</strong> 8-step เร็ว — Resolution auto ตามรูปที่ 1 |
+          รูปที่ 2 (optional) ใช้เป็น reference ให้ตัว Upsampler เท่านั้น | Upsampler เปิดเป็น default
+        </div>
+      )}
+
       {/* Image 1 */}
       <UploadBox
         label={
-          isFaceSwap
-            ? '📷 Image 1 (Body Reference)'
-            : isBodySwap
-              ? '📷 Image 1 (Scene Reference)'
-              : '📷 Image 1'
+          isFaceSwap ? '📷 Image 1 (Body Reference)' :
+          isBodySwap ? '📷 Image 1 (Scene Reference)' :
+          isPH3Edit ? '📷 Image 1 (รูปที่จะแก้ไข - บังคับ)' :
+          '📷 Image 1'
         }
         kind="image"
         onUploaded={setImage1Filename}
@@ -238,11 +236,10 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       {currentModel?.needsImage2 && (
         <UploadBox
           label={
-            isFaceSwap
-              ? '📷 Image 2 (Head Reference)'
-              : isBodySwap
-                ? '📷 Image 2 (Body Reference)'
-                : '📷 Image 2'
+            isFaceSwap ? '📷 Image 2 (Head Reference)' :
+            isBodySwap ? '📷 Image 2 (Body Reference)' :
+            isPH3Edit ? '📷 Image 2 (Optional - reference สำหรับ Upsampler)' :
+            '📷 Image 2'
           }
           kind="image"
           onUploaded={setImage2Filename}
@@ -261,14 +258,11 @@ export function EditControls({ onLoading, onResult }: TabProps) {
               </SelectTrigger>
               <SelectContent className="min-w-[180px]">
                 {FACESWAP_ASPECT_RATIOS.map((ar) => (
-                  <SelectItem key={ar.value} value={ar.value}>
-                    {ar.label}
-                  </SelectItem>
+                  <SelectItem key={ar.value} value={ar.value}>{ar.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
             <Label>📊 Resolution</Label>
             <Select value={megapixels} onValueChange={(v) => v && setMegapixels(v)}>
@@ -277,9 +271,7 @@ export function EditControls({ onLoading, onResult }: TabProps) {
               </SelectTrigger>
               <SelectContent className="min-w-[180px]">
                 {FACESWAP_MEGAPIXELS.map((mp) => (
-                  <SelectItem key={mp.value} value={mp.value}>
-                    {mp.label}
-                  </SelectItem>
+                  <SelectItem key={mp.value} value={mp.value}>{mp.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -303,20 +295,16 @@ export function EditControls({ onLoading, onResult }: TabProps) {
                 <SelectItem value="-1">⚠️ No LoRA found</SelectItem>
               ) : (
                 loras.map((l, i) => (
-                  <SelectItem key={l.filename} value={String(i)}>
-                    {l.label}
-                  </SelectItem>
+                  <SelectItem key={l.filename} value={String(i)}>{l.label}</SelectItem>
                 ))
               )}
             </SelectContent>
           </Select>
-          <p className="text-[10px] text-amber-400">
-            ⚠️ โมเดลนี้บังคับใช้ LoRA ในการสร้าง
-          </p>
+          <p className="text-[10px] text-amber-400">⚠️ โมเดลนี้บังคับใช้ LoRA ในการสร้าง</p>
         </div>
       )}
 
-      {/* Prompt - ซ่อนเมื่อ fixedPrompt */}
+      {/* Prompt */}
       {currentModel?.fixedPrompt ? (
         <div className="space-y-2">
           <Label>🔒 Prompt (Fixed)</Label>
@@ -347,41 +335,50 @@ export function EditControls({ onLoading, onResult }: TabProps) {
         </div>
       )}
 
+      {/* ✅ Upsampler Toggle (P-H3 Edit) */}
+      {isUpsamplerEdit && (
+        <button
+          type="button"
+          onClick={() => setUseUpsampler((v) => !v)}
+          className={`flex w-full items-center justify-between rounded-lg border p-3 text-left text-xs transition ${
+            useUpsampler
+              ? 'border-purple-500/50 bg-purple-900/20 text-purple-300'
+              : 'border-slate-700 bg-slate-800/50 text-slate-400'
+          }`}
+        >
+          <span>
+            🪄 <strong>AI Prompt Upsampler</strong>
+            <br />
+            <span className="text-[10px] opacity-80">
+              ให้ AI ขยายคำสั่ง edit สั้นๆ โดยดูรูปที่ 1 (และรูปที่ 2 ถ้ามี) ประกอบ
+            </span>
+          </span>
+          <span className={`ml-2 shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${useUpsampler ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+            {useUpsampler ? 'ON' : 'OFF'}
+          </span>
+        </button>
+      )}
+
       {/* Tips */}
       <div className="rounded-lg border border-slate-700/50 bg-slate-800/50 p-3 text-xs text-slate-400">
         {model === 'KREA-2-CONTROLNET' ? (
-          <p>
-            💡 <strong>Tip:</strong> ใช้คำสั่งสั้นๆ Gemma4 จะช่วย gen prompt ยาวให้อัตโนมัติ
-            รักษา pose เดิมด้วย Depth ControlNet
-          </p>
+          <p>💡 <strong>Tip:</strong> ใช้คำสั่งสั้นๆ Gemma4 จะช่วย gen prompt ยาวให้อัตโนมัติ รักษา pose เดิมด้วย Depth ControlNet</p>
         ) : model === 'Krea2 Identity Edit' ? (
-          <p>
-            💡 <strong>Tip:</strong> ใส่รูป reference 1 รูป + คำสั่ง จะคงเอกลักษณ์บุคคลไว้
-          </p>
+          <p>💡 <strong>Tip:</strong> ใส่รูป reference 1 รูป + คำสั่ง จะคงเอกลักษณ์บุคคลไว้</p>
         ) : model === 'Krea2 Identity Edit (2 Ref)' ? (
-          <p>
-            💡 <strong>Tip:</strong> ใส่รูป 2 รูป เช่น คน 2 คน แล้วสั่งให้มาอยู่ในฉากเดียวกัน
-          </p>
+          <p>💡 <strong>Tip:</strong> ใส่รูป 2 รูป เช่น คน 2 คน แล้วสั่งให้มาอยู่ในฉากเดียวกัน</p>
         ) : model === 'Flux Face Swap' ? (
-          <p>
-            💡 <strong>Tip:</strong> Image 1 = รูปต้นทาง, Image 2 = รูปใบหน้าที่จะสลับมา
-          </p>
+          <p>💡 <strong>Tip:</strong> Image 1 = รูปต้นทาง, Image 2 = รูปใบหน้าที่จะสลับมา</p>
         ) : model === 'Qwen Image 2.1 Union Control' ? (
-          <p>
-            💡 <strong>Tip:</strong> ใช้ Canny ControlNet รักษาโครงร่างรูปต้นแบบ + LoRA 8-step turbo สำหรับความเร็วสูง
-          </p>
+          <p>💡 <strong>Tip:</strong> ใช้ Canny ControlNet รักษาโครงร่างรูปต้นแบบ + LoRA 8-step turbo สำหรับความเร็วสูง</p>
+        ) : isPH3Edit ? (
+          <p>💡 <strong>Tip:</strong> Resolution ตามรูปที่ 1 อัตโนมัติ — รูปที่ 2 เป็นเพียง reference ให้ Upsampler เข้าใจบริบทเพิ่ม (ไม่บังคับ)</p>
         ) : isFaceSwap ? (
-          <p>
-            💡 <strong>Tip:</strong> Image 1 = ร่างกาย/ฉากต้นแบบ, Image 2 = ใบหน้าที่จะสลับมา. Prompt ถูก fix ไว้แล้วเพื่อผลลัพธ์ที่ดีที่สุด
-          </p>
+          <p>💡 <strong>Tip:</strong> Image 1 = ร่างกาย/ฉากต้นแบบ, Image 2 = ใบหน้าที่จะสลับมา. Prompt ถูก fix ไว้แล้วเพื่อผลลัพธ์ที่ดีที่สุด</p>
         ) : isBodySwap ? (
-          <p>
-            💡 <strong>Tip:</strong> Image 1 = ฉาก/pose ต้นแบบ, Image 2 = ร่างกายที่จะสลับมา (แนะนำรูป pose neutral). Prompt ถูก fix ไว้แล้วเพื่อผลลัพธ์ที่ดีที่สุด
-          </p>
+          <p>💡 <strong>Tip:</strong> Image 1 = ฉาก/pose ต้นแบบ, Image 2 = ร่างกายที่จะสลับมา (แนะนำรูป pose neutral). Prompt ถูก fix ไว้แล้วเพื่อผลลัพธ์ที่ดีที่สุด</p>
         ) : (
-          <p>
-            💡 <strong>Tip:</strong> Image 2 เป็น optional ใช้สำหรับ reference เพิ่มเติม
-          </p>
+          <p>💡 <strong>Tip:</strong> Image 2 เป็น optional ใช้สำหรับ reference เพิ่มเติม</p>
         )}
       </div>
 
@@ -389,20 +386,20 @@ export function EditControls({ onLoading, onResult }: TabProps) {
       <Button
         onClick={generate}
         disabled={isGenerating}
-        className={`w-full bg-gradient-to-r from-pink-500 to-orange-600 hover:from-pink-400 hover:to-orange-500 ${
-          isGenerating ? 'opacity-60 cursor-not-allowed' : ''
-        }`}
+        className={`w-full bg-gradient-to-r ${
+          isPH3Edit
+            ? 'from-fuchsia-500 to-purple-600 hover:from-fuchsia-400 hover:to-purple-500'
+            : 'from-pink-500 to-orange-600 hover:from-pink-400 hover:to-orange-500'
+        } ${isGenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
-        {isGenerating
-          ? '⏳ Processing...'
-          : isFaceSwap
-            ? '✨ Face Swap'
-            : isBodySwap
-              ? '✨ Body Swap'
-              : '✨ Edit Image'}
+        {isGenerating ? '⏳ Processing...' :
+         isPH3Edit ? '🌸 Edit with P-H3' :
+         isFaceSwap ? '✨ Face Swap' :
+         isBodySwap ? '✨ Body Swap' :
+         '✨ Edit Image'}
       </Button>
 
-      {/* ✅ Cancel Button - แสดงเฉพาะตอนกำลังรัน */}
+      {/* Cancel Button */}
       {isGenerating && (
         <Button
           onClick={handleCancel}

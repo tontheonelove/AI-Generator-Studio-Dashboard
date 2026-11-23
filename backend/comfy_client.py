@@ -263,7 +263,7 @@ def generate_image_stream(prompt_text, seed, width, height, lora_filename, lora_
         yield {"type": "final_result", "data": final_result}
 
 
-def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, lora_filename="", lora_strength=0.0):
+def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, lora_filename="", lora_strength=0.0, use_upsampler=False):
     """Generator สำหรับ Edit Mode แบบ Streaming (รองรับ LoRA + Optional Image2)"""
     client_id = get_client_id()
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -282,6 +282,12 @@ def generate_edit_stream(prompt_text, image1_filename, image2_filename, config, 
                 node_inputs["text"] = prompt_text
     else:
         print(f"[Edit] 🔒 Using fixed prompt for {config.get('file')}")
+    
+    # ✅ Inject Prompt Upsampler switch (P-H3)
+    upsampler_id = config.get("upsampler_switch_id")
+    if upsampler_id and upsampler_id in workflow:
+        workflow[upsampler_id]["inputs"][config.get("upsampler_switch_key", "switch")] = bool(use_upsampler)
+        print(f"[Edit] 🪄 Prompt Upsampler: {'ON' if use_upsampler else 'OFF'}")
 
     # Inject Seed
     actual_seed = random.randint(1, 10**14)
@@ -448,6 +454,9 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
         workflow[image2_node_id]["inputs"]["subfolder"] = ""
         workflow[image2_node_id]["inputs"]["type"] = "input"
         print(f"[Video] 🖼️ Image 2 injected: {image2_filename}")
+    elif not has_image2 and config.get("require_image2"):
+        yield {"type": "error", "message": "This model requires a last-frame image (Image 2)"}
+        return
     elif not has_image2 and image2_node_id and config.get("disable_nodes_if_no_img2"):
         disabled_node_ids = set(str(nid) for nid in config["disable_nodes_if_no_img2"])
         for node_id in disabled_node_ids:
@@ -541,6 +550,12 @@ def generate_video_stream(prompt_text, image1_filename, audio_filename, width, h
             length_value = int(round(length * config["length_multiplier"]))
         print(f"[Video] ⏱️ Length: {length_value} frames (request: {length}s, multiplier: {config.get('length_multiplier', 1)})")
         workflow[config["length_id"]]["inputs"][length_key] = length_value
+
+    # ✅ Inject Duration (seconds) — สำหรับ workflow ที่มี math node แปลงเป็น frames
+    if config.get("duration_id") and config["duration_id"] in workflow:
+        duration_key = config.get("duration_key", "value")
+        workflow[config["duration_id"]]["inputs"][duration_key] = length
+        print(f"[Video] ⏱️ Duration: {length}s -> node {config['duration_id']} key '{duration_key}'")
 
     # ✅ Inject FPS (support fixed_fps) - ทำครั้งเดียว
     if config.get("fps_id") and config["fps_id"] in workflow:

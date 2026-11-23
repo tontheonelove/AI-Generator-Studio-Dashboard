@@ -2,6 +2,27 @@
 
 --------------------------------------------------------------------------------
 
+RelayVSR  Upscale X4
+
+[ relayvsr_x4_int8_convrot ]   => วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/RelayVSR/blob/main/diffusion_models/relayvsr_x4_int8_convrot.safetensors
+
+[ relayvsr_flash_vae_x4 ] =>วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/RelayVSR/blob/main/vae/relayvsr_flash_vae_x4_fp32.safetensors
+
+
+--------------------------------------------------------------------------------
+
+RelayVSR Video Upscale X2
+
+[ relayvsr_x2_lightx2v_int8_convrot ]  => วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/RelayVSR/blob/main/diffusion_models/relayvsr_x2_lightx2v_int8_convrot.safetensors
+
+[ relayvsr_flash_vae_x2 ]  =>วางไฟล์ที่ /model/vae
+https://huggingface.co/Comfy-Org/RelayVSR/blob/main/vae/relayvsr_flash_vae_x2_fp32.safetensors
+
+--------------------------------------------------------------------------------
+
 [NVIDIA PID] [UPSCALE 4K]
 
 [pid_flux2_1024_to_4096_4step_bf16]  => วางไฟล์ที่ /model/diffusion_models

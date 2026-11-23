@@ -1,5 +1,5 @@
 export const IMAGE_MODELS = [
-  'Minimax H3 Image','Moss Image SFT','Flux3 Klein Image Distilled (16Step)','Flux3 Klein Image Base (50Step)',
+  'P-H3-Image','Minimax H3 Image','Moss Image SFT','Flux3 Klein Image Distilled (16Step)','Flux3 Klein Image Base (50Step)',
   'Qwen Image 2.1 Turbo 8 Step','Qwen Image 2.1','Qwen Image 2.1 (NSFW)','Krea2 Turbo', 'Ideogram 4',
   'Boogu Image Turbo', 'Z-image x PID4K',
   'Z-Image Turbo', 'Z-Image Turbo-GGUF', 'Flux 2 Klein-GGUF',
@@ -9,6 +9,9 @@ export const IMAGE_MODELS = [
 export const SIZE_OPTIONS = [720, 864, 1024, 1080, 1280, 1440, 1536, 1920, 2160, 2560, 3840];
 
 export const VIDEO_MODELS = [
+  { value: 'PIKA H3 FLEX REF2V', label: '⚡ PIKA H3 FLEX REF2V (2 References)', needsImage: true },
+  { value: 'PIKA H3 FLEX FL2V', label: '⚡ PIKA H3 FLEX FL2V (First+Last Frame)', needsImage: true },
+  { value: 'PIKA H3 FLEX T2V', label: '⚡ PIKA H3 FLEX T2V (6-Step)', needsImage: false },
   { value: 'Minimax Charactor Swap Turbo', label: '🔄 Minimax Character Swap Turbo (Video+Image)', needsImage: true, needsVideo: true },
   { value: 'Fast H3 OminiRef 8 Step with lipsync', label: '🎬 Fast H3 OminiRef 8 Step (Multi-Ref)', needsImage: true, needsAudio: true },
   { value: 'Minimax H3 I2V Fast 4 Step', label: '⚡ Minimax H3 I2V Fast เร็วมาก แนะนำ *', needsImage: true },
@@ -27,6 +30,8 @@ export const VIDEO_MODELS = [
 ];
 
 export const TOOLS_MODELS = [
+  { value: 'RelayVsr-Video-x2-upscale', label: '🎬 RelayVSR Video x2 Upscale', needsVideo: true, hasScaleQuality: false },
+  { value: 'RelayVsr-Video-x4-upscale', label: '🎬 RelayVSR Video x4 Upscale', needsVideo: true, hasScaleQuality: false },
   {
     value: 'RTX Image Upscale',
     label: '🖼️ RTX Image Upscale (4K Enhancement)',
@@ -70,6 +75,16 @@ export const TOOLS_MODELS = [
 ];
 
 export const EDIT_MODELS = [
+  {
+    value: 'P-H3-Image Edit',
+    label: '🌸 P-H3-Image Edit (8-Step)',
+    needsImage2: true,
+    image2Required: false,
+    needsLora: false,
+    promptLabel: '📝 Edit Instruction',
+    promptRows: 3,
+    promptPlaceholder: 'Describe the edit... e.g., change the lighting to night time',
+  },
   {
     value: 'Flux3 Klein Distilled Edit Fast',
     label: '⚡ Flux3 Klein Distilled Edit Fast (1-2 Images)',

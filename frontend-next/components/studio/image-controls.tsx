@@ -22,7 +22,8 @@ const NO_LORA_MODELS = [
   'Flux3 Image Base (50Step)',
   'Flux3 Klein Image Distilled (16Step)',
   'Moss Image SFT',
-  'Minimax H3 Image',   // ✅ เพิ่ม
+  'Minimax H3 Image',
+  'P-H3-Image',   // ✅ เพิ่ม
   'Ideogram 4',
 ];
 
@@ -30,6 +31,7 @@ const UPSAMPLER_MODELS = [
   'Flux3 Image Base (50Step)',
   'Flux3 Klein Image Distilled (16Step)',
   'Moss Image SFT',
+  'P-H3-Image',   // ✅ เพิ่ม
 ];
 
 // ✅ โมเดลที่มี Turbo Mode (สลับ Base/Turbo LoRA)
@@ -71,12 +73,12 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
   const [useUpsampler, setUseUpsampler] = useState(false);
   const [useTurbo, setUseTurbo] = useState(false);
 
-  // ✅ Cancel feature: เก็บ AbortController + สถานะกำลัง generate
+  // ✅ Cancel feature
   const abortRef = useRef<AbortController | null>(null);
   const cancelledByUserRef = useRef(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // ✅ เช็คว่าโมเดลปัจจุบันรองรับ LoRA หรือไม่
+  // ✅ Flags
   const supportsLora = !NO_LORA_MODELS.includes(model);
   const isQwen21 = model === 'Qwen Image 2.1' || model === 'Qwen Image 2.1 (NSFW)';
   const isNSFW = model === 'Qwen Image 2.1 (NSFW)';
@@ -86,6 +88,7 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
   const isFlux3 = isFlux3Base || isFlux3Distilled;
   const isMossSFT = model === 'Moss Image SFT';
   const isMinimaxH3Image = model === 'Minimax H3 Image';
+  const isPH3Image = model === 'P-H3-Image';   // ✅ เพิ่ม
   const isUpsamplerModel = UPSAMPLER_MODELS.includes(model);
 
   useEffect(() => {
@@ -97,14 +100,15 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
     }
   }, [model, supportsLora]);
 
-  // ✅ ตั้ง Upsampler / Turbo default state เมื่อเปลี่ยนโมเดล
+  // ✅ ตั้ง Upsampler / Turbo default เมื่อเปลี่ยนโมเดล
   useEffect(() => {
-    if (model === 'Flux3 Klein Image Distilled (16Step)') {
+    // P-H3-Image: workflow default switch=true → เปิด Upsampler เป็น default
+    if (model === 'Flux3 Klein Image Distilled (16Step)' || model === 'P-H3-Image') {
       setUseUpsampler(true);
     } else {
       setUseUpsampler(false);
     }
-    setUseTurbo(false);  // reset turbo ทุกครั้งที่เปลี่ยนโมเดล
+    setUseTurbo(false);
   }, [model]);
 
   useEffect(() => {
@@ -129,23 +133,19 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
     }
   }
 
-  // ✅ ฟังก์ชันยกเลิกรวม (เรียกจากปุ่ม Cancel)
   async function handleCancel() {
     if (!abortRef.current) return;
     cancelledByUserRef.current = true;
-    // 1) บอก backend ให้ interrupt ComfyUI
     await cancelBackendJob();
-    // 2) abort stream ฝั่ง frontend
     abortRef.current.abort();
   }
 
   async function generate() {
     if (!prompt.trim()) { alert('Please enter a prompt!'); return; }
-    if (isGenerating) return; // กันกดซ้ำ
+    if (isGenerating) return;
 
     const lora = supportsLora && loraIndex >= 0 ? loras[loraIndex] : undefined;
 
-    // ✅ สร้าง AbortController ใหม่ทุกครั้งที่ generate
     const controller = new AbortController();
     abortRef.current = controller;
     cancelledByUserRef.current = false;
@@ -158,11 +158,13 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
       title: isFlux3Base ? 'Generating (50 Steps - High Quality)...' :
              isFlux3Distilled ? 'Generating (16 Steps - Balanced)...' :
              isMossSFT ? 'Generating Moss (25 Steps)...' :
+             isPH3Image ? 'Generating P-H3 (8 Steps)...' :
              isMinimaxH3Image ? (useTurbo ? 'Generating (8 Steps - Turbo)...' : 'Generating (30 Steps - High Quality)...') :
              'Generating...',
       detail: isFlux3Base ? 'This may take 2-4 minutes...' :
               isFlux3Distilled ? 'This may take 1-2 minutes...' :
               isMossSFT ? 'This may take 1-2 minutes...' :
+              isPH3Image ? '8-step manual sigmas - fast...' :
               isMinimaxH3Image ? (useTurbo ? 'Turbo mode - very fast...' : 'This may take 2-3 minutes...') :
               'Please wait'
     });
@@ -183,7 +185,6 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
 
         if (ev.type === 'progress') {
           const pct = Math.round((ev.value / ev.max) * 100);
-          // ✅ แสดง Step X/Y แทน "Processing..."
           onLoading({
             title: `${pct}%`,
             detail: `Step ${ev.value}/${ev.max}`,
@@ -205,7 +206,6 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
     } catch (e: any) {
       const message = String(e?.message || '');
 
-      // ✅ ถ้า user cancel → ไม่แสดง alert (รวม race condition)
       const isUserCancelled =
         cancelledByUserRef.current ||
         e instanceof SSECancelledError ||
@@ -291,7 +291,7 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
         </div>
       )}
 
-      {/* ✅ Moss Image SFT Info Banner */}
+      {/* Moss Image SFT Info Banner */}
       {isMossSFT && (
         <div className="rounded-lg border border-lime-700/30 bg-lime-900/20 p-2.5 text-xs text-lime-300">
           <span className="mr-1">🌿</span>
@@ -299,11 +299,19 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
         </div>
       )}
 
-      {/* ✅ Minimax H3 Image Info Banner */}
+      {/* Minimax H3 Image Info Banner */}
       {isMinimaxH3Image && (
         <div className="rounded-lg border border-sky-700/30 bg-sky-900/20 p-2.5 text-xs text-sky-300">
           <span className="mr-1">🎬</span>
           <strong>Minimax H3 Image:</strong> โมเดลภาพนิ่งจากตระกูล MiniMax H3 — ปิด Turbo = คุณภาพสูงสุด (30 steps), เปิด Turbo = เร็วมาก (8 steps)
+        </div>
+      )}
+
+      {/* ✅ P-H3-Image Info Banner */}
+      {isPH3Image && (
+        <div className="rounded-lg border border-fuchsia-700/30 bg-fuchsia-900/20 p-2.5 text-xs text-fuchsia-300">
+          <span className="mr-1">🌸</span>
+          <strong>P-H3-Image:</strong> 8-step (Manual Sigmas) บนฐาน MiniMax H3 + LoRA เฉพาะ — Upsampler เปิดเป็น default แนะนำพิมพ์ prompt สั้นๆ แล้วให้ AI ขยายรายละเอียด
         </div>
       )}
 
@@ -370,7 +378,7 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
         )}
       </div>
 
-      {/* ✅ AI Prompt Upsampler Toggle - แสดงสำหรับ Flux3 และ Moss */}
+      {/* AI Prompt Upsampler Toggle */}
       {isUpsamplerModel && (
         <button
           type="button"
@@ -394,7 +402,7 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
         </button>
       )}
 
-      {/* ✅ Turbo Mode Toggle - แสดงเฉพาะ Minimax H3 Image */}
+      {/* Turbo Mode Toggle (Minimax H3 Image) */}
       {isMinimaxH3Image && (
         <button
           type="button"
@@ -467,21 +475,24 @@ export function ImageControls({ onLoading, onResult }: TabProps) {
                 ? 'from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500'
                 : isMossSFT
                   ? 'from-lime-500 to-green-600 hover:from-lime-400 hover:to-green-500'
-                  : isMinimaxH3Image
-                    ? 'from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500'
-                    : isTurbo8
-                      ? 'from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500'
-                      : 'from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500'
+                  : isPH3Image
+                    ? 'from-fuchsia-500 to-purple-600 hover:from-fuchsia-400 hover:to-purple-500'
+                    : isMinimaxH3Image
+                      ? 'from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500'
+                      : isTurbo8
+                        ? 'from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500'
+                        : 'from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500'
         } ${isGenerating ? 'opacity-60 cursor-not-allowed' : ''}`}>
         {isGenerating ? '⏳ Generating...' :
          isFlux3Base ? '✨ Generate Masterpiece (High Quality)' :
          isFlux3Distilled ? '✨ Generate Masterpiece (Balanced)' :
          isMossSFT ? '🌿 Generate Moss Image' :
+         isPH3Image ? '🌸 Generate P-H3 Image' :
          isMinimaxH3Image ? '🎬 Generate with MiniMax H3' :
          '✨ Generate Masterpiece'}
       </Button>
 
-      {/* ✅ Cancel Button - แสดงเฉพาะตอนกำลัง generate */}
+      {/* Cancel Button */}
       {isGenerating && (
         <Button
           onClick={handleCancel}

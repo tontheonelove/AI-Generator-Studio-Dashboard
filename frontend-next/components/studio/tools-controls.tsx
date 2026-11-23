@@ -51,6 +51,7 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
   );
 
   const isLLM = currentModel?.type === 'llm';
+  const isRelayVSR = model.startsWith('RelayVsr-Video');
 
   // Reset state เมื่อเปลี่ยนโมเดล
   function handleModelChange(newModel: string) {
@@ -296,6 +297,16 @@ export function ToolsControls({ onLoading, onResult }: TabProps) {
           <strong>{model}</strong> ใช้ NVIDIA RTX GPU สำหรับ AI-powered upscaling
           {model === 'NvidiaPID Upscale 4K' &&
             ' — NvidiaPID เป็นวิธี upscale แบบใหม่'}
+        </div>
+      )}
+
+      {/* ✅ RelayVSR Info Banner */}
+      {isRelayVSR && (
+        <div className="rounded-lg border border-violet-700/30 bg-violet-900/20 p-3 text-xs text-violet-300">
+          <span className="mr-1">🎬</span>
+          <strong>{model.includes('x4') ? 'RelayVSR x4' : 'RelayVSR x2'}:</strong>{' '}
+          AI Video Super-Resolution ({model.includes('x4') ? 'ขยาย 4 เท่า' : 'ขยาย 2 เท่า'}) — 1 step เร็วมาก
+          คง FPS + เสียงต้นฉบับอัตโนมัติ (ไม่ต้องตั้ง Scale/Quality)
         </div>
       )}
 

@@ -122,6 +122,12 @@ def get_current_prompt_id():
 WORKFLOW_SETTINGS = {
     # === Images Models ===
 
+    "P-H3-Image": {
+        "file": "workflow/image_p_h3_t2i.json","prompt_id": "29:24","prompt_key": "value","seed_id": "29:12",
+        "seed_key": "noise_seed","latent_id": "29:9","upsampler_switch_id": "29:23","upsampler_switch_key": "switch",
+        "output_node_id": "16","no_lora": True,
+    },
+
     "Minimax H3 Image": {
         "file": "workflow/image_minimax_h3_t2i.json","prompt_id": "58:12","prompt_key": "text","seed_id": "58:15",
         "seed_key": "noise_seed","latent_id": "58:46","turbo_switch_id": "58:52","turbo_switch_key": "switch",
@@ -215,6 +221,11 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Edit Models ===
+    "P-H3-Image Edit": {
+        "file": "workflow/image_p_h3_image_edit.json","prompt_id": "24","prompt_key": "value","seed_id": "12",
+        "seed_key": "noise_seed","image1_id": "26","image2_id": "30","disable_nodes_if_no_img2": ["30"],
+        "upsampler_switch_id": "23","upsampler_switch_key": "switch","output_node_id": "16","no_lora": True,
+    },
     "Flux3 Klein Distilled Edit Fast": {
         "file": "workflow/image_flux3_klein_distilled_image_edit.json","prompt_id": "4","prompt_key": "text",
         "seed_id": "7","seed_key": "seed","image1_id": "11","image2_id": "45",
@@ -277,6 +288,28 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Video Models ===
+
+    "PIKA H3 FLEX REF2V": {
+        "file": "workflow/video_pika_h3_flex_ref2va.json",
+        "prompt_id": "138","prompt_key": "value","seed_id": "129","seed_key": "noise_seed","image1_id": "149",
+        "image2_id": "150","disable_nodes_if_no_img2": ["150"],"width_id": "136","width_key": "width",
+        "height_id": "136","height_key": "height","duration_id": "132","duration_key": "value",
+        "output_node_id": "92","has_audio": True,"fixed_fps": 24,
+    },
+
+    "PIKA H3 FLEX FL2V": {
+        "file": "workflow/video_pika_h3_flex_fl2va.json",
+        "prompt_id": "140:131","prompt_key": "prompt","seed_id": "140:129","seed_key": "noise_seed","image1_id": "148",
+        "image2_id": "147","require_image2": True,"duration_id": "140:133","duration_key": "value","output_node_id": "92",
+        "has_audio": True,"fixed_fps": 24,
+    },
+
+    "PIKA H3 FLEX T2V": {
+        "file": "workflow/video_pika_h3_flex_t2v.json","prompt_id": "140:131","prompt_key": "prompt","seed_id": "140:129",
+        "seed_key": "noise_seed","width_id": "140:149","width_key": "value","height_id": "140:150","height_key": "value",
+        "duration_id": "140:133","duration_key": "value","output_node_id": "92","has_audio": True,
+        "fixed_fps": 24,"no_image_required": True,
+    },
 
     "Minimax Charactor Swap Turbo": {
         "file": "workflow/Minimax_character-swap-turbo.json","prompt_id": "11","prompt_key": "value",
@@ -398,6 +431,19 @@ WORKFLOW_SETTINGS = {
     },
     
     # === Tools Models ===
+
+    "RelayVsr-Video-x2-upscale": {
+        "file": "workflow/relayvsr_video_x2_upscale.json",
+        "video_id": "1",
+        "video_key": "file",
+        "is_video_tool": True,
+    },
+    "RelayVsr-Video-x4-upscale": {
+        "file": "workflow/relayvsr_video_x4_upscale.json",
+        "video_id": "1",
+        "video_key": "file",
+        "is_video_tool": True,
+    },
     "RTX Image Upscale": {
         "file": "workflow/rtx_image_upscale.json",
         "image_id": "2", "scale_id": "1", "scale_key": "resize_type.scale",
@@ -653,7 +699,8 @@ async def generate_stream_endpoint(req: GenerationRequest):
                 stream_fn = generate_edit_stream(
                     req.prompt, req.image1_filename, req.image2_filename, config,
                     lora_filename=req.lora_filename,
-                    lora_strength=req.lora_strength 
+                    lora_strength=req.lora_strength,
+                    use_upsampler=req.use_upsampler,
                 )
             else:
                 stream_fn = generate_image_stream(req.prompt, req.seed, req.width, req.height, req.lora_filename, req.lora_strength, config, use_upsampler=req.use_upsampler,turbo_mode=req.turbo_mode,)

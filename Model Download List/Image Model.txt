@@ -1,5 +1,26 @@
 +++ รายการ Model ทั้งหมด สามารถเลือก โหลดเฉพาะที่จะใช้งานได้ +++
 
+--------------------------------------------------------------------------------------
+
+P-H3- Image & EDIT  ใช้ Model ร่วมกัน
+
+[ minimax_h3_fl2va_pruned ]   =>วางไฟล์ที่ /model/diffusion_models
+https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors
+
+[ p-h3-image_lora_bf16 ] => วางไฟล์ที่ /model/loras
+https://huggingface.co/PrunaAI/p-h3-image-comfy/resolve/main/loras/p-h3-image_lora_bf16.safetensors
+
+[ p-h3-image_text_encoder_int8 ]   =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/PrunaAI/p-h3-image-comfy/resolve/main/text_encoders/p-h3-image_text_encoder_int8_convrot.safetensors
+
+[ p-h3-image_vae_int8 ]  => วางไฟล์ที่ /model/vae
+https://huggingface.co/PrunaAI/p-h3-image-comfy/resolve/main/vae/p-h3-image_vae_int8_convrot.safetensors
+
+[ p-h3-image_prompt_upsampler ]  =>วางไฟล์ที่ /model/textencoders
+https://huggingface.co/PrunaAI/p-h3-image-comfy/resolve/main/text_encoders/p-h3-image_prompt_upsampler_w4a8.safetensors
+
+--------------------------------------------------------------------------------------
+
 MINIMAX H3 Text to Image 
 
 [ minimax_h3_fl2va_pruned_int8_convrot ]   =>วางไฟล์ที่ /model/diffusion_models

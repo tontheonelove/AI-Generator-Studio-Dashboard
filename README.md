@@ -4,11 +4,10 @@
 
 ---
 
-## 🚀 Version 4.5 (30-10-26) UPDATE ***  
-  - 🚀 MOSS-IMAGE Added
-  - 🔥 Minimax H3 Image Added
-  - 🎥 Minimax H3 4 Step Charactor Swap Added
-  - 🚀 FAST H3 8 Step OminiREF + Lipsync Added
+## 🚀 Version 4.6 (23-11-26) UPDATE ***  
+  - 🚀 P H3 Image & EDIT
+  - 🔥 Relay VSR Video Upscale X2 , X4
+  - 🎥 Pika H3 Flex T2V , FL2V , REF2V
 ---
 <img src=ex2.jpg/>
 

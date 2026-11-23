@@ -1,0 +1,342 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "2": {
+    "inputs": {
+      "clip_name": "p-h3-image_text_encoder_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Text encoder",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "3": {
+    "inputs": {
+      "vae_name": "p-h3-image_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "4": {
+    "inputs": {
+      "clip_name": "p-h3-image_prompt_upsampler_w4a8.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Prompt upsampler model",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "8": {
+    "inputs": {
+      "source": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Upsampled prompt",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "9": {
+    "inputs": {
+      "prompt": [
+        "8",
+        0
+      ],
+      "width": [
+        "27",
+        0
+      ],
+      "height": [
+        "27",
+        1
+      ],
+      "clip": [
+        "2",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ],
+      "images.image_1": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "PH3ImageConditioning",
+    "_meta": {
+      "title": "p-h3-image Conditioning",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "10": {
+    "inputs": {
+      "model": [
+        "18",
+        0
+      ],
+      "conditioning": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "11": {
+    "inputs": {
+      "sampler_name": "er_sde"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "12": {
+    "inputs": {
+      "noise_seed": 691899913323484
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "13": {
+    "inputs": {
+      "sigmas": "1.0, 0.984753, 0.967905, 0.951688, 0.925372, 0.881923, 0.810083, 0.528718, 0.0"
+    },
+    "class_type": "ManualSigmas",
+    "_meta": {
+      "title": "ManualSigmas",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "14": {
+    "inputs": {
+      "noise": [
+        "12",
+        0
+      ],
+      "guider": [
+        "10",
+        0
+      ],
+      "sampler": [
+        "11",
+        0
+      ],
+      "sigmas": [
+        "13",
+        0
+      ],
+      "latent_image": [
+        "9",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "15": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "16": {
+    "inputs": {
+      "filename_prefix": "image_p_h3_image_edit",
+      "images": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "18": {
+    "inputs": {
+      "shift_video": 1,
+      "shift_audio": 1,
+      "model": [
+        "19",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "ModelSamplingMiniMaxH3 (keep at 1.0)",
+      "cnr_id": "comfy-core",
+      "ver": "0.43.0"
+    }
+  },
+  "19": {
+    "inputs": {
+      "lora_name": "p-h3-image_lora_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  },
+  "23": {
+    "inputs": {
+      "switch": true,
+      "on_false": [
+        "24",
+        0
+      ],
+      "on_true": [
+        "29",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  },
+  "24": {
+    "inputs": {
+      "value": "Aspect ratio: 1:1\nRequest: change the lighting to night time"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text (Prompt)",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  },
+  "26": {
+    "inputs": {
+      "image": "image_p_h3_image_edit_atrium_day.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  },
+  "27": {
+    "inputs": {
+      "image": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "Get Image Size",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  },
+  "29": {
+    "inputs": {
+      "prompt": [
+        "24",
+        0
+      ],
+      "max_length": 1536,
+      "sampling_mode": "off",
+      "thinking": true,
+      "use_default_template": true,
+      "mtp": "auto",
+      "clip": [
+        "4",
+        0
+      ],
+      "images.image1": [
+        "26",
+        0
+      ],
+      "images.image2": [
+        "30",
+        0
+      ]
+    },
+    "class_type": "TextGenerateV2",
+    "_meta": {
+      "title": "Generate Text",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  },
+  "30": {
+    "inputs": {
+      "image": "HW95QYpbIAAZaYM_38b1f32cfe50.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image",
+      "cnr_id": "comfy-core",
+      "ver": "0.46.0"
+    }
+  }
+}
