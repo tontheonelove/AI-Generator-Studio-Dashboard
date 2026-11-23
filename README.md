@@ -9,7 +9,7 @@
   - 🔥 Relay VSR Video Upscale X2 , X4
   - 🎥 Pika H3 Flex T2V , FL2V , REF2V
 ---
-<img src=ex2.jpg/>
+<img src=ex2.png/>
 
 
 # Feature
